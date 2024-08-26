@@ -18,7 +18,7 @@ import { Url, UrlSchema } from './url/schemas/url.schema';
         //service: process.env.EMAIL_HOST,
         // host: process.env.EMAIL_HOST,
         // host: '54.227.230.41',
-        host: 'mail.elitemarketpro.site',
+        host: `${process.env.MAILER_HOST}`,
         secure: false,
         port: 25,
         tls: {
