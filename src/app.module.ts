@@ -25,8 +25,8 @@ import { Url, UrlSchema } from './url/schemas/url.schema';
           rejectUnauthorized: false, // Disable TLS verification
         },
         auth: {
-          user: 'admin@elitemarketpro.site',
-          pass: 'SmtpAdmin@123',
+          user: `${process.env.ROOT_MAIL_USER}`,
+          pass: `${process.env.ROOT_MAIL_USER_PASSWORD}`,
         },
         logger: true,
         debug: true,
