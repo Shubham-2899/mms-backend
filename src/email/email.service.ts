@@ -7,10 +7,14 @@ export class EmailService {
   constructor(private readonly mailService: MailerService) {}
 
   async create(createEmailDto: CreateEmailDto) {
-    await this.sendMail(createEmailDto);
-    return {
-      message: 'Email processed successfully',
-    };
+    try {
+      await this.sendMail(createEmailDto);
+      return {
+        message: 'Email processed successfully',
+      };
+    } catch (error) {
+      throw Error(error);
+    }
   }
 
   async sendMail(createEmailDto: CreateEmailDto) {

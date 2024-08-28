@@ -20,14 +20,14 @@ import { Url, UrlSchema } from './url/schemas/url.schema';
         // host: '54.227.230.41',
         host: `${process.env.MAILER_HOST}`,
         secure: false,
-        port: 25,
+        port: 587,
         tls: {
           rejectUnauthorized: false, // Disable TLS verification
         },
-        // auth: {
-        //   user: 'admin@elitemarketpro.site',
-        //   pass: 'SmtpAdmin@123',
-        // },
+        auth: {
+          user: 'admin@elitemarketpro.site',
+          pass: 'SmtpAdmin@123',
+        },
         logger: true,
         debug: true,
       },
