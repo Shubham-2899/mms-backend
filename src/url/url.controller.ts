@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { UrlService } from './url.service';
 import { CreateUrlDto } from './dto/create-url.dto';
+import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 
+@UseGuards(FirebaseAuthGuard)
 @Controller('/api/url')
 export class UrlController {
   constructor(private readonly urlService: UrlService) {}

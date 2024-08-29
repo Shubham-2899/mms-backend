@@ -8,9 +8,11 @@ import { ConfigModule } from '@nestjs/config';
 import { EmailModule } from './email/email.module';
 import { UrlModule } from './url/url.module';
 import { Url, UrlSchema } from './url/schemas/url.schema';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
+    AuthModule,
     ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
     MongooseModule.forRoot(`${process.env.DB_CONNECTION_STRING}`),
     MailerModule.forRoot({
@@ -30,6 +32,7 @@ import { Url, UrlSchema } from './url/schemas/url.schema';
       },
     }),
     MongooseModule.forFeature([{ name: Url.name, schema: UrlSchema }]),
+    // AuthModule,
     EmailModule,
     UrlModule,
   ],

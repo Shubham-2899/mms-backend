@@ -27,6 +27,7 @@
     "@nestjs/mongoose": "^10.0.6",
     "@nestjs/platform-express": "^10.0.0",
     "dns": "^0.2.2",
+    "firebase-admin": "^12.4.0",
     "mailparser": "^3.7.1",
     "mongoose": "^8.4.1",
     "nodemailer": "^6.9.13",
