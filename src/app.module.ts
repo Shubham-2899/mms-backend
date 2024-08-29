@@ -15,9 +15,6 @@ import { Url, UrlSchema } from './url/schemas/url.schema';
     MongooseModule.forRoot(`${process.env.DB_CONNECTION_STRING}`),
     MailerModule.forRoot({
       transport: {
-        //service: process.env.EMAIL_HOST,
-        // host: process.env.EMAIL_HOST,
-        // host: '54.227.230.41',
         host: `${process.env.MAILER_HOST}`,
         secure: false,
         port: 587,

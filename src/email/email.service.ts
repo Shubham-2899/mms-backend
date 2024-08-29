@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { CreateEmailDto } from './dto/create-email.dto';
 
@@ -13,7 +13,7 @@ export class EmailService {
         message: 'Email processed successfully',
       };
     } catch (error) {
-      throw Error(error);
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -25,16 +25,20 @@ export class EmailService {
 
     try {
       for (const userEmail of emailToUsers) {
-        console.log(`sending email to ${userEmail}`);
+        console.log(`Sending email to ${userEmail}`);
         await this.mailService.sendMail({
-          from: from,
+          from,
           to: userEmail,
-          subject: mode === 'test' ? `Test Email` : 'Marketing Email',
+          subject: mode === 'test' ? 'Test Email' : 'Marketing Email',
           html: templateType === 'html' ? emailTemplate : null,
         });
       }
     } catch (e) {
-      console.log(e);
+      console.error(
+        `Failed to send email to one or more recipients: ${e.message}`,
+      );
+      // Rethrow the error with additional context if necessary
+      throw new HttpException(e.message, HttpStatus.BAD_GATEWAY);
     }
   }
 }
