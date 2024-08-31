@@ -29,7 +29,10 @@ export class EmailService {
         await this.mailService.sendMail({
           from,
           to: userEmail,
-          subject: mode === 'test' ? 'Test Email' : 'Marketing Email',
+          subject:
+            mode === 'test'
+              ? 'Welcome to ElitemarkePro Ltd'
+              : 'Marketing Email',
           html: templateType === 'html' ? emailTemplate : null,
         });
       }
