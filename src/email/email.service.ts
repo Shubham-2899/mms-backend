@@ -18,7 +18,14 @@ export class EmailService {
   }
 
   async sendMail(createEmailDto: CreateEmailDto) {
-    const { from, to: emailToUsers, templateType, mode } = createEmailDto;
+    const {
+      from,
+      to: emailToUsers,
+      templateType,
+      mode,
+      fromName,
+      subject,
+    } = createEmailDto;
     let { emailTemplate } = createEmailDto;
 
     emailTemplate = decodeURIComponent(emailTemplate);
@@ -27,12 +34,9 @@ export class EmailService {
       for (const userEmail of emailToUsers) {
         console.log(`Sending email to ${userEmail}`);
         await this.mailService.sendMail({
-          from,
+          from: `${fromName} ${from}`,
           to: userEmail,
-          subject:
-            mode === 'test'
-              ? 'Welcome to ElitemarkePro Ltd'
-              : 'Marketing Email',
+          subject: subject,
           html: templateType === 'html' ? emailTemplate : null,
         });
       }
