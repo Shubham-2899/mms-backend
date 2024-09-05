@@ -9,6 +9,9 @@ import { EmailModule } from './email/email.module';
 import { UrlModule } from './url/url.module';
 import { Url, UrlSchema } from './url/schemas/url.schema';
 import { AuthModule } from './auth/auth.module';
+import { RootController } from './root.controller';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -35,8 +38,11 @@ import { AuthModule } from './auth/auth.module';
     // AuthModule,
     EmailModule,
     UrlModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+    }),
   ],
-  controllers: [AppController],
+  controllers: [AppController, RootController],
   providers: [AppService],
 })
 export class AppModule {}
