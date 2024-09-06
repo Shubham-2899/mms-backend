@@ -1,0 +1,32 @@
+name: CICD FOR PULL
+
+# Trigger the workflow on push to main branch or manual dispatch
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  pull_and_restart:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Use the SSH key stored in GitHub Secrets
+      - name: Setup SSH Agent and Add SSH Key
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      # SSH into the EC2 instance and pull changes + restart PM2
+      - name: SSH and Pull Latest Changes
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.IP}} << 'EOF'
+            cd ${{ secrets.PATH }}
+            git pull origin main
+            pm2 restart 0
+          EOF
