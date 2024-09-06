@@ -14,7 +14,7 @@ jobs:
     steps:
       # Checkout the repository
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Use the SSH key stored in GitHub Secrets
       - name: Setup SSH Agent and Add SSH Key
@@ -24,9 +24,15 @@ jobs:
 
       # SSH into the EC2 instance and pull changes + restart PM2
       - name: SSH and Pull Latest Changes
+        
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.IP}} << 'EOF'
             cd ${{ secrets.PATH }}
             git pull origin main
             pm2 restart 0
           EOF
+          
+        
+
+
+         
