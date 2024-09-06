@@ -6,7 +6,7 @@ import { join } from 'path';
 export class RootController {
   @Get('/')
   getHomePage(): string {
-    const htmlFilePath = join(__dirname, '..', 'public', 'welcome.html');
+    const htmlFilePath = join(__dirname, '..', 'public', 'index.html');
     const htmlContent = readFileSync(htmlFilePath, 'utf8');
     return htmlContent;
   }
