@@ -18,23 +18,12 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Remove old build folder on EC2 (Optional Backup)
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.IP }} << 'EOF'
-            cd ${{ secrets.PATH }}
-
-            # Option 2: Delete the old build folder
-            rm -rf dist
-          EOF
-
-      - name: Copy new build files to EC2
-        run: |
-          scp -o StrictHostKeyChecking=no -r ./dist ubuntu@${{ secrets.IP}}:${{ secrets.PATH }}
 
       - name: Restart PM2 process on EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.IP}} << 'EOF'
             cd ${{ secrets.PATH }}
             # Restart your app using PM2
-            pm2 reload all
+            git pull origin main
+            pm2 reload 0
           EOF
