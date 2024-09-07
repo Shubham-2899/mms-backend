@@ -1,38 +1,53 @@
-name: CICD FOR PULL
+name: Deploy to EC2
 
-# Trigger the workflow on push to main branch or manual dispatch
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main 
 
 jobs:
-  pull_and_restart:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # Use the SSH key stored in GitHub Secrets
-      - name: Setup SSH Agent and Add SSH Key
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # Specify the Node.js version you're using
+
+      # Step 2: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 3: Build the project
+      - name: Build the project
+        run: npm run build 
+        
+      - name: Set up SSH agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      # SSH into the EC2 instance and pull changes + restart PM2
-      - name: SSH and Pull Latest Changes
-        
+      - name: Remove old build folder on EC2 (Optional Backup)
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.IP }} << 'EOF'
+            cd ${{ secrets.PATH }}
+
+            # Option 2: Delete the old build folder
+            rm -rf dist
+          EOF
+
+      - name: Copy new build files to EC2
+        run: |
+          scp -o StrictHostKeyChecking=no -r ./dist ubuntu@${{ secrets.IP}}:${{ secrets.PATH }}
+
+      - name: Restart PM2 process on EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.IP}} << 'EOF'
             cd ${{ secrets.PATH }}
-            git pull origin main
-            pm2 restart 0
+            # Restart your app using PM2
+            pm2 reload all
           EOF
-          
-        
-
-
-         
