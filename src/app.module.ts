@@ -12,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { RootController } from './root.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { Email, EmailSchema } from './email/schemas/email.schemas';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { join } from 'path';
     MailerModule.forRoot({
       transport: {
         host: `${process.env.MAILER_HOST}`,
+        pool: true,
         secure: false,
         port: 587,
         tls: {
@@ -31,10 +33,13 @@ import { join } from 'path';
           pass: `${process.env.ROOT_MAIL_USER_PASSWORD}`,
         },
         logger: true,
-        debug: true,
+        // debug: true,
       },
     }),
-    MongooseModule.forFeature([{ name: Url.name, schema: UrlSchema }]),
+    MongooseModule.forFeature([
+      { name: Url.name, schema: UrlSchema },
+      { name: Email.name, schema: EmailSchema },
+    ]),
     // AuthModule,
     EmailModule,
     UrlModule,

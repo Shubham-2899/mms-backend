@@ -6,4 +6,5 @@ export declare class CreateEmailDto {
     templateType: string;
     emailTemplate: string;
     mode: string;
+    offerId: string;
 }

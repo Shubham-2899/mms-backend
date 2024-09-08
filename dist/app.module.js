@@ -20,6 +20,7 @@ const auth_module_1 = require("./auth/auth.module");
 const root_controller_1 = require("./root.controller");
 const serve_static_1 = require("@nestjs/serve-static");
 const path_1 = require("path");
+const email_schemas_1 = require("./email/schemas/email.schemas");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -32,6 +33,7 @@ exports.AppModule = AppModule = __decorate([
             mailer_1.MailerModule.forRoot({
                 transport: {
                     host: `${process.env.MAILER_HOST}`,
+                    pool: true,
                     secure: false,
                     port: 587,
                     tls: {
@@ -42,10 +44,12 @@ exports.AppModule = AppModule = __decorate([
                         pass: `${process.env.ROOT_MAIL_USER_PASSWORD}`,
                     },
                     logger: true,
-                    debug: true,
                 },
             }),
-            mongoose_1.MongooseModule.forFeature([{ name: url_schema_1.Url.name, schema: url_schema_1.UrlSchema }]),
+            mongoose_1.MongooseModule.forFeature([
+                { name: url_schema_1.Url.name, schema: url_schema_1.UrlSchema },
+                { name: email_schemas_1.Email.name, schema: email_schemas_1.EmailSchema },
+            ]),
             email_module_1.EmailModule,
             url_module_1.UrlModule,
             serve_static_1.ServeStaticModule.forRoot({

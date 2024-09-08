@@ -8,19 +8,26 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailService = void 0;
 const common_1 = require("@nestjs/common");
 const mailer_1 = require("@nestjs-modules/mailer");
+const mongoose_1 = require("@nestjs/mongoose");
+const mongoose_2 = require("mongoose");
+const email_schemas_1 = require("./schemas/email.schemas");
 let EmailService = class EmailService {
-    constructor(mailService) {
+    constructor(mailService, emailModel) {
         this.mailService = mailService;
+        this.emailModel = emailModel;
     }
     async create(createEmailDto) {
         try {
             await this.sendMail(createEmailDto);
             return {
-                message: 'Email processed successfully',
+                message: 'Emails processed and saved successfully',
             };
         }
         catch (error) {
@@ -34,12 +41,21 @@ let EmailService = class EmailService {
         try {
             for (const userEmail of emailToUsers) {
                 console.log(`Sending email to ${userEmail}`);
-                await this.mailService.sendMail({
-                    from: `${fromName} ${from}`,
+                const info = await this.mailService.sendMail({
+                    from: `${fromName} <${from}>`,
                     to: userEmail,
                     subject: subject,
-                    html: templateType === 'html' ? emailTemplate : null,
+                    html: templateType === 'html' ? emailTemplate : emailTemplate,
                 });
+                console.log('🚀 ~ EmailService ~ sendMail ~ info:', info);
+                const emailRecord = new this.emailModel({
+                    from: createEmailDto.from,
+                    to: userEmail,
+                    offerId: createEmailDto.offerId,
+                    response: info.response,
+                    sentAt: new Date(),
+                });
+                await emailRecord.save();
             }
         }
         catch (e) {
@@ -51,6 +67,8 @@ let EmailService = class EmailService {
 exports.EmailService = EmailService;
 exports.EmailService = EmailService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [mailer_1.MailerService])
+    __param(1, (0, mongoose_1.InjectModel)(email_schemas_1.Email.name)),
+    __metadata("design:paramtypes", [mailer_1.MailerService,
+        mongoose_2.Model])
 ], EmailService);
 //# sourceMappingURL=email.service.js.map

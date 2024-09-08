@@ -23,16 +23,17 @@
 /// <reference types="mongoose/types/virtuals" />
 /// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
-import { MailerService } from '@nestjs-modules/mailer';
-import { Model } from 'mongoose';
-import { EmailDocument } from './schemas/email.schemas';
-import { CreateEmailDto } from './dto/create-email.dto';
-export declare class EmailService {
-    private readonly mailService;
-    private emailModel;
-    constructor(mailService: MailerService, emailModel: Model<EmailDocument>);
-    create(createEmailDto: CreateEmailDto): Promise<{
-        message: string;
-    }>;
-    sendMail(createEmailDto: CreateEmailDto): Promise<void>;
+import { Document } from 'mongoose';
+export type EmailDocument = Email & Document;
+export declare class Email {
+    from: string;
+    response: string;
+    to: string;
+    offerId: string;
+    sentAt: Date;
 }
+export declare const EmailSchema: import("mongoose").Schema<Email, import("mongoose").Model<Email, any, any, any, Document<unknown, any, Email> & Email & {
+    _id: import("mongoose").Types.ObjectId;
+}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Email, Document<unknown, {}, import("mongoose").FlatRecord<Email>> & import("mongoose").FlatRecord<Email> & {
+    _id: import("mongoose").Types.ObjectId;
+}>;
