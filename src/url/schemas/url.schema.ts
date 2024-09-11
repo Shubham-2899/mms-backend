@@ -20,6 +20,9 @@ export class Url {
   @Prop({ required: true })
   linkType: string;
 
+  @Prop({ required: true })
+  campaignId: string;
+
   @Prop(
     raw([
       {

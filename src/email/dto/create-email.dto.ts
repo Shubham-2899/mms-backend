@@ -7,4 +7,5 @@ export class CreateEmailDto {
   emailTemplate: string;
   mode: string;
   offerId: string;
+  campaignId: string;
 }

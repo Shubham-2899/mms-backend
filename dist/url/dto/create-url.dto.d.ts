@@ -3,4 +3,5 @@ export declare class CreateUrlDto {
     domain: string;
     offerId: string;
     linkType: string;
+    campaignId: string;
 }

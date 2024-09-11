@@ -17,6 +17,9 @@ export class Email {
   @Prop({ required: true })
   offerId: string;
 
+  @Prop({ required: true })
+  campaignId: string;
+
   @Prop({ default: Date.now })
   sentAt: Date;
 }

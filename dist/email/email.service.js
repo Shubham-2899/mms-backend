@@ -52,6 +52,7 @@ let EmailService = class EmailService {
                     from: createEmailDto.from,
                     to: userEmail,
                     offerId: createEmailDto.offerId,
+                    campaignId: createEmailDto.campaignId,
                     response: info.response,
                     sentAt: new Date(),
                 });

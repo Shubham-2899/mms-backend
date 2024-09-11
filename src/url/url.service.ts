@@ -27,6 +27,7 @@ export class UrlService {
       redirectURL: body.url,
       domain: body.domain,
       offerId: body.offerId,
+      campaignId: body.campaignId,
       linkType: body.linkType,
       visitHistory: [],
     });
@@ -39,11 +40,16 @@ export class UrlService {
   async getAnalytics(shortId: string): Promise<any> {
     const result = await this.urlModel.findOne({ shortId });
 
-    return {
-      offerId: result.offerId,
-      totalClicks: result.clickCount,
-      analytics: result.visitHistory,
-    };
+    if (result) {
+      return {
+        offerId: result.offerId,
+        campaignId: result.campaignId,
+        totalClicks: result.clickCount,
+        analytics: result.visitHistory,
+      };
+    } else {
+      return {};
+    }
   }
 
   /**
@@ -54,13 +60,14 @@ export class UrlService {
     try {
       const allUrls = await this.urlModel.find(
         {},
-        { offerId: 1, clickCount: 1, visitHistory: 1 },
+        { offerId: 1, clickCount: 1, visitHistory: 1, campaignId: 1 },
       );
 
       const reports = allUrls.map((url) => ({
         offerId: url.offerId,
         totalClicks: url.clickCount,
         analytics: url.visitHistory,
+        campaignId: url.campaignId,
       }));
 
       return reports;

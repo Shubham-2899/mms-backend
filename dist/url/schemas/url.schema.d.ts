@@ -31,6 +31,7 @@ export declare class Url {
     offerId: string;
     domain: string;
     linkType: string;
+    campaignId: string;
     visitHistory: Record<string, any>[];
     clickCount: number;
 }
