@@ -47,7 +47,7 @@ import { Email, EmailSchema } from './email/schemas/email.schemas';
       rootPath: join(__dirname, '..', 'public'),
     }),
   ],
-  controllers: [AppController, RootController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

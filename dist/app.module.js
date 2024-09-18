@@ -17,7 +17,6 @@ const email_module_1 = require("./email/email.module");
 const url_module_1 = require("./url/url.module");
 const url_schema_1 = require("./url/schemas/url.schema");
 const auth_module_1 = require("./auth/auth.module");
-const root_controller_1 = require("./root.controller");
 const serve_static_1 = require("@nestjs/serve-static");
 const path_1 = require("path");
 const email_schemas_1 = require("./email/schemas/email.schemas");
@@ -56,7 +55,7 @@ exports.AppModule = AppModule = __decorate([
                 rootPath: (0, path_1.join)(__dirname, '..', 'public'),
             }),
         ],
-        controllers: [app_controller_1.AppController, root_controller_1.RootController],
+        controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
     })
 ], AppModule);

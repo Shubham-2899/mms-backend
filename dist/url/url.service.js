@@ -18,6 +18,14 @@ const mongoose_1 = require("@nestjs/mongoose");
 const shortid = require('shortid');
 const url_schema_1 = require("./schemas/url.schema");
 const mongoose_2 = require("mongoose");
+function generateRandomString(length) {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
 let UrlService = class UrlService {
     constructor(urlModel) {
         this.urlModel = urlModel;
@@ -28,6 +36,11 @@ let UrlService = class UrlService {
         if (!body.url)
             throw new common_1.BadRequestException('Url is required');
         const shortID = shortid();
+        const [part1, part2] = body.linkPattern.split('/').filter(Boolean);
+        const randomString1 = generateRandomString(16);
+        const randomString2 = generateRandomString(16);
+        const finalLongString1 = `${part1}${randomString1}`;
+        const finalLongString2 = `${part2}${randomString2}`;
         const createdUrl = new this.urlModel({
             shortId: shortID,
             redirectURL: body.url,
@@ -38,7 +51,8 @@ let UrlService = class UrlService {
             visitHistory: [],
         });
         createdUrl.save();
-        return { finalRedirectLink: `${body.domain}/${shortID}` };
+        const finalRedirectLink = `${body.domain}/${shortID}/${finalLongString1}/${finalLongString2}`;
+        return { finalRedirectLink };
     }
     async getAnalytics(shortId) {
         const result = await this.urlModel.findOne({ shortId });

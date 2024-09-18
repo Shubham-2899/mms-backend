@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppController = void 0;
 const app_service_1 = require("./app.service");
 const common_1 = require("@nestjs/common");
+const fs_1 = require("fs");
+const path_1 = require("path");
 let AppController = class AppController {
     constructor(appService) {
         this.appService = appService;
@@ -27,10 +29,15 @@ let AppController = class AppController {
             console.log(e);
         }
     }
+    getHomePage() {
+        const htmlFilePath = (0, path_1.join)(__dirname, '..', 'public', 'index.html');
+        const htmlContent = (0, fs_1.readFileSync)(htmlFilePath, 'utf8');
+        return htmlContent;
+    }
 };
 exports.AppController = AppController;
 __decorate([
-    (0, common_1.Get)(':shortId'),
+    (0, common_1.Get)(':shortId/*/*'),
     __param(0, (0, common_1.Res)()),
     __param(1, (0, common_1.Ip)()),
     __param(2, (0, common_1.Headers)()),
@@ -39,8 +46,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object, String]),
     __metadata("design:returntype", Promise)
 ], AppController.prototype, "getRedirectUrl", null);
+__decorate([
+    (0, common_1.Get)('/'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", String)
+], AppController.prototype, "getHomePage", null);
 exports.AppController = AppController = __decorate([
-    (0, common_1.Controller)('/api'),
+    (0, common_1.Controller)('/'),
     __metadata("design:paramtypes", [app_service_1.AppService])
 ], AppController);
 //# sourceMappingURL=app.controller.js.map

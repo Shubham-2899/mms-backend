@@ -4,4 +4,5 @@ export class CreateUrlDto {
   offerId: string;
   linkType: string;
   campaignId: string;
+  linkPattern: string;
 }

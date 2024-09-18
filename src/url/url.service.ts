@@ -5,6 +5,16 @@ import { Url } from './schemas/url.schema';
 import { Model } from 'mongoose';
 import { CreateUrlDto } from './dto/create-url.dto';
 
+// Helper function to generate random alphabetic string
+function generateRandomString(length: number): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 @Injectable()
 export class UrlService {
   constructor(@InjectModel(Url.name) private urlModel: Model<Url>) {}
@@ -22,6 +32,14 @@ export class UrlService {
 
     const shortID = shortid();
 
+    const [part1, part2] = body.linkPattern.split('/').filter(Boolean);
+
+    const randomString1 = generateRandomString(16);
+    const randomString2 = generateRandomString(16);
+
+    const finalLongString1 = `${part1}${randomString1}`;
+    const finalLongString2 = `${part2}${randomString2}`;
+
     const createdUrl = new this.urlModel({
       shortId: shortID,
       redirectURL: body.url,
@@ -34,7 +52,9 @@ export class UrlService {
 
     createdUrl.save();
 
-    return { finalRedirectLink: `${body.domain}/${shortID}` };
+    const finalRedirectLink = `${body.domain}/${shortID}/${finalLongString1}/${finalLongString2}`;
+
+    return { finalRedirectLink };
   }
 
   async getAnalytics(shortId: string): Promise<any> {
