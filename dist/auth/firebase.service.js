@@ -23,6 +23,22 @@ let FirebaseService = class FirebaseService {
     async verifyToken(idToken) {
         return this.firebaseApp.auth().verifyIdToken(idToken);
     }
+    async createUser(email, password, displayName) {
+        return this.firebaseApp.auth().createUser({
+            email,
+            password,
+            displayName,
+        });
+    }
+    async updateUser(uid, data) {
+        return this.firebaseApp.auth().updateUser(uid, data);
+    }
+    async deleteUser(uid) {
+        return this.firebaseApp.auth().deleteUser(uid);
+    }
+    async setAdminClaim(uid, isAdmin) {
+        await this.firebaseApp.auth().setCustomUserClaims(uid, { admin: isAdmin });
+    }
 };
 exports.FirebaseService = FirebaseService;
 exports.FirebaseService = FirebaseService = __decorate([

@@ -21,4 +21,31 @@ export class FirebaseService {
   async verifyToken(idToken: string) {
     return this.firebaseApp.auth().verifyIdToken(idToken);
   }
+
+  // Function to create a new Firebase user
+  async createUser(email: string, password: string, displayName: string) {
+    return this.firebaseApp.auth().createUser({
+      email,
+      password,
+      displayName,
+    });
+  }
+
+  // Function to update Firebase user
+  async updateUser(
+    uid: string,
+    data: { email?: string; password?: string; displayName?: string },
+  ) {
+    return this.firebaseApp.auth().updateUser(uid, data);
+  }
+
+  // Function to delete Firebase user
+  async deleteUser(uid: string) {
+    return this.firebaseApp.auth().deleteUser(uid);
+  }
+
+  // Function to set custom claims for a Firebase user
+  async setAdminClaim(uid: string, isAdmin: boolean) {
+    await this.firebaseApp.auth().setCustomUserClaims(uid, { admin: isAdmin });
+  }
 }

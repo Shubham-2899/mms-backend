@@ -13,6 +13,8 @@ import { RootController } from './root.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { Email, EmailSchema } from './email/schemas/email.schemas';
+import { User, UserSchema } from './user/schemas/user.schema';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -39,10 +41,12 @@ import { Email, EmailSchema } from './email/schemas/email.schemas';
     MongooseModule.forFeature([
       { name: Url.name, schema: UrlSchema },
       { name: Email.name, schema: EmailSchema },
+      { name: User.name, schema: UserSchema },
     ]),
     // AuthModule,
     EmailModule,
     UrlModule,
+    UserModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
     }),
