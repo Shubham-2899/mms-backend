@@ -10,8 +10,10 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
+import { AdminAuthGuard } from 'src/auth/admin-auth.guard';
 
 @UseGuards(FirebaseAuthGuard)
+@UseGuards(AdminAuthGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -50,6 +52,7 @@ export class UserController {
       password?: string;
       displayName?: string;
       serverData?: any;
+      isAdmin: boolean;
     },
   ) {
     return this.userService.updateUser(uid, body);

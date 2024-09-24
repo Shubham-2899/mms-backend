@@ -28,6 +28,7 @@ let UserService = class UserService {
     }
     async createUser(email, password, displayName, serverData, isAdmin) {
         const firebaseUser = await this.firebaseService.createUser(email, password, displayName);
+        await this.firebaseService.setAdminClaim(firebaseUser.uid, isAdmin);
         const createdUser = new this.userModel({
             firebaseUid: firebaseUser.uid,
             email,
@@ -38,6 +39,16 @@ let UserService = class UserService {
         return createdUser.save();
     }
     async updateUser(uid, updateData) {
+        const existingUser = await this.userModel.findOne({ firebaseUid: uid });
+        if (!existingUser) {
+            throw new Error('User not found');
+        }
+        const promises = [];
+        if (updateData.isAdmin !== undefined &&
+            updateData.isAdmin !== existingUser.isAdmin) {
+            promises.push(this.firebaseService.setAdminClaim(uid, updateData.isAdmin));
+            promises.push(this.userModel.updateOne({ firebaseUid: uid }, { $set: { isAdmin: updateData.isAdmin } }));
+        }
         const updateOperations = [];
         if (updateData.serverData) {
             for (const server of updateData.serverData) {
@@ -73,7 +84,11 @@ let UserService = class UserService {
             }
             await this.userModel.bulkWrite(updateOperations);
         }
-        return this.userModel.findOne({ firebaseUid: uid });
+        if (promises.length > 0) {
+            await Promise.all(promises);
+        }
+        const updatedUser = await this.userModel.findOne({ firebaseUid: uid });
+        return updatedUser;
     }
     async deleteUser(uid) {
         await this.firebaseService.deleteUser(uid);

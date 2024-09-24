@@ -16,6 +16,7 @@ exports.UserController = void 0;
 const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
 const firebase_auth_guard_1 = require("../auth/firebase-auth.guard");
+const admin_auth_guard_1 = require("../auth/admin-auth.guard");
 let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
@@ -74,6 +75,7 @@ __decorate([
 ], UserController.prototype, "findUser", null);
 exports.UserController = UserController = __decorate([
     (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
+    (0, common_1.UseGuards)(admin_auth_guard_1.AdminAuthGuard),
     (0, common_1.Controller)('users'),
     __metadata("design:paramtypes", [user_service_1.UserService])
 ], UserController);

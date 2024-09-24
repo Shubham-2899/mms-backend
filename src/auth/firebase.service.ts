@@ -43,4 +43,9 @@ export class FirebaseService {
   async deleteUser(uid: string) {
     return this.firebaseApp.auth().deleteUser(uid);
   }
+
+  // Function to set custom claims for a Firebase user
+  async setAdminClaim(uid: string, isAdmin: boolean) {
+    await this.firebaseApp.auth().setCustomUserClaims(uid, { admin: isAdmin });
+  }
 }

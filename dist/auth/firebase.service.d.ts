@@ -9,4 +9,5 @@ export declare class FirebaseService {
         displayName?: string;
     }): Promise<import("firebase-admin/lib/auth/user-record").UserRecord>;
     deleteUser(uid: string): Promise<void>;
+    setAdminClaim(uid: string, isAdmin: boolean): Promise<void>;
 }

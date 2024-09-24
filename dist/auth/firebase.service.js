@@ -36,6 +36,9 @@ let FirebaseService = class FirebaseService {
     async deleteUser(uid) {
         return this.firebaseApp.auth().deleteUser(uid);
     }
+    async setAdminClaim(uid, isAdmin) {
+        await this.firebaseApp.auth().setCustomUserClaims(uid, { admin: isAdmin });
+    }
 };
 exports.FirebaseService = FirebaseService;
 exports.FirebaseService = FirebaseService = __decorate([

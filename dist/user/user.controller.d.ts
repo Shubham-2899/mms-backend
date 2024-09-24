@@ -45,6 +45,7 @@ export declare class UserController {
         password?: string;
         displayName?: string;
         serverData?: any;
+        isAdmin: boolean;
     }): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User> & import("./schemas/user.schema").User & {
         _id: import("mongoose").Types.ObjectId;
     }>;

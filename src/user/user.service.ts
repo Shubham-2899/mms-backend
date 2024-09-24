@@ -16,6 +16,15 @@ export class UserService {
     return this.userModel.find().exec();
   }
 
+  /**
+   * Creates a new user in Firebase and MongoDB.
+   * @param email - The user's email address.
+   * @param password - The user's password.
+   * @param displayName - The user's display name.
+   * @param serverData - The user's server data.
+   * @param isAdmin - Whether the user is an admin or not.
+   * @returns The newly created user.
+   */
   async createUser(
     email: string,
     password: string,
@@ -30,6 +39,9 @@ export class UserService {
       displayName,
     );
 
+    // Set the custom claim for admin
+    await this.firebaseService.setAdminClaim(firebaseUser.uid, isAdmin);
+
     // Save user in MongoDB
     const createdUser = new this.userModel({
       firebaseUid: firebaseUser.uid,
@@ -42,7 +54,32 @@ export class UserService {
     return createdUser.save();
   }
 
+  // Method to update a user
   async updateUser(uid: string, updateData: any) {
+    const existingUser = await this.userModel.findOne({ firebaseUid: uid });
+
+    if (!existingUser) {
+      throw new Error('User not found');
+    }
+
+    const promises: Promise<any>[] = []; // Array to hold promises
+
+    // Check if isAdmin has changed, and update Firebase claims accordingly
+    if (
+      updateData.isAdmin !== undefined &&
+      updateData.isAdmin !== existingUser.isAdmin
+    ) {
+      promises.push(
+        this.firebaseService.setAdminClaim(uid, updateData.isAdmin),
+      );
+      promises.push(
+        this.userModel.updateOne(
+          { firebaseUid: uid },
+          { $set: { isAdmin: updateData.isAdmin } },
+        ),
+      );
+    }
+
     const updateOperations = [];
 
     if (updateData.serverData) {
@@ -85,7 +122,13 @@ export class UserService {
       await this.userModel.bulkWrite(updateOperations);
     }
 
-    return this.userModel.findOne({ firebaseUid: uid });
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+
+    const updatedUser = await this.userModel.findOne({ firebaseUid: uid });
+    // Return the updated user
+    return updatedUser;
   }
 
   async deleteUser(uid: string) {
