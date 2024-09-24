@@ -20,6 +20,8 @@ const auth_module_1 = require("./auth/auth.module");
 const serve_static_1 = require("@nestjs/serve-static");
 const path_1 = require("path");
 const email_schemas_1 = require("./email/schemas/email.schemas");
+const user_schema_1 = require("./user/schemas/user.schema");
+const user_module_1 = require("./user/user.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -48,9 +50,11 @@ exports.AppModule = AppModule = __decorate([
             mongoose_1.MongooseModule.forFeature([
                 { name: url_schema_1.Url.name, schema: url_schema_1.UrlSchema },
                 { name: email_schemas_1.Email.name, schema: email_schemas_1.EmailSchema },
+                { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
             ]),
             email_module_1.EmailModule,
             url_module_1.UrlModule,
+            user_module_1.UserModule,
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(__dirname, '..', 'public'),
             }),
