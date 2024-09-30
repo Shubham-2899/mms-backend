@@ -14,7 +14,7 @@ import { AdminAuthGuard } from 'src/auth/admin-auth.guard';
 
 @UseGuards(FirebaseAuthGuard)
 @UseGuards(AdminAuthGuard)
-@Controller('users')
+@Controller('/api/users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

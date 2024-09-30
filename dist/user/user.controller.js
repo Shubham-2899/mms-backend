@@ -76,7 +76,7 @@ __decorate([
 exports.UserController = UserController = __decorate([
     (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
     (0, common_1.UseGuards)(admin_auth_guard_1.AdminAuthGuard),
-    (0, common_1.Controller)('users'),
+    (0, common_1.Controller)('/api/users'),
     __metadata("design:paramtypes", [user_service_1.UserService])
 ], UserController);
 //# sourceMappingURL=user.controller.js.map
