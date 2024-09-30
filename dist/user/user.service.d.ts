@@ -30,9 +30,17 @@ export declare class UserService {
     private userModel;
     private firebaseService;
     constructor(userModel: Model<User>, firebaseService: FirebaseService);
-    getAllUsers(): Promise<(import("mongoose").Document<unknown, {}, User> & User & {
-        _id: import("mongoose").Types.ObjectId;
-    })[]>;
+    getAllUsers(): Promise<{
+        message: string;
+        success: boolean;
+        users: (import("mongoose").Document<unknown, {}, User> & User & {
+            _id: import("mongoose").Types.ObjectId;
+        })[];
+    } | {
+        message: any;
+        success: boolean;
+        users?: undefined;
+    }>;
     createUser(email: string, password: string, displayName: string, serverData: any, isAdmin: boolean): Promise<import("mongoose").Document<unknown, {}, User> & User & {
         _id: import("mongoose").Types.ObjectId;
     }>;
@@ -42,7 +50,15 @@ export declare class UserService {
     deleteUser(uid: string): Promise<import("mongoose").Document<unknown, {}, User> & User & {
         _id: import("mongoose").Types.ObjectId;
     }>;
-    findUserByUid(uid: string): Promise<import("mongoose").Document<unknown, {}, User> & User & {
-        _id: import("mongoose").Types.ObjectId;
+    findUserByUid(uid: string): Promise<{
+        message: string;
+        success: boolean;
+        user?: undefined;
+    } | {
+        message: string;
+        success: boolean;
+        user: import("mongoose").Document<unknown, {}, User> & User & {
+            _id: import("mongoose").Types.ObjectId;
+        };
     }>;
 }

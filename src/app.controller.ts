@@ -8,22 +8,26 @@ import { join } from 'path';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get(':shortId/*/*')
-  async getRedirectUrl(
-    @Res() response: Response,
-    @Ip() ip,
-    @Headers() headers: Record<string, string>,
-    @Param('shortId') shortId: string,
-  ) {
-    try {
-      return response.redirect(
-        await this.appService.getRedirectUrl(shortId, headers, ip),
-      );
-    } catch (e) {
-      console.log(e);
-    }
-    // return `User ID: ${shortId}`;
-  }
+  /**
+   * Not required as we are using different service for redirection
+   * but keeping it for future reference
+   */
+  // @Get(':shortId/*/*')
+  // async getRedirectUrl(
+  //   @Res() response: Response,
+  //   @Ip() ip,
+  //   @Headers() headers: Record<string, string>,
+  //   @Param('shortId') shortId: string,
+  // ) {
+  //   try {
+  //     return response.redirect(
+  //       await this.appService.getRedirectUrl(shortId, headers, ip),
+  //     );
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  //   // return `User ID: ${shortId}`;
+  // }
   @Get('/')
   getHomePage(): string {
     const htmlFilePath = join(__dirname, '..', 'public', 'index.html');

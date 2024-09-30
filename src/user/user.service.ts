@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { FirebaseService } from '../auth/firebase.service';
 import { User } from './schemas/user.schema';
-
 @Injectable()
 export class UserService {
   constructor(
@@ -13,7 +12,21 @@ export class UserService {
 
   // Method to get all users
   async getAllUsers() {
-    return this.userModel.find().exec();
+    // Get all users from MongoDB
+    try {
+      const users = await this.userModel.find().exec();
+      return {
+        message: 'All Users',
+        success: true,
+        users: users,
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        message: err.message,
+        success: false,
+      };
+    }
   }
 
   /**
@@ -140,6 +153,18 @@ export class UserService {
   }
 
   async findUserByUid(uid: string) {
-    return this.userModel.findOne({ firebaseUid: uid });
+    // Find user in MongoDB
+    const user = await this.userModel.findOne({ firebaseUid: uid });
+    if (!user) {
+      return {
+        message: 'User not found',
+        success: false,
+      };
+    }
+    return {
+      message: 'User Found',
+      success: true,
+      user: user,
+    };
   }
 }

@@ -24,7 +24,21 @@ let UserService = class UserService {
         this.firebaseService = firebaseService;
     }
     async getAllUsers() {
-        return this.userModel.find().exec();
+        try {
+            const users = await this.userModel.find().exec();
+            return {
+                message: 'All Users',
+                success: true,
+                users: users,
+            };
+        }
+        catch (err) {
+            console.log(err);
+            return {
+                message: err.message,
+                success: false,
+            };
+        }
     }
     async createUser(email, password, displayName, serverData, isAdmin) {
         const firebaseUser = await this.firebaseService.createUser(email, password, displayName);
@@ -95,7 +109,18 @@ let UserService = class UserService {
         return this.userModel.findOneAndDelete({ firebaseUid: uid });
     }
     async findUserByUid(uid) {
-        return this.userModel.findOne({ firebaseUid: uid });
+        const user = await this.userModel.findOne({ firebaseUid: uid });
+        if (!user) {
+            return {
+                message: 'User not found',
+                success: false,
+            };
+        }
+        return {
+            message: 'User Found',
+            success: true,
+            user: user,
+        };
     }
 };
 exports.UserService = UserService;

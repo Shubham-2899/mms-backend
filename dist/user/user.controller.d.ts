@@ -28,9 +28,17 @@ import { UserService } from './user.service';
 export declare class UserController {
     private readonly userService;
     constructor(userService: UserService);
-    getAllUsers(): Promise<(import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User> & import("./schemas/user.schema").User & {
-        _id: import("mongoose").Types.ObjectId;
-    })[]>;
+    getAllUsers(): Promise<{
+        message: string;
+        success: boolean;
+        users: (import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User> & import("./schemas/user.schema").User & {
+            _id: import("mongoose").Types.ObjectId;
+        })[];
+    } | {
+        message: any;
+        success: boolean;
+        users?: undefined;
+    }>;
     createUser(body: {
         email: string;
         password: string;
@@ -52,7 +60,15 @@ export declare class UserController {
     deleteUser(uid: string): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User> & import("./schemas/user.schema").User & {
         _id: import("mongoose").Types.ObjectId;
     }>;
-    findUser(uid: string): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User> & import("./schemas/user.schema").User & {
-        _id: import("mongoose").Types.ObjectId;
+    findUser(uid: string): Promise<{
+        message: string;
+        success: boolean;
+        user?: undefined;
+    } | {
+        message: string;
+        success: boolean;
+        user: import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User> & import("./schemas/user.schema").User & {
+            _id: import("mongoose").Types.ObjectId;
+        };
     }>;
 }
