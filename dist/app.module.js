@@ -45,6 +45,13 @@ exports.AppModule = AppModule = __decorate([
                         pass: `${process.env.ROOT_MAIL_USER_PASSWORD}`,
                     },
                     logger: true,
+                    debug: true,
+                    maxConnections: 5,
+                    maxMessages: 100,
+                    rateLimit: 10,
+                    connectionTimeout: 2 * 60 * 1000,
+                    greetingTimeout: 30 * 1000,
+                    socketTimeout: 5 * 60 * 1000,
                 },
             }),
             mongoose_1.MongooseModule.forFeature([

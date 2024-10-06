@@ -1,3 +1,4 @@
+//app.module.ts
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
@@ -24,18 +25,24 @@ import { UserModule } from './user/user.module';
     MailerModule.forRoot({
       transport: {
         host: `${process.env.MAILER_HOST}`,
-        pool: true,
-        secure: false,
+        pool: true, // Connection pooling enabled
+        secure: false, // Not using port 465
         port: 587,
         tls: {
-          rejectUnauthorized: false, // Disable TLS verification
+          rejectUnauthorized: false, // Disable TLS verification (consider setting to true in production)
         },
         auth: {
           user: `${process.env.ROOT_MAIL_USER}`,
           pass: `${process.env.ROOT_MAIL_USER_PASSWORD}`,
         },
-        logger: true,
-        // debug: true,
+        logger: true, // Log SMTP actions
+        // debug: true, // Enable debugging for troubleshooting
+        maxConnections: 5, // Max 5 connections at a time
+        maxMessages: 100, // Max 100 emails per connection
+        rateLimit: 10, // Max 10 emails per second
+        connectionTimeout: 2 * 60 * 1000, // 2 minutes connection timeout
+        greetingTimeout: 30 * 1000, // 30 seconds greeting timeout
+        socketTimeout: 5 * 60 * 1000, // 5 minutes socket timeout
       },
     }),
     MongooseModule.forFeature([
