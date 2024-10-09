@@ -16,6 +16,11 @@ import { join } from 'path';
 import { Email, EmailSchema } from './email/schemas/email.schemas';
 import { User, UserSchema } from './user/schemas/user.schema';
 import { UserModule } from './user/user.module';
+import {
+  EmailList,
+  EmailListSchema,
+} from './email_list/schemas/email_list.schemas';
+import { EmailListModule } from './email_list/email_list.module';
 
 @Module({
   imports: [
@@ -49,11 +54,13 @@ import { UserModule } from './user/user.module';
       { name: Url.name, schema: UrlSchema },
       { name: Email.name, schema: EmailSchema },
       { name: User.name, schema: UserSchema },
+      { name: EmailList.name, schema: EmailListSchema },
     ]),
     // AuthModule,
     EmailModule,
     UrlModule,
     UserModule,
+    EmailListModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
     }),

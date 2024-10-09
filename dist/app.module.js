@@ -22,6 +22,8 @@ const path_1 = require("path");
 const email_schemas_1 = require("./email/schemas/email.schemas");
 const user_schema_1 = require("./user/schemas/user.schema");
 const user_module_1 = require("./user/user.module");
+const email_list_schemas_1 = require("./email_list/schemas/email_list.schemas");
+const email_list_module_1 = require("./email_list/email_list.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -45,7 +47,6 @@ exports.AppModule = AppModule = __decorate([
                         pass: `${process.env.ROOT_MAIL_USER_PASSWORD}`,
                     },
                     logger: true,
-                    debug: true,
                     maxConnections: 5,
                     maxMessages: 100,
                     rateLimit: 10,
@@ -58,10 +59,12 @@ exports.AppModule = AppModule = __decorate([
                 { name: url_schema_1.Url.name, schema: url_schema_1.UrlSchema },
                 { name: email_schemas_1.Email.name, schema: email_schemas_1.EmailSchema },
                 { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+                { name: email_list_schemas_1.EmailList.name, schema: email_list_schemas_1.EmailListSchema },
             ]),
             email_module_1.EmailModule,
             url_module_1.UrlModule,
             user_module_1.UserModule,
+            email_list_module_1.EmailListModule,
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(__dirname, '..', 'public'),
             }),
