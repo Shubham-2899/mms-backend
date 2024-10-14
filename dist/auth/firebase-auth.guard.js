@@ -19,7 +19,6 @@ let FirebaseAuthGuard = class FirebaseAuthGuard {
     async canActivate(context) {
         const request = context.switchToHttp().getRequest();
         const token = request.headers.authorization?.split(' ')[1];
-        console.log('token:', token);
         if (!token) {
             return false;
         }

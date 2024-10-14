@@ -69,7 +69,7 @@ import { BullModule } from '@nestjs/bullmq';
       connection: {
         host: 'localhost',
         port: 6379,
-        // password: 'YourStrongPasswordHere',
+        password: `${process.env.REDIS_PASSWORD}`,
       },
     }),
 

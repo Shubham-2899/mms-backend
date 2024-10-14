@@ -50,6 +50,7 @@ exports.AppModule = AppModule = __decorate([
                 connection: {
                     host: 'localhost',
                     port: 6379,
+                    password: `${process.env.REDIS_PASSWORD}`,
                 },
             }),
             bullmq_1.BullModule.registerQueue({
