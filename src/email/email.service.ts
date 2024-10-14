@@ -1,5 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Email, EmailDocument } from './schemas/email.schemas';
@@ -8,63 +9,27 @@ import { CreateEmailDto } from './dto/create-email.dto';
 @Injectable()
 export class EmailService {
   constructor(
-    private readonly mailService: MailerService,
+    @InjectQueue('email-queue') private emailQueue: Queue, // Inject BullMQ Queue
     @InjectModel(Email.name) private emailModel: Model<EmailDocument>,
   ) {}
 
+  // This method now adds email jobs to the queue
   async create(createEmailDto: CreateEmailDto) {
     try {
-      await this.sendMail(createEmailDto);
-      return {
-        message: 'Emails processed and saved successfully',
+      const smtpConfig = {
+        host: 'mail.elitemarketpro.site',
+        user: 'admin@elitemarketpro.site',
+        password: 'adminMms@2899',
       };
+      // Add job to BullMQ queue
+      await this.emailQueue.add('send-email-job', {
+        ...createEmailDto,
+        smtpConfig,
+      });
+
+      return { message: 'Email job added to queue successfully' };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async sendMail(createEmailDto: CreateEmailDto) {
-    const {
-      from,
-      to: emailToUsers,
-      templateType,
-      mode,
-      fromName,
-      subject,
-    } = createEmailDto;
-    let { emailTemplate } = createEmailDto;
-
-    emailTemplate = decodeURIComponent(emailTemplate);
-
-    try {
-      for (const userEmail of emailToUsers) {
-        console.log(`Sending email to ${userEmail}`);
-
-        // Send the email
-        const info = await this.mailService.sendMail({
-          from: `${fromName} <${from}>`,
-          to: userEmail,
-          subject: subject,
-          html: templateType === 'html' ? emailTemplate : emailTemplate, // need to update this line
-        });
-        console.log('🚀 ~ EmailService ~ sendMail ~ info:', info);
-
-        // Save the email to the database after it is successfully sent
-        const emailRecord = new this.emailModel({
-          from: createEmailDto.from,
-          to: userEmail,
-          offerId: createEmailDto.offerId,
-          campaignId: createEmailDto.campaignId,
-          response: info.response,
-          sentAt: new Date(),
-        });
-        await emailRecord.save();
-      }
-    } catch (e) {
-      console.error(
-        `Failed to send email to one or more recipients: ${e.message}`,
-      );
-      throw new HttpException(e.message, HttpStatus.BAD_GATEWAY);
     }
   }
 }

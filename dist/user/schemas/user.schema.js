@@ -11,30 +11,24 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserSchema = exports.User = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
-class Instance {
+class serverInstance {
 }
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
-], Instance.prototype, "ip", void 0);
+], serverInstance.prototype, "ip", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true, enum: ['active', 'inactive'] }),
     __metadata("design:type", String)
-], Instance.prototype, "status", void 0);
+], serverInstance.prototype, "status", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", Boolean)
-], Instance.prototype, "isMainIp", void 0);
-class ServerData {
-}
+], serverInstance.prototype, "isMainIp", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
-], ServerData.prototype, "provider", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: [Instance], required: true }),
-    __metadata("design:type", Array)
-], ServerData.prototype, "instances", void 0);
+], serverInstance.prototype, "provider", void 0);
 let User = class User {
 };
 exports.User = User;
@@ -55,7 +49,7 @@ __decorate([
     __metadata("design:type", Date)
 ], User.prototype, "lastLoginAt", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: [ServerData], required: true }),
+    (0, mongoose_1.Prop)({ type: [serverInstance], required: true }),
     __metadata("design:type", Array)
 ], User.prototype, "serverData", void 0);
 __decorate([

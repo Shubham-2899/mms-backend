@@ -13,17 +13,24 @@ const email_service_1 = require("./email.service");
 const auth_module_1 = require("../auth/auth.module");
 const mongoose_1 = require("@nestjs/mongoose");
 const email_schemas_1 = require("./schemas/email.schemas");
+const bullmq_1 = require("@nestjs/bullmq");
+const email_processor_1 = require("./email.processor");
+const mailer_1 = require("@nestjs-modules/mailer");
 let EmailModule = class EmailModule {
 };
 exports.EmailModule = EmailModule;
 exports.EmailModule = EmailModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            mailer_1.MailerModule,
+            bullmq_1.BullModule.registerQueue({
+                name: 'email-queue',
+            }),
             auth_module_1.AuthModule,
             mongoose_1.MongooseModule.forFeature([{ name: email_schemas_1.Email.name, schema: email_schemas_1.EmailSchema }]),
         ],
         controllers: [email_controller_1.EmailController],
-        providers: [email_service_1.EmailService],
+        providers: [email_service_1.EmailService, email_processor_1.EmailProcessor],
     })
 ], EmailModule);
 //# sourceMappingURL=email.module.js.map

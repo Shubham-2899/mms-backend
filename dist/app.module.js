@@ -11,7 +11,6 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
-const mailer_1 = require("@nestjs-modules/mailer");
 const config_1 = require("@nestjs/config");
 const email_module_1 = require("./email/email.module");
 const url_module_1 = require("./url/url.module");
@@ -24,6 +23,7 @@ const user_schema_1 = require("./user/schemas/user.schema");
 const user_module_1 = require("./user/user.module");
 const email_list_schemas_1 = require("./email_list/schemas/email_list.schemas");
 const email_list_module_1 = require("./email_list/email_list.module");
+const bullmq_1 = require("@nestjs/bullmq");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -33,28 +33,6 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             config_1.ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
             mongoose_1.MongooseModule.forRoot(`${process.env.DB_CONNECTION_STRING}`),
-            mailer_1.MailerModule.forRoot({
-                transport: {
-                    host: `${process.env.MAILER_HOST}`,
-                    pool: true,
-                    secure: false,
-                    port: 587,
-                    tls: {
-                        rejectUnauthorized: false,
-                    },
-                    auth: {
-                        user: `${process.env.ROOT_MAIL_USER}`,
-                        pass: `${process.env.ROOT_MAIL_USER_PASSWORD}`,
-                    },
-                    logger: true,
-                    maxConnections: 5,
-                    maxMessages: 100,
-                    rateLimit: 10,
-                    connectionTimeout: 2 * 60 * 1000,
-                    greetingTimeout: 30 * 1000,
-                    socketTimeout: 5 * 60 * 1000,
-                },
-            }),
             mongoose_1.MongooseModule.forFeature([
                 { name: url_schema_1.Url.name, schema: url_schema_1.UrlSchema },
                 { name: email_schemas_1.Email.name, schema: email_schemas_1.EmailSchema },
@@ -67,6 +45,15 @@ exports.AppModule = AppModule = __decorate([
             email_list_module_1.EmailListModule,
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(__dirname, '..', 'public'),
+            }),
+            bullmq_1.BullModule.forRoot({
+                connection: {
+                    host: 'localhost',
+                    port: 6379,
+                },
+            }),
+            bullmq_1.BullModule.registerQueue({
+                name: 'email-queue',
             }),
         ],
         controllers: [app_controller_1.AppController],

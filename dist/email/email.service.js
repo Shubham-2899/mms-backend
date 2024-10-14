@@ -14,62 +14,40 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailService = void 0;
 const common_1 = require("@nestjs/common");
-const mailer_1 = require("@nestjs-modules/mailer");
+const bullmq_1 = require("@nestjs/bullmq");
+const bullmq_2 = require("bullmq");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const email_schemas_1 = require("./schemas/email.schemas");
 let EmailService = class EmailService {
-    constructor(mailService, emailModel) {
-        this.mailService = mailService;
+    constructor(emailQueue, emailModel) {
+        this.emailQueue = emailQueue;
         this.emailModel = emailModel;
     }
     async create(createEmailDto) {
         try {
-            await this.sendMail(createEmailDto);
-            return {
-                message: 'Emails processed and saved successfully',
+            const smtpConfig = {
+                host: 'mail.elitemarketpro.site',
+                user: 'admin@elitemarketpro.site',
+                password: 'adminMms@2899',
             };
+            await this.emailQueue.add('send-email-job', {
+                ...createEmailDto,
+                smtpConfig,
+            });
+            return { message: 'Email job added to queue successfully' };
         }
         catch (error) {
             throw new common_1.HttpException(error.message, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    async sendMail(createEmailDto) {
-        const { from, to: emailToUsers, templateType, mode, fromName, subject, } = createEmailDto;
-        let { emailTemplate } = createEmailDto;
-        emailTemplate = decodeURIComponent(emailTemplate);
-        try {
-            for (const userEmail of emailToUsers) {
-                console.log(`Sending email to ${userEmail}`);
-                const info = await this.mailService.sendMail({
-                    from: `${fromName} <${from}>`,
-                    to: userEmail,
-                    subject: subject,
-                    html: templateType === 'html' ? emailTemplate : emailTemplate,
-                });
-                console.log('🚀 ~ EmailService ~ sendMail ~ info:', info);
-                const emailRecord = new this.emailModel({
-                    from: createEmailDto.from,
-                    to: userEmail,
-                    offerId: createEmailDto.offerId,
-                    campaignId: createEmailDto.campaignId,
-                    response: info.response,
-                    sentAt: new Date(),
-                });
-                await emailRecord.save();
-            }
-        }
-        catch (e) {
-            console.error(`Failed to send email to one or more recipients: ${e.message}`);
-            throw new common_1.HttpException(e.message, common_1.HttpStatus.BAD_GATEWAY);
         }
     }
 };
 exports.EmailService = EmailService;
 exports.EmailService = EmailService = __decorate([
     (0, common_1.Injectable)(),
+    __param(0, (0, bullmq_1.InjectQueue)('email-queue')),
     __param(1, (0, mongoose_1.InjectModel)(email_schemas_1.Email.name)),
-    __metadata("design:paramtypes", [mailer_1.MailerService,
+    __metadata("design:paramtypes", [bullmq_2.Queue,
         mongoose_2.Model])
 ], EmailService);
 //# sourceMappingURL=email.service.js.map
