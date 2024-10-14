@@ -27,6 +27,7 @@ import { Document } from 'mongoose';
 export type UserDocument = User & Document;
 declare class serverInstance {
     ip: string;
+    host: string;
     status: string;
     isMainIp: boolean;
     provider: string;

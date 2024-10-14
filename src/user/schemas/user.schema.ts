@@ -3,24 +3,30 @@ import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
 
-class Instance {
+class serverInstance {
   @Prop({ required: true })
   ip: string;
+
+  @Prop()
+  host: string;
 
   @Prop({ required: true, enum: ['active', 'inactive'] })
   status: string;
 
   @Prop({ required: true })
   isMainIp: boolean;
-}
 
-class ServerData {
   @Prop({ required: true })
   provider: string;
-
-  @Prop({ type: [Instance], required: true })
-  instances: Instance[];
 }
+
+// class ServerData {
+//   @Prop({ required: true })
+//   provider: string;
+
+//   @Prop({ type: [Instance], required: true })
+//   instances: Instance[];
+// }
 
 @Schema()
 export class User {
@@ -36,8 +42,8 @@ export class User {
   @Prop({ type: Date, default: null })
   lastLoginAt: Date;
 
-  @Prop({ type: [ServerData], required: true })
-  serverData: ServerData[];
+  @Prop({ type: [serverInstance], required: true })
+  serverData: serverInstance[];
 
   @Prop({ required: true })
   isAdmin: boolean;

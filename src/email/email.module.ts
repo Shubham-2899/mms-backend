@@ -7,6 +7,7 @@ import { Email, EmailSchema } from './schemas/email.schemas';
 import { BullModule } from '@nestjs/bullmq';
 import { EmailProcessor } from './email.processor';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
       name: 'email-queue',
     }),
     AuthModule,
+    UserModule,
     MongooseModule.forFeature([{ name: Email.name, schema: EmailSchema }]),
   ],
   controllers: [EmailController],

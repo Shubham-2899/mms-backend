@@ -27,11 +27,16 @@ import { Queue } from 'bullmq';
 import { Model } from 'mongoose';
 import { EmailDocument } from './schemas/email.schemas';
 import { CreateEmailDto } from './dto/create-email.dto';
+import { FirebaseService } from 'src/auth/firebase.service';
+import { UserDocument } from 'src/user/schemas/user.schema';
 export declare class EmailService {
     private emailQueue;
     private emailModel;
-    constructor(emailQueue: Queue, emailModel: Model<EmailDocument>);
-    create(createEmailDto: CreateEmailDto): Promise<{
+    private userModel;
+    private firebaseService;
+    constructor(emailQueue: Queue, emailModel: Model<EmailDocument>, userModel: Model<UserDocument>, firebaseService: FirebaseService);
+    create(createEmailDto: CreateEmailDto, firebaseToken: string): Promise<{
         message: string;
     }>;
+    private fetchSmtpDetails;
 }

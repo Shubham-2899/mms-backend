@@ -36,7 +36,7 @@ let EmailProcessor = class EmailProcessor extends bullmq_1.WorkerHost {
             },
             auth: {
                 user: smtpConfig.user,
-                pass: smtpConfig.password,
+                pass: `${process.env.ROOT_MAIL_USER_PASSWORD}`,
             },
             logger: true,
             maxConnections: 5,

@@ -1,6 +1,5 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-// import { MailerService } from '@nestjs-modules/mailer';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as nodemailer from 'nodemailer';
@@ -8,7 +7,6 @@ import { Email, EmailDocument } from './schemas/email.schemas';
 @Processor('email-queue')
 export class EmailProcessor extends WorkerHost {
   constructor(
-    // private readonly mailService: MailerService,
     @InjectModel(Email.name) private emailModel: Model<EmailDocument>,
   ) {
     super();
@@ -39,7 +37,7 @@ export class EmailProcessor extends WorkerHost {
       },
       auth: {
         user: smtpConfig.user,
-        pass: smtpConfig.password,
+        pass: `${process.env.ROOT_MAIL_USER_PASSWORD}`,
       },
       logger: true, // Log SMTP actions
       // debug: true, // Enable debugging for troubleshooting

@@ -63,40 +63,8 @@ let UserService = class UserService {
             promises.push(this.firebaseService.setAdminClaim(uid, updateData.isAdmin));
             promises.push(this.userModel.updateOne({ firebaseUid: uid }, { $set: { isAdmin: updateData.isAdmin } }));
         }
-        const updateOperations = [];
         if (updateData.serverData) {
-            for (const server of updateData.serverData) {
-                updateOperations.push({
-                    updateOne: {
-                        filter: {
-                            firebaseUid: uid,
-                            'serverData.provider': server.provider,
-                        },
-                        update: {
-                            $push: {
-                                'serverData.$.instances': { $each: server.instances },
-                            },
-                        },
-                    },
-                });
-                updateOperations.push({
-                    updateOne: {
-                        filter: {
-                            firebaseUid: uid,
-                            'serverData.provider': { $ne: server.provider },
-                        },
-                        update: {
-                            $addToSet: {
-                                serverData: {
-                                    provider: server.provider,
-                                    instances: server.instances,
-                                },
-                            },
-                        },
-                    },
-                });
-            }
-            await this.userModel.bulkWrite(updateOperations);
+            await this.userModel.updateOne({ firebaseUid: uid }, { $set: { serverData: updateData.serverData } });
         }
         if (promises.length > 0) {
             await Promise.all(promises);

@@ -16,6 +16,7 @@ const email_schemas_1 = require("./schemas/email.schemas");
 const bullmq_1 = require("@nestjs/bullmq");
 const email_processor_1 = require("./email.processor");
 const mailer_1 = require("@nestjs-modules/mailer");
+const user_module_1 = require("../user/user.module");
 let EmailModule = class EmailModule {
 };
 exports.EmailModule = EmailModule;
@@ -27,6 +28,7 @@ exports.EmailModule = EmailModule = __decorate([
                 name: 'email-queue',
             }),
             auth_module_1.AuthModule,
+            user_module_1.UserModule,
             mongoose_1.MongooseModule.forFeature([{ name: email_schemas_1.Email.name, schema: email_schemas_1.EmailSchema }]),
         ],
         controllers: [email_controller_1.EmailController],

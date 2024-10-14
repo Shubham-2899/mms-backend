@@ -19,18 +19,20 @@ const bullmq_2 = require("bullmq");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const email_schemas_1 = require("./schemas/email.schemas");
+const firebase_service_1 = require("../auth/firebase.service");
+const user_schema_1 = require("../user/schemas/user.schema");
 let EmailService = class EmailService {
-    constructor(emailQueue, emailModel) {
+    constructor(emailQueue, emailModel, userModel, firebaseService) {
         this.emailQueue = emailQueue;
         this.emailModel = emailModel;
+        this.userModel = userModel;
+        this.firebaseService = firebaseService;
     }
-    async create(createEmailDto) {
+    async create(createEmailDto, firebaseToken) {
         try {
-            const smtpConfig = {
-                host: 'mail.elitemarketpro.site',
-                user: 'admin@elitemarketpro.site',
-                password: 'adminMms@2899',
-            };
+            const res = await this.firebaseService.verifyToken(firebaseToken);
+            console.log('🚀 ~ EmailService ~ create ~ res:', res);
+            const smtpConfig = await this.fetchSmtpDetails(res.uid);
             await this.emailQueue.add('send-email-job', {
                 ...createEmailDto,
                 smtpConfig,
@@ -38,7 +40,26 @@ let EmailService = class EmailService {
             return { message: 'Email job added to queue successfully' };
         }
         catch (error) {
+            console.log('🚀 ~ EmailService ~ create ~ error:', error);
             throw new common_1.HttpException(error.message, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async fetchSmtpDetails(userId) {
+        try {
+            const user = await this.userModel.findOne({ firebaseUid: userId });
+            if (!user) {
+                throw new Error('User not found');
+            }
+            const parts = user?.serverData?.[0].host.split('.');
+            const smtpConfig = {
+                host: user?.serverData?.[0].host,
+                ip: user?.serverData?.[0].ip,
+                user: `admin@${parts.slice(1).join('.')}`,
+            };
+            return smtpConfig;
+        }
+        catch (error) {
+            throw new common_1.HttpException('Failed to fetch SMTP details', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 };
@@ -47,7 +68,10 @@ exports.EmailService = EmailService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, bullmq_1.InjectQueue)('email-queue')),
     __param(1, (0, mongoose_1.InjectModel)(email_schemas_1.Email.name)),
+    __param(2, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
     __metadata("design:paramtypes", [bullmq_2.Queue,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        mongoose_2.Model,
+        firebase_service_1.FirebaseService])
 ], EmailService);
 //# sourceMappingURL=email.service.js.map

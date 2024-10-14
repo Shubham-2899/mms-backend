@@ -18,6 +18,10 @@ __decorate([
     __metadata("design:type", String)
 ], serverInstance.prototype, "ip", void 0);
 __decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], serverInstance.prototype, "host", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ required: true, enum: ['active', 'inactive'] }),
     __metadata("design:type", String)
 ], serverInstance.prototype, "status", void 0);
