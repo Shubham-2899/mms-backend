@@ -25,21 +25,19 @@
 /// <reference types="mongoose/types/inferrawdoctype" />
 import { Document } from 'mongoose';
 export type UserDocument = User & Document;
-declare class Instance {
+declare class serverInstance {
     ip: string;
+    host: string;
     status: string;
     isMainIp: boolean;
-}
-declare class ServerData {
     provider: string;
-    instances: Instance[];
 }
 export declare class User {
     firebaseUid: string;
     name: string;
     email: string;
     lastLoginAt: Date;
-    serverData: ServerData[];
+    serverData: serverInstance[];
     isAdmin: boolean;
 }
 export declare const UserSchema: import("mongoose").Schema<User, import("mongoose").Model<User, any, any, any, Document<unknown, any, User> & User & {

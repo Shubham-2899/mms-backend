@@ -1,70 +1,69 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Email, EmailDocument } from './schemas/email.schemas';
 import { CreateEmailDto } from './dto/create-email.dto';
-
+import { FirebaseService } from 'src/auth/firebase.service';
+import { User, UserDocument } from 'src/user/schemas/user.schema';
 @Injectable()
 export class EmailService {
   constructor(
-    private readonly mailService: MailerService,
+    @InjectQueue('email-queue') private emailQueue: Queue, // Inject BullMQ Queue
     @InjectModel(Email.name) private emailModel: Model<EmailDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>, // Inject User model
+    private firebaseService: FirebaseService, // Inject Firebase service
   ) {}
 
-  async create(createEmailDto: CreateEmailDto) {
+  // This method now adds email jobs to the queue
+  async create(createEmailDto: CreateEmailDto, firebaseToken: string) {
+    // console.log('🚀 ~ EmailService ~ create ~ firebaseToken:', firebaseToken);
     try {
-      await this.sendMail(createEmailDto);
-      return {
-        message: 'Emails processed and saved successfully',
-      };
+      // Verify Firebase token and retrieve user ID
+      const res = await this.firebaseService.verifyToken(firebaseToken);
+      console.log('🚀 ~ EmailService ~ create ~ res:', res);
+
+      // Fetch the SMTP details using the userId (uid)
+      const smtpConfig = await this.fetchSmtpDetails(res.uid);
+      // console.log('🚀 ~ EmailService ~ create ~ smtpConfig:', smtpConfig);
+
+      // Add job to BullMQ queue
+      await this.emailQueue.add('send-email-job', {
+        ...createEmailDto,
+        smtpConfig,
+      });
+
+      return { message: 'Email job added to queue successfully' };
     } catch (error) {
+      console.log('🚀 ~ EmailService ~ create ~ error:', error);
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  async sendMail(createEmailDto: CreateEmailDto) {
-    const {
-      from,
-      to: emailToUsers,
-      templateType,
-      mode,
-      fromName,
-      subject,
-    } = createEmailDto;
-    let { emailTemplate } = createEmailDto;
-
-    emailTemplate = decodeURIComponent(emailTemplate);
-
+  // Method to fetch SMTP details based on user ID
+  private async fetchSmtpDetails(userId: string): Promise<any> {
     try {
-      for (const userEmail of emailToUsers) {
-        console.log(`Sending email to ${userEmail}`);
+      const user = await this.userModel.findOne({ firebaseUid: userId });
 
-        // Send the email
-        const info = await this.mailService.sendMail({
-          from: `${fromName} <${from}>`,
-          to: userEmail,
-          subject: subject,
-          html: templateType === 'html' ? emailTemplate : emailTemplate, // need to update this line
-        });
-        console.log('🚀 ~ EmailService ~ sendMail ~ info:', info);
-
-        // Save the email to the database after it is successfully sent
-        const emailRecord = new this.emailModel({
-          from: createEmailDto.from,
-          to: userEmail,
-          offerId: createEmailDto.offerId,
-          campaignId: createEmailDto.campaignId,
-          response: info.response,
-          sentAt: new Date(),
-        });
-        await emailRecord.save();
+      if (!user) {
+        throw new Error('User not found');
       }
-    } catch (e) {
-      console.error(
-        `Failed to send email to one or more recipients: ${e.message}`,
+
+      const parts = user?.serverData?.[0].host.split('.');
+
+      const smtpConfig = {
+        host: user?.serverData?.[0].host,
+        ip: user?.serverData?.[0].ip,
+        user: `admin@${parts.slice(1).join('.')}`,
+      };
+
+      return smtpConfig;
+    } catch (error) {
+      throw new HttpException(
+        'Failed to fetch SMTP details',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
-      throw new HttpException(e.message, HttpStatus.BAD_GATEWAY);
     }
   }
 }

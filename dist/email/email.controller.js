@@ -21,17 +21,19 @@ let EmailController = class EmailController {
     constructor(emailService) {
         this.emailService = emailService;
     }
-    create(createEmailDto) {
-        return this.emailService.create(createEmailDto);
+    async create(createEmailDto, token) {
+        const firebaseToken = token.split(' ')[1];
+        return this.emailService.create(createEmailDto, firebaseToken);
     }
 };
 exports.EmailController = EmailController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Headers)('Authorization')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_email_dto_1.CreateEmailDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [create_email_dto_1.CreateEmailDto, String]),
+    __metadata("design:returntype", Promise)
 ], EmailController.prototype, "create", null);
 exports.EmailController = EmailController = __decorate([
     (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),

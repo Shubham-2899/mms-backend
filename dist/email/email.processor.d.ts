@@ -23,20 +23,12 @@
 /// <reference types="mongoose/types/virtuals" />
 /// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
-import { Queue } from 'bullmq';
+import { WorkerHost } from '@nestjs/bullmq';
+import { Job } from 'bullmq';
 import { Model } from 'mongoose';
 import { EmailDocument } from './schemas/email.schemas';
-import { CreateEmailDto } from './dto/create-email.dto';
-import { FirebaseService } from 'src/auth/firebase.service';
-import { UserDocument } from 'src/user/schemas/user.schema';
-export declare class EmailService {
-    private emailQueue;
+export declare class EmailProcessor extends WorkerHost {
     private emailModel;
-    private userModel;
-    private firebaseService;
-    constructor(emailQueue: Queue, emailModel: Model<EmailDocument>, userModel: Model<UserDocument>, firebaseService: FirebaseService);
-    create(createEmailDto: CreateEmailDto, firebaseToken: string): Promise<{
-        message: string;
-    }>;
-    private fetchSmtpDetails;
+    constructor(emailModel: Model<EmailDocument>);
+    process(job: Job<any>): Promise<void>;
 }

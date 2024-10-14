@@ -93,54 +93,21 @@ export class UserService {
       );
     }
 
-    const updateOperations = [];
-
+    // Update serverData if provided
     if (updateData.serverData) {
-      for (const server of updateData.serverData) {
-        // Add push operation for instances or set if provider is missing
-        updateOperations.push({
-          updateOne: {
-            filter: {
-              firebaseUid: uid,
-              'serverData.provider': server.provider,
-            },
-            update: {
-              $push: {
-                'serverData.$.instances': { $each: server.instances },
-              },
-            },
-          },
-        });
-
-        // Add to serverData if provider is not found
-        updateOperations.push({
-          updateOne: {
-            filter: {
-              firebaseUid: uid,
-              'serverData.provider': { $ne: server.provider },
-            },
-            update: {
-              $addToSet: {
-                serverData: {
-                  provider: server.provider,
-                  instances: server.instances,
-                },
-              },
-            },
-          },
-        });
-      }
-
-      // Execute all operations in bulk
-      await this.userModel.bulkWrite(updateOperations);
+      await this.userModel.updateOne(
+        { firebaseUid: uid },
+        { $set: { serverData: updateData.serverData } },
+      );
     }
 
+    // Resolve all promises (for isAdmin update and Firebase claim)
     if (promises.length > 0) {
       await Promise.all(promises);
     }
 
+    // Fetch and return the updated user
     const updatedUser = await this.userModel.findOne({ firebaseUid: uid });
-    // Return the updated user
     return updatedUser;
   }
 
