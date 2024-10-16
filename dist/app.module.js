@@ -24,6 +24,7 @@ const user_module_1 = require("./user/user.module");
 const email_list_schemas_1 = require("./email_list/schemas/email_list.schemas");
 const email_list_module_1 = require("./email_list/email_list.module");
 const bullmq_1 = require("@nestjs/bullmq");
+const bullmq_dashboard_module_1 = require("./bullmq-dashboard/bullmq-dashboard.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -56,6 +57,7 @@ exports.AppModule = AppModule = __decorate([
             bullmq_1.BullModule.registerQueue({
                 name: 'email-queue',
             }),
+            bullmq_dashboard_module_1.BullmqDashboardModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

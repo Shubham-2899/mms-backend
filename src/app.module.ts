@@ -22,6 +22,7 @@ import {
 } from './email_list/schemas/email_list.schemas';
 import { EmailListModule } from './email_list/email_list.module';
 import { BullModule } from '@nestjs/bullmq';
+import { BullmqDashboardModule } from './bullmq-dashboard/bullmq-dashboard.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { BullModule } from '@nestjs/bullmq';
     BullModule.registerQueue({
       name: 'email-queue',
     }),
+    BullmqDashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

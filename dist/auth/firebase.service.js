@@ -16,9 +16,11 @@ const path = require("path");
 let FirebaseService = class FirebaseService {
     constructor() {
         const serviceAccount = require(path.resolve(__dirname, '../../serviceAccountKey.json'));
-        this.firebaseApp = admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-        });
+        if (!admin.apps.length) {
+            this.firebaseApp = admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+            });
+        }
     }
     async verifyToken(idToken) {
         return this.firebaseApp.auth().verifyIdToken(idToken);

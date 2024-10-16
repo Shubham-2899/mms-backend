@@ -13,9 +13,11 @@ export class FirebaseService {
       path.resolve(__dirname, '../../serviceAccountKey.json'),
     );
 
-    this.firebaseApp = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
+    if (!admin.apps.length) {
+      this.firebaseApp = admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    }
   }
 
   async verifyToken(idToken: string) {
