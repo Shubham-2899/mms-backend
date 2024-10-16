@@ -66,7 +66,7 @@ export class BullmqDashboardService implements OnModuleInit {
         return res.status(401).send('Unauthorized');
       }
 
-      const token = authHeader.split(' ')[1]; // Assuming "Bearer <token>
+      const token = authHeader.split(' ')[1];
 
       // const decodedToken = await this.firebaseService.verifyToken(token);
       const decodedToken = { admin: true };
