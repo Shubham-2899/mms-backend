@@ -38,12 +38,9 @@ let EmailListController = class EmailListController {
         }
         const filePath = path.join(__dirname, '../../uploads', file.filename);
         try {
-            await this.emailListService.addEmailsFromCSVFile(filePath);
+            const res = await this.emailListService.addEmailsFromCSVFile(filePath);
             fs.unlinkSync(filePath);
-            return {
-                message: 'Emails added successfully from CSV.',
-                success: true,
-            };
+            return res;
         }
         catch (error) {
             console.log('🚀 ~ EmailListController ~ uploadCSV ~ error.message:', error.message);

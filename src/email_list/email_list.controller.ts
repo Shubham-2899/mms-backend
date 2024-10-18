@@ -64,15 +64,12 @@ export class EmailListController {
 
     try {
       // Process the CSV file (this can throw errors if invalid)
-      await this.emailListService.addEmailsFromCSVFile(filePath);
+      const res = await this.emailListService.addEmailsFromCSVFile(filePath);
 
       // Remove the file after processing
       fs.unlinkSync(filePath);
 
-      return {
-        message: 'Emails added successfully from CSV.',
-        success: true,
-      };
+      return res;
     } catch (error) {
       // Clean up the file if there was an error during processing
       console.log(

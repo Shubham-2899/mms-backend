@@ -28,6 +28,7 @@ import { EmailListDocument } from './schemas/email_list.schemas';
 export declare class EmailListService {
     private emailListModel;
     constructor(emailListModel: Model<EmailListDocument>);
+    private emailRegex;
     addEmails(emailArray: string[]): Promise<any>;
     addEmailsFromCSVFile(filePath: string): Promise<void>;
 }

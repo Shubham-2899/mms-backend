@@ -12,17 +12,42 @@ export class EmailListService {
     private emailListModel: Model<EmailListDocument>,
   ) {}
 
+  // Regular expression for email validation
+  private emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
   // Add emails via array
   async addEmails(emailArray: string[]): Promise<any> {
     try {
-      const emailDocs = emailArray.map((email) => ({ email }));
-      await this.emailListModel.insertMany(emailDocs, { ordered: false });
+      // Filter out invalid emails
+      const validEmails = emailArray.filter((email) =>
+        this.emailRegex.test(email),
+      );
+
+      // If no valid emails, throw an error
+      if (!validEmails.length) {
+        throw new BadRequestException('No valid emails provided.');
+      }
+
+      // Prepare bulk operations for valid emails
+      const bulkOps = validEmails.map((email) => ({
+        updateOne: {
+          filter: { email }, // Check if the email already exists
+          update: { $setOnInsert: { email } }, // Insert only if it doesn't exist
+          upsert: true, // Ensures new emails are added, existing ones are ignored
+        },
+      }));
+
+      // Perform bulkWrite operation
+      const result = await this.emailListModel.bulkWrite(bulkOps);
+
       return {
-        message: 'Emails added successfully.',
+        message: 'Emails processed successfully.',
         success: true,
+        insertedCount: result.upsertedCount,
+        modifiedCount: result.modifiedCount,
       };
     } catch (err) {
-      console.log('error while adding emails:', err.message);
+      console.log('Error while processing emails:', err.message);
       return {
         message: err.message,
         success: false,
