@@ -6,12 +6,14 @@ export declare class EmailController {
     create(createEmailDto: CreateEmailDto, token: string): Promise<{
         message: string;
         success: boolean;
+        failedEmails: any[];
         emailSent: number;
         jobId?: undefined;
     } | {
         message: string;
         success: boolean;
         jobId: string;
+        failedEmails?: undefined;
         emailSent?: undefined;
     }>;
 }

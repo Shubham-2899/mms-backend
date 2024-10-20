@@ -38,6 +38,10 @@ __decorate([
     (0, mongoose_1.Prop)({ default: Date.now }),
     __metadata("design:type", Date)
 ], Email.prototype, "sentAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 'test' }),
+    __metadata("design:type", String)
+], Email.prototype, "mode", void 0);
 exports.Email = Email = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Email);

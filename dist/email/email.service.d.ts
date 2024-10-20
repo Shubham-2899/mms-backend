@@ -38,12 +38,14 @@ export declare class EmailService {
     create(createEmailDto: CreateEmailDto, firebaseToken: string): Promise<{
         message: string;
         success: boolean;
+        failedEmails: any[];
         emailSent: number;
         jobId?: undefined;
     } | {
         message: string;
         success: boolean;
         jobId: string;
+        failedEmails?: undefined;
         emailSent?: undefined;
     }>;
     private fetchSmtpDetails;

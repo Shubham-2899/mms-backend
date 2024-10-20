@@ -32,6 +32,7 @@ export declare class Email {
     offerId: string;
     campaignId: string;
     sentAt: Date;
+    mode: string;
 }
 export declare const EmailSchema: import("mongoose").Schema<Email, import("mongoose").Model<Email, any, any, any, Document<unknown, any, Email> & Email & {
     _id: import("mongoose").Types.ObjectId;

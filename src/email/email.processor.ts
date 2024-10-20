@@ -23,6 +23,7 @@ export class EmailProcessor extends WorkerHost {
       emailTemplate,
       offerId,
       campaignId,
+      mode,
       smtpConfig,
     } = job.data;
     console.log('🚀 ~ EmailProcessor ~ process ~ smtpConfig:', smtpConfig);
@@ -50,34 +51,49 @@ export class EmailProcessor extends WorkerHost {
     //   socketTimeout: 5 * 60 * 1000, // 5 minutes socket timeout
     // });
 
-    const transporter = createTransporter(smtpConfig);
-
     try {
+      const transporter = createTransporter(smtpConfig);
       emailTemplate = decodeURIComponent(emailTemplate);
+
       for (const userEmail of to) {
-        console.log(`Sending email to ${userEmail}`);
+        try {
+          console.log(`Sending email to ${userEmail}`);
+          // Send the email using user's SMTP configuration
+          const info = await transporter.sendMail({
+            from: `${fromName} <${from}>`,
+            to: userEmail,
+            subject: subject,
+            html: templateType === 'html' ? emailTemplate : emailTemplate,
+          });
 
-        // Send the email using user's SMTP configuration
-        const info = await transporter.sendMail({
-          from: `${fromName} <${from}>`,
-          to: userEmail,
-          subject: subject,
-          html: templateType === 'html' ? emailTemplate : emailTemplate,
-        });
+          console.log('Email sent:', info.response);
 
-        console.log('Email sent:', info.response);
+          // Save email to database
+          const emailRecord = new this.emailModel({
+            from: from,
+            to: userEmail,
+            offerId: offerId,
+            campaignId: campaignId,
+            response: info.response,
+            sentAt: new Date(),
+            mode: mode,
+          });
 
-        // Save email to database
-        const emailRecord = new this.emailModel({
-          from: from,
-          to: userEmail,
-          offerId: offerId,
-          campaignId: campaignId,
-          response: info.response,
-          sentAt: new Date(),
-        });
-
-        await emailRecord.save();
+          await emailRecord.save();
+        } catch (e) {
+          console.error(`Failed to send email to ${userEmail}: ${e.message}`);
+          // Optionally save failed email attempts with a status or error message
+          const emailRecord = new this.emailModel({
+            from: from,
+            to: userEmail,
+            offerId: offerId,
+            campaignId: campaignId,
+            response: `Failed: ${e.message}`,
+            sentAt: new Date(),
+            mode: mode,
+          });
+          await emailRecord.save();
+        }
       }
     } catch (e) {
       console.error(`Failed to send email: ${e.message}`);

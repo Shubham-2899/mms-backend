@@ -38,8 +38,9 @@ let EmailService = class EmailService {
                 let { from, to, templateType, fromName, subject, emailTemplate, offerId, campaignId, } = createEmailDto;
                 const transporter = (0, mailer_util_1.createTransporter)(smtpConfig);
                 emailTemplate = decodeURIComponent(emailTemplate);
-                try {
-                    for (const userEmail of to) {
+                const failedEmails = [];
+                for (const userEmail of to) {
+                    try {
                         console.log(`Sending email to ${userEmail}`);
                         const info = await transporter.sendMail({
                             from: `${fromName} <${from}>`,
@@ -55,22 +56,41 @@ let EmailService = class EmailService {
                             campaignId: campaignId,
                             response: info.response,
                             sentAt: new Date(),
+                            mode: 'test',
                         });
                         await emailRecord.save();
                     }
-                    return {
-                        message: 'Emails processed successfully.',
-                        success: true,
-                        emailSent: to.length,
-                    };
+                    catch (e) {
+                        console.error(`Failed to send email to ${userEmail}: ${e.message}`);
+                        failedEmails.push(userEmail);
+                        const emailRecord = new this.emailModel({
+                            from: from,
+                            to: userEmail,
+                            offerId: offerId,
+                            campaignId: campaignId,
+                            response: `Failed: ${e.message}`,
+                            sentAt: new Date(),
+                            mode: 'test',
+                        });
+                        await emailRecord.save();
+                    }
                 }
-                catch (e) {
-                    console.error(`Failed to send email: ${e.message}`);
-                    throw new Error(e.message);
-                }
+                const success = failedEmails.length === 0;
+                const message = success
+                    ? 'Emails processed successfully'
+                    : `Emails processed successfully, with some failures.`;
+                return {
+                    message: message,
+                    success: success,
+                    failedEmails,
+                    emailSent: to.length - failedEmails.length,
+                };
             }
             else {
                 console.log('inside bulk mode');
+                if (createEmailDto.to.length === 0) {
+                    throw new Error('No recipient found');
+                }
                 const res = await this.emailQueue.add('send-email-job', {
                     ...createEmailDto,
                     smtpConfig,

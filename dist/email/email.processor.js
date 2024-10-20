@@ -24,29 +24,45 @@ let EmailProcessor = class EmailProcessor extends bullmq_1.WorkerHost {
         this.emailModel = emailModel;
     }
     async process(job) {
-        let { from, to, templateType, fromName, subject, emailTemplate, offerId, campaignId, smtpConfig, } = job.data;
+        let { from, to, templateType, fromName, subject, emailTemplate, offerId, campaignId, mode, smtpConfig, } = job.data;
         console.log('🚀 ~ EmailProcessor ~ process ~ smtpConfig:', smtpConfig);
-        const transporter = (0, mailer_util_1.createTransporter)(smtpConfig);
         try {
+            const transporter = (0, mailer_util_1.createTransporter)(smtpConfig);
             emailTemplate = decodeURIComponent(emailTemplate);
             for (const userEmail of to) {
-                console.log(`Sending email to ${userEmail}`);
-                const info = await transporter.sendMail({
-                    from: `${fromName} <${from}>`,
-                    to: userEmail,
-                    subject: subject,
-                    html: templateType === 'html' ? emailTemplate : emailTemplate,
-                });
-                console.log('Email sent:', info.response);
-                const emailRecord = new this.emailModel({
-                    from: from,
-                    to: userEmail,
-                    offerId: offerId,
-                    campaignId: campaignId,
-                    response: info.response,
-                    sentAt: new Date(),
-                });
-                await emailRecord.save();
+                try {
+                    console.log(`Sending email to ${userEmail}`);
+                    const info = await transporter.sendMail({
+                        from: `${fromName} <${from}>`,
+                        to: userEmail,
+                        subject: subject,
+                        html: templateType === 'html' ? emailTemplate : emailTemplate,
+                    });
+                    console.log('Email sent:', info.response);
+                    const emailRecord = new this.emailModel({
+                        from: from,
+                        to: userEmail,
+                        offerId: offerId,
+                        campaignId: campaignId,
+                        response: info.response,
+                        sentAt: new Date(),
+                        mode: mode,
+                    });
+                    await emailRecord.save();
+                }
+                catch (e) {
+                    console.error(`Failed to send email to ${userEmail}: ${e.message}`);
+                    const emailRecord = new this.emailModel({
+                        from: from,
+                        to: userEmail,
+                        offerId: offerId,
+                        campaignId: campaignId,
+                        response: `Failed: ${e.message}`,
+                        sentAt: new Date(),
+                        mode: mode,
+                    });
+                    await emailRecord.save();
+                }
             }
         }
         catch (e) {

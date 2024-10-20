@@ -22,6 +22,9 @@ export class Email {
 
   @Prop({ default: Date.now })
   sentAt: Date;
+
+  @Prop({ default: 'test' })
+  mode: string;
 }
 
 export const EmailSchema = SchemaFactory.createForClass(Email);

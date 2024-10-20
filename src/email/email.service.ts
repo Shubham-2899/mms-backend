@@ -44,11 +44,11 @@ export class EmailService {
         const transporter = createTransporter(smtpConfig);
         emailTemplate = decodeURIComponent(emailTemplate);
 
-        try {
-          for (const userEmail of to) {
+        const failedEmails = [];
+        for (const userEmail of to) {
+          try {
             console.log(`Sending email to ${userEmail}`);
 
-            // Send the email using user's SMTP configuration
             const info = await transporter.sendMail({
               from: `${fromName} <${from}>`,
               to: userEmail,
@@ -58,7 +58,6 @@ export class EmailService {
 
             console.log('Email sent:', info.response);
 
-            // Save email to database
             const emailRecord = new this.emailModel({
               from: from,
               to: userEmail,
@@ -66,23 +65,42 @@ export class EmailService {
               campaignId: campaignId,
               response: info.response,
               sentAt: new Date(),
+              mode: 'test',
             });
 
             await emailRecord.save();
+          } catch (e) {
+            console.error(`Failed to send email to ${userEmail}: ${e.message}`);
+            failedEmails.push(userEmail);
+            const emailRecord = new this.emailModel({
+              from: from,
+              to: userEmail,
+              offerId: offerId,
+              campaignId: campaignId,
+              response: `Failed: ${e.message}`,
+              sentAt: new Date(),
+              mode: 'test',
+            });
+            await emailRecord.save();
           }
-
-          return {
-            message: 'Emails processed successfully.',
-            success: true,
-            emailSent: to.length,
-          };
-        } catch (e) {
-          console.error(`Failed to send email: ${e.message}`);
-          throw new Error(e.message);
         }
+
+        const success = failedEmails.length === 0;
+        const message = success
+          ? 'Emails processed successfully'
+          : `Emails processed successfully, with some failures.`;
+        return {
+          message: message,
+          success: success,
+          failedEmails,
+          emailSent: to.length - failedEmails.length,
+        };
       } else {
         console.log('inside bulk mode');
         // Add job to BullMQ queue
+        if (createEmailDto.to.length === 0) {
+          throw new Error('No recipient found');
+        }
         const res = await this.emailQueue.add('send-email-job', {
           ...createEmailDto,
           smtpConfig,
