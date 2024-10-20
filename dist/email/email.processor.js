@@ -16,8 +16,8 @@ exports.EmailProcessor = void 0;
 const bullmq_1 = require("@nestjs/bullmq");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
-const nodemailer = require("nodemailer");
 const email_schemas_1 = require("./schemas/email.schemas");
+const mailer_util_1 = require("./mailer.util");
 let EmailProcessor = class EmailProcessor extends bullmq_1.WorkerHost {
     constructor(emailModel) {
         super();
@@ -26,30 +26,11 @@ let EmailProcessor = class EmailProcessor extends bullmq_1.WorkerHost {
     async process(job) {
         let { from, to, templateType, fromName, subject, emailTemplate, offerId, campaignId, smtpConfig, } = job.data;
         console.log('🚀 ~ EmailProcessor ~ process ~ smtpConfig:', smtpConfig);
-        const transporter = nodemailer.createTransport({
-            host: smtpConfig.host,
-            pool: true,
-            secure: false,
-            port: 587,
-            tls: {
-                rejectUnauthorized: false,
-            },
-            auth: {
-                user: smtpConfig.user,
-                pass: `${process.env.ROOT_MAIL_USER_PASSWORD}`,
-            },
-            logger: true,
-            maxConnections: 5,
-            maxMessages: 100,
-            rateLimit: 10,
-            connectionTimeout: 2 * 60 * 1000,
-            greetingTimeout: 30 * 1000,
-            socketTimeout: 5 * 60 * 1000,
-        });
+        const transporter = (0, mailer_util_1.createTransporter)(smtpConfig);
         try {
+            emailTemplate = decodeURIComponent(emailTemplate);
             for (const userEmail of to) {
                 console.log(`Sending email to ${userEmail}`);
-                emailTemplate = decodeURIComponent(emailTemplate);
                 const info = await transporter.sendMail({
                     from: `${fromName} <${from}>`,
                     to: userEmail,

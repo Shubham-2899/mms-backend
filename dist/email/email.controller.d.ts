@@ -5,5 +5,13 @@ export declare class EmailController {
     constructor(emailService: EmailService);
     create(createEmailDto: CreateEmailDto, token: string): Promise<{
         message: string;
+        success: boolean;
+        emailSent: number;
+        jobId?: undefined;
+    } | {
+        message: string;
+        success: boolean;
+        jobId: string;
+        emailSent?: undefined;
     }>;
 }

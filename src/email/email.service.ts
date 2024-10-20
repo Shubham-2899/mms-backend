@@ -7,6 +7,7 @@ import { Email, EmailDocument } from './schemas/email.schemas';
 import { CreateEmailDto } from './dto/create-email.dto';
 import { FirebaseService } from 'src/auth/firebase.service';
 import { User, UserDocument } from 'src/user/schemas/user.schema';
+import { createTransporter } from './mailer.util';
 @Injectable()
 export class EmailService {
   constructor(
@@ -22,19 +23,78 @@ export class EmailService {
     try {
       // Verify Firebase token and retrieve user ID
       const res = await this.firebaseService.verifyToken(firebaseToken);
-      console.log('🚀 ~ EmailService ~ create ~ res:', res);
+      // console.log('🚀 ~ EmailService ~ create ~ res:', res);
 
       // Fetch the SMTP details using the userId (uid)
       const smtpConfig = await this.fetchSmtpDetails(res.uid);
       // console.log('🚀 ~ EmailService ~ create ~ smtpConfig:', smtpConfig);
 
-      // Add job to BullMQ queue
-      await this.emailQueue.add('send-email-job', {
-        ...createEmailDto,
-        smtpConfig,
-      });
+      if (createEmailDto.mode === 'test') {
+        console.log('inside the test mode');
+        let {
+          from,
+          to,
+          templateType,
+          fromName,
+          subject,
+          emailTemplate,
+          offerId,
+          campaignId,
+        } = createEmailDto;
+        const transporter = createTransporter(smtpConfig);
+        emailTemplate = decodeURIComponent(emailTemplate);
 
-      return { message: 'Email job added to queue successfully' };
+        try {
+          for (const userEmail of to) {
+            console.log(`Sending email to ${userEmail}`);
+
+            // Send the email using user's SMTP configuration
+            const info = await transporter.sendMail({
+              from: `${fromName} <${from}>`,
+              to: userEmail,
+              subject: subject,
+              html: templateType === 'html' ? emailTemplate : emailTemplate,
+            });
+
+            console.log('Email sent:', info.response);
+
+            // Save email to database
+            const emailRecord = new this.emailModel({
+              from: from,
+              to: userEmail,
+              offerId: offerId,
+              campaignId: campaignId,
+              response: info.response,
+              sentAt: new Date(),
+            });
+
+            await emailRecord.save();
+          }
+
+          return {
+            message: 'Emails processed successfully.',
+            success: true,
+            emailSent: to.length,
+          };
+        } catch (e) {
+          console.error(`Failed to send email: ${e.message}`);
+          throw new Error(e.message);
+        }
+      } else {
+        console.log('inside bulk mode');
+        // Add job to BullMQ queue
+        const res = await this.emailQueue.add('send-email-job', {
+          ...createEmailDto,
+          smtpConfig,
+        });
+        // console.log('🚀 ~ EmailService ~ create ~ res:', res);
+
+        return {
+          message: 'Email job added to queue successfully',
+          success: true,
+          jobId: res.id,
+        };
+      }
     } catch (error) {
       console.log('🚀 ~ EmailService ~ create ~ error:', error);
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);

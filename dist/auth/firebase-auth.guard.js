@@ -24,7 +24,6 @@ let FirebaseAuthGuard = class FirebaseAuthGuard {
         }
         try {
             const decodedToken = await this.firebaseService.verifyToken(token);
-            console.log('decodedToken:', decodedToken);
             request.user = decodedToken;
             return true;
         }

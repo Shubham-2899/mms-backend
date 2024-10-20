@@ -37,6 +37,14 @@ export declare class EmailService {
     constructor(emailQueue: Queue, emailModel: Model<EmailDocument>, userModel: Model<UserDocument>, firebaseService: FirebaseService);
     create(createEmailDto: CreateEmailDto, firebaseToken: string): Promise<{
         message: string;
+        success: boolean;
+        emailSent: number;
+        jobId?: undefined;
+    } | {
+        message: string;
+        success: boolean;
+        jobId: string;
+        emailSent?: undefined;
     }>;
     private fetchSmtpDetails;
 }

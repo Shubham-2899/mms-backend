@@ -52,7 +52,6 @@ let BullmqDashboardService = class BullmqDashboardService {
             }
             const token = authHeader.split(' ')[1];
             const decodedToken = { admin: true };
-            console.log('🚀 ~ BullmqDashboardService ~ bindMiddleware ~ decodedToken:', decodedToken);
             const isAdmin = decodedToken.admin === true;
             if (!isAdmin) {
                 return res.status(403).send('Forbidden');

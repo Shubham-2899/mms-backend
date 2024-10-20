@@ -71,10 +71,10 @@ export class BullmqDashboardService implements OnModuleInit {
       // const decodedToken = await this.firebaseService.verifyToken(token);
       const decodedToken = { admin: true };
 
-      console.log(
-        '🚀 ~ BullmqDashboardService ~ bindMiddleware ~ decodedToken:',
-        decodedToken,
-      );
+      // console.log(
+      //   '🚀 ~ BullmqDashboardService ~ bindMiddleware ~ decodedToken:',
+      //   decodedToken,
+      // );
 
       // Implement your admin check logic based on decodedToken
       const isAdmin = decodedToken.admin === true; // Example check
