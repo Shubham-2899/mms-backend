@@ -43,7 +43,7 @@ let UrlService = class UrlService {
         const finalLongString2 = `${part2}${randomString2}`;
         const createdUrl = new this.urlModel({
             shortId: shortID,
-            redirectURL: body.url,
+            redirectURL: body.url.trim(),
             domain: body.domain,
             offerId: body.offerId,
             campaignId: body.campaignId,
