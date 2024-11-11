@@ -8,4 +8,5 @@ export declare class CreateEmailDto {
     mode: string;
     offerId: string;
     campaignId: string;
+    selectedIp: string;
 }

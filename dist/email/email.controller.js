@@ -25,19 +25,30 @@ let EmailController = class EmailController {
         const firebaseToken = token.split(' ')[1];
         return this.emailService.create(createEmailDto, firebaseToken);
     }
+    async getAvailableIps(token) {
+        const firebaseToken = token.split(' ')[1];
+        return this.emailService.getAvailableIps(firebaseToken);
+    }
 };
 exports.EmailController = EmailController;
 __decorate([
-    (0, common_1.Post)(),
+    (0, common_1.Post)('sendemail'),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Headers)('Authorization')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_email_dto_1.CreateEmailDto, String]),
     __metadata("design:returntype", Promise)
 ], EmailController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)('/availableIps'),
+    __param(0, (0, common_1.Headers)('Authorization')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], EmailController.prototype, "getAvailableIps", null);
 exports.EmailController = EmailController = __decorate([
     (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
-    (0, common_1.Controller)('/api/sendemail'),
+    (0, common_1.Controller)('/api'),
     __metadata("design:paramtypes", [email_service_1.EmailService])
 ], EmailController);
 //# sourceMappingURL=email.controller.js.map

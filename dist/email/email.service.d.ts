@@ -49,4 +49,5 @@ export declare class EmailService {
         emailSent?: undefined;
     }>;
     private fetchSmtpDetails;
+    getAvailableIps(firebaseToken: string): Promise<any>;
 }

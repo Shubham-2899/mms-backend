@@ -16,6 +16,7 @@ exports.UrlController = void 0;
 const common_1 = require("@nestjs/common");
 const url_service_1 = require("./url.service");
 const create_url_dto_1 = require("./dto/create-url.dto");
+const firebase_auth_guard_1 = require("../auth/firebase-auth.guard");
 let UrlController = class UrlController {
     constructor(urlService) {
         this.urlService = urlService;
@@ -46,6 +47,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UrlController.prototype, "getReports", null);
 exports.UrlController = UrlController = __decorate([
+    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
     (0, common_1.Controller)('/api/url'),
     __metadata("design:paramtypes", [url_service_1.UrlService])
 ], UrlController);

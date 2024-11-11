@@ -16,4 +16,5 @@ export declare class EmailController {
         failedEmails?: undefined;
         emailSent?: undefined;
     }>;
+    getAvailableIps(token: string): Promise<any>;
 }

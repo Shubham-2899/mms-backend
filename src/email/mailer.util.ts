@@ -11,7 +11,7 @@ interface SendMailOptions {
 
 export const createTransporter = (smtpConfig: {
   user: string;
-  pass: string;
+  // pass: string;
   host: string;
 }) => {
   console.log('inside util createTransporter');

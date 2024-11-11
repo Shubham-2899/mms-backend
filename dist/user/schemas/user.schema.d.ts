@@ -25,11 +25,15 @@
 /// <reference types="mongoose/types/inferrawdoctype" />
 import { Document } from 'mongoose';
 export type UserDocument = User & Document;
-declare class serverInstance {
+declare class ip {
     ip: string;
+    isMainIp: boolean;
+    wentSpam: boolean;
+}
+declare class serverInstance {
+    availableIps: ip[];
     host: string;
     status: string;
-    isMainIp: boolean;
     provider: string;
 }
 export declare class User {

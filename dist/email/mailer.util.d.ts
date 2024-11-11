@@ -8,7 +8,6 @@ interface SendMailOptions {
 }
 export declare const createTransporter: (smtpConfig: {
     user: string;
-    pass: string;
     host: string;
 }) => nodemailer.Transporter<import("nodemailer/lib/smtp-pool").SentMessageInfo>;
 export declare const sendEmail: (transporter: nodemailer.Transporter, options: SendMailOptions) => Promise<any>;
