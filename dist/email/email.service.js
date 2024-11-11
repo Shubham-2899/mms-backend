@@ -32,21 +32,33 @@ let EmailService = class EmailService {
     async create(createEmailDto, firebaseToken) {
         try {
             const res = await this.firebaseService.verifyToken(firebaseToken);
-            const smtpConfig = await this.fetchSmtpDetails(res.uid);
+            const serverData = await this.fetchSmtpDetails(res.uid);
+            const domain = createEmailDto.selectedIp?.split("-")[0]?.trim();
+            const ip = createEmailDto.selectedIp?.split("-")[1]?.trim();
+            const smtpConfig = {
+                host: `mail.${domain}`,
+                user: `admin@${domain}`,
+            };
             if (createEmailDto.mode === 'test') {
                 console.log('inside the test mode');
-                let { from, to, templateType, fromName, subject, emailTemplate, offerId, campaignId, } = createEmailDto;
+                let { from, to, templateType, fromName, subject, emailTemplate, offerId, campaignId, selectedIp, } = createEmailDto;
                 const transporter = (0, mailer_util_1.createTransporter)(smtpConfig);
+                console.log('🚀 ~ EmailService ~ create ~ smtpConfig:', smtpConfig);
                 emailTemplate = decodeURIComponent(emailTemplate);
+                const headers = {
+                    'X-Outgoing-IP': ip,
+                };
                 const failedEmails = [];
                 for (const userEmail of to) {
                     try {
                         console.log(`Sending email to ${userEmail}`);
+                        console.log('🚀 ~ EmailService ~ create ~ headers:', headers);
                         const info = await transporter.sendMail({
                             from: `${fromName} <${from}>`,
                             to: userEmail,
                             subject: subject,
                             html: templateType === 'html' ? emailTemplate : emailTemplate,
+                            headers,
                         });
                         console.log('Email sent:', info.response);
                         const emailRecord = new this.emailModel({
@@ -113,16 +125,36 @@ let EmailService = class EmailService {
             if (!user) {
                 throw new Error('User not found');
             }
-            const parts = user?.serverData?.[0].host.split('.');
-            const smtpConfig = {
-                host: user?.serverData?.[0].host,
-                ip: user?.serverData?.[0].ip,
-                user: `admin@${parts.slice(1).join('.')}`,
-            };
-            return smtpConfig;
+            return user?.serverData;
         }
         catch (error) {
             throw new common_1.HttpException('Failed to fetch SMTP details', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async getAvailableIps(firebaseToken) {
+        try {
+            const res = await this.firebaseService.verifyToken(firebaseToken);
+            const serverdata = await this.fetchSmtpDetails(res.uid);
+            const domainIp = {};
+            serverdata.forEach((server) => {
+                if (server.status === 'active') {
+                    const hostKey = server.host.replace(/^mail\./, '');
+                    const validIps = server.availableIps.filter((ip) => !ip.wentSpam).map((ip) => ip.ip);
+                    if (validIps.length > 0) {
+                        domainIp[hostKey] = validIps;
+                    }
+                }
+            });
+            console.log('🚀 ~ EmailService ~ getAvailableIps ~ domainIp:', domainIp);
+            return {
+                message: 'Available domain and Ips',
+                success: true,
+                domainIp,
+            };
+        }
+        catch (error) {
+            console.log('🚀 ~ EmailService ~ create ~ error:', error);
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 };

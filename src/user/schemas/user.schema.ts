@@ -3,9 +3,19 @@ import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
 
-class serverInstance {
+class ip {
   @Prop({ required: true })
   ip: string;
+
+  @Prop({ required: true })
+  isMainIp: boolean;
+
+  @Prop({ required: true, default: false })
+  wentSpam: boolean;
+}
+class serverInstance {
+  @Prop({ type: [ip], required: true })
+  availableIps: ip[];
 
   @Prop()
   host: string;
@@ -14,19 +24,8 @@ class serverInstance {
   status: string;
 
   @Prop({ required: true })
-  isMainIp: boolean;
-
-  @Prop({ required: true })
   provider: string;
 }
-
-// class ServerData {
-//   @Prop({ required: true })
-//   provider: string;
-
-//   @Prop({ type: [Instance], required: true })
-//   instances: Instance[];
-// }
 
 @Schema()
 export class User {

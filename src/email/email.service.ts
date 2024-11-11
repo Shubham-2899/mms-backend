@@ -26,8 +26,17 @@ export class EmailService {
       // console.log('🚀 ~ EmailService ~ create ~ res:', res);
 
       // Fetch the SMTP details using the userId (uid)
-      const smtpConfig = await this.fetchSmtpDetails(res.uid);
-      // console.log('🚀 ~ EmailService ~ create ~ smtpConfig:', smtpConfig);
+      const serverData = await this.fetchSmtpDetails(res.uid);
+      // console.log('🚀 ~ EmailService ~ create ~ serverData:', serverData);
+
+      const domain = createEmailDto.selectedIp?.split("-")[0]?.trim();
+      const ip = createEmailDto.selectedIp?.split("-")[1]?.trim();
+
+      const smtpConfig = {
+        host: `mail.${domain}`,
+        // ip: ip,
+        user: `admin@${domain}`,
+      };
 
       if (createEmailDto.mode === 'test') {
         console.log('inside the test mode');
@@ -40,20 +49,27 @@ export class EmailService {
           emailTemplate,
           offerId,
           campaignId,
+          selectedIp,
         } = createEmailDto;
         const transporter = createTransporter(smtpConfig);
+        console.log('🚀 ~ EmailService ~ create ~ smtpConfig:', smtpConfig);
         emailTemplate = decodeURIComponent(emailTemplate);
+        const headers = {
+          'X-Outgoing-IP': ip,
+        };
 
         const failedEmails = [];
         for (const userEmail of to) {
           try {
             console.log(`Sending email to ${userEmail}`);
+            console.log('🚀 ~ EmailService ~ create ~ headers:', headers);
 
             const info = await transporter.sendMail({
               from: `${fromName} <${from}>`,
               to: userEmail,
               subject: subject,
               html: templateType === 'html' ? emailTemplate : emailTemplate,
+              headers,
             });
 
             console.log('Email sent:', info.response);
@@ -128,20 +144,62 @@ export class EmailService {
         throw new Error('User not found');
       }
 
-      const parts = user?.serverData?.[0].host.split('.');
-
-      const smtpConfig = {
-        host: user?.serverData?.[0].host,
-        ip: user?.serverData?.[0].ip,
-        user: `admin@${parts.slice(1).join('.')}`,
-      };
-
-      return smtpConfig;
+      return user?.serverData;
     } catch (error) {
       throw new HttpException(
         'Failed to fetch SMTP details',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  async getAvailableIps(firebaseToken: string): Promise<any> {
+    try {
+      // Verify Firebase token and retrieve user ID
+      const res = await this.firebaseService.verifyToken(firebaseToken);
+      // console.log('🚀 ~ EmailService ~ create ~ res:', res);
+
+      // Fetch the SMTP details using the userId (uid)
+      const serverdata = await this.fetchSmtpDetails(res.uid);
+      // console.log('🚀 ~ EmailService ~ create ~ smtpConfig:', serverdata);
+
+      const domainIp = {};
+
+      serverdata.forEach((server) => {
+        // Only process servers that are active
+        if (server.status === 'active') {
+          // Extract the host name without "mail." prefix and capitalize the first letter
+          const hostKey = server.host.replace(/^mail\./, '');
+          // const capitalizedHostKey =
+          //   hostKey.charAt(0).toUpperCase() + hostKey.slice(1);
+
+          // Filter IPs that haven't gone to spam and mask two segments of each IP
+          // const validIps = server.availableIps
+          //   .filter((ip) => !ip.wentSpam)
+          //   .map((ip) =>
+          //     ip.ip.replace(
+          //       /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/,
+          //       (_, p1, _p2, _p3, p4) => `${p1}.****.${p4}`,
+          //     ),
+          //   );
+
+          const validIps = server.availableIps.filter((ip) => !ip.wentSpam).map((ip) => ip.ip);
+
+          // If there are valid IPs, add them to the response
+          if (validIps.length > 0) {
+            domainIp[hostKey] = validIps;
+          }
+        }
+      });
+      console.log('🚀 ~ EmailService ~ getAvailableIps ~ domainIp:', domainIp);
+      return {
+        message: 'Available domain and Ips',
+        success: true,
+        domainIp,
+      };
+    } catch (error: any) {
+      console.log('🚀 ~ EmailService ~ create ~ error:', error);
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

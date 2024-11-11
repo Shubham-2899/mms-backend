@@ -25,8 +25,10 @@ export class EmailProcessor extends WorkerHost {
       campaignId,
       mode,
       smtpConfig,
+      selectedIp,
     } = job.data;
     console.log('🚀 ~ EmailProcessor ~ process ~ smtpConfig:', smtpConfig);
+    const ip = selectedIp?.split('-')[1]?.trim();
 
     // Setup SMTP for each user (dynamically based on user)
     // const transporter = nodemailer.createTransport({
@@ -54,6 +56,9 @@ export class EmailProcessor extends WorkerHost {
     try {
       const transporter = createTransporter(smtpConfig);
       emailTemplate = decodeURIComponent(emailTemplate);
+      const headers = {
+        'X-Outgoing-IP': ip,
+      };
 
       for (const userEmail of to) {
         try {
@@ -64,6 +69,7 @@ export class EmailProcessor extends WorkerHost {
             to: userEmail,
             subject: subject,
             html: templateType === 'html' ? emailTemplate : emailTemplate,
+            headers,
           });
 
           console.log('Email sent:', info.response);
