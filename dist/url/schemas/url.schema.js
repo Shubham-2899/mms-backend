@@ -53,7 +53,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Url.prototype, "clickCount", void 0);
 exports.Url = Url = __decorate([
-    (0, mongoose_1.Schema)()
+    (0, mongoose_1.Schema)({ timestamps: true })
 ], Url);
 exports.UrlSchema = mongoose_1.SchemaFactory.createForClass(Url);
 //# sourceMappingURL=url.schema.js.map

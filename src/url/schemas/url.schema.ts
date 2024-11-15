@@ -3,7 +3,7 @@ import { HydratedDocument } from 'mongoose';
 
 export type UrlDocument = HydratedDocument<Url>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Url {
   @Prop({ required: true, unique: true })
   shortId: string;
