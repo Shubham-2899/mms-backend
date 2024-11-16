@@ -29,7 +29,14 @@ export class ReportsService {
       // Aggregate data from Url and Email collections
       const aggregatedData = await this.urlModel.aggregate([
         {
-          $match: searchFilter,
+          $match: {
+            ...(offerId && {
+              offerId: { $regex: `^${offerId}$`, $options: 'i' },
+            }),
+            ...(campaignId && {
+              campaignId: { $regex: `^${campaignId}$`, $options: 'i' },
+            }),
+          },
         },
         {
           // Match only the necessary fields
@@ -73,7 +80,12 @@ export class ReportsService {
       ]);
 
       // Get total count for pagination
-      const totalElements = await this.urlModel.countDocuments(searchFilter);
+      const totalElements = await this.urlModel.countDocuments({
+        ...(offerId && { offerId: { $regex: `^${offerId}$`, $options: 'i' } }),
+        ...(campaignId && {
+          campaignId: { $regex: `^${campaignId}$`, $options: 'i' },
+        }),
+      });
 
       return {
         reports: aggregatedData,
