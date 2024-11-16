@@ -11,9 +11,16 @@ export class ReportsController {
   async getReports(
     @Query('page') page: number = 1,
     @Query('pageSize') pageSize: number = 10,
+    @Query('offerId') offerId,
+    @Query('campaignId') campaignId,
   ) {
-    console.log('page pageSize', page, pageSize);
-    const result = await this.reportsService.getReports(page, pageSize);
+    console.log('page pageSize =>', page, pageSize);
+    const result = await this.reportsService.getReports(
+      page,
+      pageSize,
+      offerId,
+      campaignId,
+    );
     return {
       message: 'Reports fetched successfully.',
       success: true,

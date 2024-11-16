@@ -21,11 +21,21 @@ let ReportsService = class ReportsService {
         this.urlModel = urlModel;
         this.emailModel = emailModel;
     }
-    async getReports(page, pageSize) {
+    async getReports(page, pageSize, offerId, campaignId) {
         const skip = (page - 1) * pageSize;
+        console.log('offerId campaignId =>', offerId, campaignId);
         console.log('🚀 ~ ReportsService ~ getReports ~ skip:', skip);
         try {
+            const searchFilter = {};
+            if (offerId)
+                searchFilter.offerId = offerId;
+            if (campaignId)
+                searchFilter.campaignId = campaignId;
+            console.log('🚀 ~ ReportsService ~ searchFilter:', searchFilter);
             const aggregatedData = await this.urlModel.aggregate([
+                {
+                    $match: searchFilter,
+                },
                 {
                     $lookup: {
                         from: 'emails',
@@ -64,7 +74,7 @@ let ReportsService = class ReportsService {
                 { $skip: skip },
                 { $limit: Number(pageSize) || pageSize },
             ]);
-            const totalElements = await this.urlModel.countDocuments();
+            const totalElements = await this.urlModel.countDocuments(searchFilter);
             return {
                 reports: aggregatedData,
                 page,

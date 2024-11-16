@@ -11,12 +11,26 @@ export class ReportsService {
     @InjectModel('Email') private readonly emailModel: Model<EmailDocument>,
   ) {}
 
-  async getReports(page: number, pageSize: number) {
+  async getReports(
+    page: number,
+    pageSize: number,
+    offerId?: string,
+    campaignId?: string,
+  ) {
     const skip = (page - 1) * pageSize;
+    console.log('offerId campaignId =>', offerId, campaignId);
     console.log('🚀 ~ ReportsService ~ getReports ~ skip:', skip);
     try {
+      const searchFilter: Record<string, any> = {};
+      if (offerId) searchFilter.offerId = offerId;
+      if (campaignId) searchFilter.campaignId = campaignId;
+      console.log('🚀 ~ ReportsService ~ searchFilter:', searchFilter);
+
       // Aggregate data from Url and Email collections
       const aggregatedData = await this.urlModel.aggregate([
+        {
+          $match: searchFilter,
+        },
         {
           // Match only the necessary fields
           $lookup: {
@@ -59,7 +73,7 @@ export class ReportsService {
       ]);
 
       // Get total count for pagination
-      const totalElements = await this.urlModel.countDocuments();
+      const totalElements = await this.urlModel.countDocuments(searchFilter);
 
       return {
         reports: aggregatedData,

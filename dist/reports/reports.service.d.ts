@@ -30,7 +30,7 @@ export declare class ReportsService {
     private readonly urlModel;
     private readonly emailModel;
     constructor(urlModel: Model<UrlDocument>, emailModel: Model<EmailDocument>);
-    getReports(page: number, pageSize: number): Promise<{
+    getReports(page: number, pageSize: number, offerId?: string, campaignId?: string): Promise<{
         reports: any[];
         page: number;
         pageSize: number;
