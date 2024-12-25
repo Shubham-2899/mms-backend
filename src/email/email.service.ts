@@ -29,8 +29,8 @@ export class EmailService {
       const serverData = await this.fetchSmtpDetails(res.uid);
       // console.log('🚀 ~ EmailService ~ create ~ serverData:', serverData);
 
-      const domain = createEmailDto.selectedIp?.split("-")[0]?.trim();
-      const ip = createEmailDto.selectedIp?.split("-")[1]?.trim();
+      const domain = createEmailDto.selectedIp?.split('-')[0]?.trim();
+      const ip = createEmailDto.selectedIp?.split('-')[1]?.trim();
 
       const smtpConfig = {
         host: `mail.${domain}`,
@@ -161,7 +161,10 @@ export class EmailService {
 
       // Fetch the SMTP details using the userId (uid)
       const serverdata = await this.fetchSmtpDetails(res.uid);
-      // console.log('🚀 ~ EmailService ~ create ~ smtpConfig:', serverdata);
+      // console.log(
+      //   '🚀 ~ EmailService ~ getAvailableIps ~ smtpConfig:',
+      //   serverdata,
+      // );
 
       const domainIp = {};
 
@@ -183,10 +186,12 @@ export class EmailService {
           //     ),
           //   );
 
-          const validIps = server.availableIps.filter((ip) => !ip.wentSpam).map((ip) => ip.ip);
+          const validIps = server.availableIps
+            ?.filter((ip) => !ip.wentSpam)
+            ?.map((ip) => ip.ip);
 
           // If there are valid IPs, add them to the response
-          if (validIps.length > 0) {
+          if (validIps?.length > 0) {
             domainIp[hostKey] = validIps;
           }
         }

@@ -33,8 +33,8 @@ let EmailService = class EmailService {
         try {
             const res = await this.firebaseService.verifyToken(firebaseToken);
             const serverData = await this.fetchSmtpDetails(res.uid);
-            const domain = createEmailDto.selectedIp?.split("-")[0]?.trim();
-            const ip = createEmailDto.selectedIp?.split("-")[1]?.trim();
+            const domain = createEmailDto.selectedIp?.split('-')[0]?.trim();
+            const ip = createEmailDto.selectedIp?.split('-')[1]?.trim();
             const smtpConfig = {
                 host: `mail.${domain}`,
                 user: `admin@${domain}`,
@@ -139,8 +139,10 @@ let EmailService = class EmailService {
             serverdata.forEach((server) => {
                 if (server.status === 'active') {
                     const hostKey = server.host.replace(/^mail\./, '');
-                    const validIps = server.availableIps.filter((ip) => !ip.wentSpam).map((ip) => ip.ip);
-                    if (validIps.length > 0) {
+                    const validIps = server.availableIps
+                        ?.filter((ip) => !ip.wentSpam)
+                        ?.map((ip) => ip.ip);
+                    if (validIps?.length > 0) {
                         domainIp[hostKey] = validIps;
                     }
                 }

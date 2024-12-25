@@ -34,6 +34,7 @@ export declare class Url {
     campaignId: string;
     visitHistory: Record<string, any>[];
     clickCount: number;
+    openRate: number;
 }
 export declare const UrlSchema: import("mongoose").Schema<Url, import("mongoose").Model<Url, any, any, any, import("mongoose").Document<unknown, any, Url> & Url & {
     _id: import("mongoose").Types.ObjectId;

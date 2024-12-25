@@ -36,6 +36,9 @@ export class Url {
 
   @Prop({ default: 0 })
   clickCount: number;
+
+  @Prop({ default: 0 })
+  openRate: number;
 }
 
 export const UrlSchema = SchemaFactory.createForClass(Url);
