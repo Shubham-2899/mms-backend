@@ -34,7 +34,14 @@ let ReportsService = class ReportsService {
             console.log('🚀 ~ ReportsService ~ searchFilter:', searchFilter);
             const aggregatedData = await this.urlModel.aggregate([
                 {
-                    $match: searchFilter,
+                    $match: {
+                        ...(offerId && {
+                            offerId: { $regex: `^${offerId}$`, $options: 'i' },
+                        }),
+                        ...(campaignId && {
+                            campaignId: { $regex: `^${campaignId}$`, $options: 'i' },
+                        }),
+                    },
                 },
                 {
                     $lookup: {
@@ -68,13 +75,19 @@ let ReportsService = class ReportsService {
                         offerId: 1,
                         clickCount: 1,
                         totalEmailSent: 1,
+                        openRate: { $ifNull: ['$openRate', 0] },
                         date: { $ifNull: ['$createdAt', new Date()] },
                     },
                 },
                 { $skip: skip },
                 { $limit: Number(pageSize) || pageSize },
             ]);
-            const totalElements = await this.urlModel.countDocuments(searchFilter);
+            const totalElements = await this.urlModel.countDocuments({
+                ...(offerId && { offerId: { $regex: `^${offerId}$`, $options: 'i' } }),
+                ...(campaignId && {
+                    campaignId: { $regex: `^${campaignId}$`, $options: 'i' },
+                }),
+            });
             return {
                 reports: aggregatedData,
                 page,

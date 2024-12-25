@@ -71,6 +71,7 @@ export class ReportsService {
             offerId: 1,
             clickCount: 1,
             totalEmailSent: 1,
+            openRate: { $ifNull: ['$openRate', 0] },
             date: { $ifNull: ['$createdAt', new Date()] },
           },
         },
