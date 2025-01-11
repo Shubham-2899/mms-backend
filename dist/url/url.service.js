@@ -35,24 +35,40 @@ let UrlService = class UrlService {
         console.log('req body', body);
         if (!body.url)
             throw new common_1.BadRequestException('Url is required');
-        const shortID = shortid();
         const [part1, part2] = body.linkPattern.split('/').filter(Boolean);
-        const randomString1 = generateRandomString(16);
-        const randomString2 = generateRandomString(16);
+        const RANDOM_STRING_LENGTH = 16;
+        const randomString1 = generateRandomString(RANDOM_STRING_LENGTH);
+        const randomString2 = generateRandomString(RANDOM_STRING_LENGTH);
         const finalLongString1 = `${part1}${randomString1}`;
         const finalLongString2 = `${part2}${randomString2}`;
-        const createdUrl = new this.urlModel({
-            shortId: shortID,
-            redirectURL: body.url.trim(),
-            domain: body.domain,
-            offerId: body.offerId,
-            campaignId: body.campaignId,
-            linkType: body.linkType,
-            visitHistory: [],
-        });
-        createdUrl.save();
-        const finalRedirectLink = `${body.domain}/${shortID}/${finalLongString1}/${finalLongString2}`;
-        return { finalRedirectLink };
+        let shortID;
+        let createdUrl;
+        let finalRedirectLink;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            shortID = shortid();
+            createdUrl = new this.urlModel({
+                shortId: shortID,
+                redirectURL: body.url.trim(),
+                domain: body.domain,
+                offerId: body.offerId,
+                campaignId: body.campaignId,
+                linkType: body.linkType,
+                visitHistory: [],
+            });
+            try {
+                await createdUrl.save();
+                finalRedirectLink = `${body.domain}/${shortID}/${finalLongString1}/${finalLongString2}`;
+                return { finalRedirectLink };
+            }
+            catch (error) {
+                if (error.code === 11000 && error.keyPattern?.shortId) {
+                    console.warn(`shortId conflict detected. Retrying... (Attempt ${attempt + 1})`);
+                    continue;
+                }
+                throw new common_1.InternalServerErrorException('Failed to save URL');
+            }
+        }
+        throw new common_1.InternalServerErrorException('Could not generate a unique shortId after multiple attempts');
     }
     async getAnalytics(shortId) {
         const result = await this.urlModel.findOne({ shortId });
