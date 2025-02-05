@@ -79,6 +79,7 @@ let ReportsService = class ReportsService {
                         date: { $ifNull: ['$createdAt', new Date()] },
                     },
                 },
+                { $sort: { date: -1 } },
                 { $skip: skip },
                 { $limit: Number(pageSize) || pageSize },
             ]);
