@@ -75,7 +75,7 @@ export class ReportsService {
             date: { $ifNull: ['$createdAt', new Date()] },
           },
         },
-        // { $sort: { date: -1 } }, // Sort by date
+        { $sort: { date: -1 } }, // Sort by date
         { $skip: skip },
         { $limit: Number(pageSize) || pageSize },
       ]);
