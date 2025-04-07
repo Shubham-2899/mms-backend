@@ -26,8 +26,14 @@
 import { Document } from 'mongoose';
 export type EmailListDocument = EmailList & Document;
 export declare class EmailList {
-    email: string;
-    unsubscribed_domains: string[];
+    from: string;
+    response: string;
+    to_email: string;
+    offerId: string;
+    campaignId: string;
+    sentAt: Date;
+    isProcessed: boolean;
+    status: string;
 }
 export declare const EmailListSchema: import("mongoose").Schema<EmailList, import("mongoose").Model<EmailList, any, any, any, Document<unknown, any, EmailList> & EmailList & {
     _id: import("mongoose").Types.ObjectId;

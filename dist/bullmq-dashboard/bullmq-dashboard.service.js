@@ -27,7 +27,7 @@ let BullmqDashboardService = class BullmqDashboardService {
         this.serverAdapter = new express_1.ExpressAdapter();
         this.serverAdapter.setBasePath('/api/admin/dashboard');
         (0, api_1.createBullBoard)({
-            queues: [new bullAdapter_1.BullAdapter(this.emailQueue, { readOnlyMode: true })],
+            queues: [new bullAdapter_1.BullAdapter(this.emailQueue, { readOnlyMode: false })],
             serverAdapter: this.serverAdapter,
             options: {
                 uiConfig: {

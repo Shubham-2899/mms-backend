@@ -16,21 +16,45 @@ let EmailList = class EmailList {
 exports.EmailList = EmailList;
 __decorate([
     (0, mongoose_1.Prop)({
+        required: false,
+        match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    }),
+    __metadata("design:type", String)
+], EmailList.prototype, "from", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: false }),
+    __metadata("design:type", String)
+], EmailList.prototype, "response", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
         required: true,
         unique: true,
         match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     }),
     __metadata("design:type", String)
-], EmailList.prototype, "email", void 0);
+], EmailList.prototype, "to_email", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({
-        type: [String],
-        default: [],
-    }),
-    __metadata("design:type", Array)
-], EmailList.prototype, "unsubscribed_domains", void 0);
+    (0, mongoose_1.Prop)({ required: false }),
+    __metadata("design:type", String)
+], EmailList.prototype, "offerId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], EmailList.prototype, "campaignId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: false }),
+    __metadata("design:type", Date)
+], EmailList.prototype, "sentAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], EmailList.prototype, "isProcessed", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 'pending' }),
+    __metadata("design:type", String)
+], EmailList.prototype, "status", void 0);
 exports.EmailList = EmailList = __decorate([
-    (0, mongoose_1.Schema)({ collection: 'email_list', timestamps: true })
+    (0, mongoose_1.Schema)({ collection: 'campaign_email_tracking', timestamps: true })
 ], EmailList);
 exports.EmailListSchema = mongoose_1.SchemaFactory.createForClass(EmailList);
 //# sourceMappingURL=email_list.schemas.js.map

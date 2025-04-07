@@ -24,7 +24,7 @@ let EmailListService = class EmailListService {
         this.emailListModel = emailListModel;
         this.emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     }
-    async addEmails(emailArray) {
+    async addEmails(emailArray, campaignId) {
         try {
             const validEmails = emailArray.filter((email) => this.emailRegex.test(email));
             if (!validEmails.length) {
@@ -32,8 +32,15 @@ let EmailListService = class EmailListService {
             }
             const bulkOps = validEmails.map((email) => ({
                 updateOne: {
-                    filter: { email },
-                    update: { $setOnInsert: { email } },
+                    filter: { to_email: email },
+                    update: {
+                        $setOnInsert: {
+                            to_email: email,
+                            campaignId,
+                            status: 'pending',
+                            isProcessed: false,
+                        },
+                    },
                     upsert: true,
                 },
             }));
@@ -53,7 +60,7 @@ let EmailListService = class EmailListService {
             };
         }
     }
-    async addEmailsFromCSVFile(filePath) {
+    async addEmailsFromCSVFile(filePath, campaignId) {
         const emails = [];
         return new Promise((resolve, reject) => {
             const stream = fs
@@ -72,7 +79,7 @@ let EmailListService = class EmailListService {
                 if (!emails.length) {
                     return reject(new common_1.BadRequestException('No emails found in the CSV file.'));
                 }
-                const res = await this.addEmails(emails);
+                const res = await this.addEmails(emails, campaignId);
                 if (res.success) {
                     resolve(res);
                 }

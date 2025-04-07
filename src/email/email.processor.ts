@@ -30,29 +30,6 @@ export class EmailProcessor extends WorkerHost {
     console.log('🚀 ~ EmailProcessor ~ process ~ smtpConfig:', smtpConfig);
     const ip = selectedIp?.split('-')[1]?.trim();
 
-    // Setup SMTP for each user (dynamically based on user)
-    // const transporter = nodemailer.createTransport({
-    //   host: smtpConfig.host,
-    //   pool: true, // Connection pooling enabled
-    //   secure: false, // Not using port 465
-    //   port: 587,
-    //   tls: {
-    //     rejectUnauthorized: false, // Disable TLS verification (consider setting to true in production)
-    //   },
-    //   auth: {
-    //     user: smtpConfig.user,
-    //     pass: `${process.env.ROOT_MAIL_USER_PASSWORD}`,
-    //   },
-    //   logger: true, // Log SMTP actions
-    //   // debug: true, // Enable debugging for troubleshooting
-    //   maxConnections: 5, // Max 5 connections at a time
-    //   maxMessages: 100, // Max 100 emails per connection
-    //   rateLimit: 10, // Max 10 emails per second
-    //   connectionTimeout: 2 * 60 * 1000, // 2 minutes connection timeout
-    //   greetingTimeout: 30 * 1000, // 30 seconds greeting timeout
-    //   socketTimeout: 5 * 60 * 1000, // 5 minutes socket timeout
-    // });
-
     try {
       const transporter = createTransporter(smtpConfig);
       emailTemplate = decodeURIComponent(emailTemplate);

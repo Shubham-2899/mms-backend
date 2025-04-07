@@ -16,19 +16,28 @@ import { AdminAuthGuard } from 'src/auth/admin-auth.guard';
 import * as fs from 'fs';
 import * as path from 'path';
 
-@UseGuards(FirebaseAuthGuard)
-@UseGuards(AdminAuthGuard)
+// @UseGuards(FirebaseAuthGuard)
+// @UseGuards(AdminAuthGuard)
 @Controller('/api/email_list')
 export class EmailListController {
   constructor(private readonly emailListService: EmailListService) {}
 
   // Add emails from an array
   @Post('add-emails')
-  async addEmails(@Body('emails') emails: string[]): Promise<string> {
+  async addEmails(
+    @Body() body: { emails: string[]; campaignId: string },
+  ): Promise<string> {
+    const { emails, campaignId } = body;
+
     if (!Array.isArray(emails) || !emails.length) {
       throw new BadRequestException('Emails must be a non-empty array');
     }
-    return await this.emailListService.addEmails(emails);
+
+    if (!campaignId) {
+      throw new BadRequestException('Campaign ID is required');
+    }
+
+    return await this.emailListService.addEmails(emails, campaignId);
   }
 
   // Add emails from a CSV file
@@ -54,17 +63,32 @@ export class EmailListController {
       },
     }),
   )
-  async uploadCSV(@UploadedFile() file: Express.Multer.File): Promise<any> {
+  async uploadCSV(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('campaignId') campaignId: string, // Extract the campaignId from the body
+  ): Promise<any> {
     console.log('🚀 ~ EmailListController ~ uploadCSV ~ file:', file);
+    console.log(
+      '🚀 ~ EmailListController ~ uploadCSV ~ campaignId:',
+      campaignId,
+    );
+
     if (!file) {
       throw new BadRequestException('CSV file must be provided.');
+    }
+
+    if (!campaignId) {
+      throw new BadRequestException('Campaign ID is required.');
     }
 
     const filePath = path.join(__dirname, '../../uploads', file.filename);
 
     try {
       // Process the CSV file (this can throw errors if invalid)
-      const res = await this.emailListService.addEmailsFromCSVFile(filePath);
+      const res = await this.emailListService.addEmailsFromCSVFile(
+        filePath,
+        campaignId,
+      );
 
       // Remove the file after processing
       fs.unlinkSync(filePath);
