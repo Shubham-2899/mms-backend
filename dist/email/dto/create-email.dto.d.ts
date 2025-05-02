@@ -9,4 +9,6 @@ export declare class CreateEmailDto {
     offerId: string;
     campaignId: string;
     selectedIp: string;
+    batchSize: number;
+    delay: number;
 }

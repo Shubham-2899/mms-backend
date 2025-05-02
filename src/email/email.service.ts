@@ -117,10 +117,16 @@ export class EmailService {
         if (createEmailDto.to.length === 0) {
           throw new Error('No recipient found');
         }
-        const res = await this.emailQueue.add('send-email-job', {
-          ...createEmailDto,
-          smtpConfig,
-        });
+        const res = await this.emailQueue.add(
+          'send-email-job',
+          {
+            ...createEmailDto,
+            smtpConfig,
+          },
+          // {
+          //   delay: 15000,
+          // },
+        );
         // console.log('🚀 ~ EmailService ~ create ~ res:', res);
 
         return {
@@ -206,5 +212,13 @@ export class EmailService {
       console.log('🚀 ~ EmailService ~ create ~ error:', error);
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  async stopJob(jobId: number) {
+    const activeJobs = await this.emailQueue.getJobs(['active']);
+    activeJobs.forEach((job) => {
+      console.log(`Job ID: ${job.id} is currently running`);
+    });
+
   }
 }
