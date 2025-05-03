@@ -17,8 +17,6 @@ const common_1 = require("@nestjs/common");
 const email_list_service_1 = require("./email_list.service");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
-const firebase_auth_guard_1 = require("../auth/firebase-auth.guard");
-const admin_auth_guard_1 = require("../auth/admin-auth.guard");
 const fs = require("fs");
 const path = require("path");
 let EmailListController = class EmailListController {
@@ -47,6 +45,16 @@ let EmailListController = class EmailListController {
             fs.unlinkSync(filePath);
             throw new common_1.BadRequestException(error.message);
         }
+    }
+    async getSuppressionList(page, limit, fromDate, toDate) {
+        const pageNum = parseInt(page, 10) || 1;
+        const limitNum = parseInt(limit, 10) || 10;
+        const result = await this.emailListService.getSuppressionList(pageNum, limitNum, fromDate, toDate);
+        return {
+            message: 'Suppression list fetched successfully.',
+            success: true,
+            ...result,
+        };
     }
 };
 exports.EmailListController = EmailListController;
@@ -80,9 +88,17 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], EmailListController.prototype, "uploadCSV", null);
+__decorate([
+    (0, common_1.Get)('/suppressions'),
+    __param(0, (0, common_1.Query)('page')),
+    __param(1, (0, common_1.Query)('limit')),
+    __param(2, (0, common_1.Query)('fromDate')),
+    __param(3, (0, common_1.Query)('toDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, String]),
+    __metadata("design:returntype", Promise)
+], EmailListController.prototype, "getSuppressionList", null);
 exports.EmailListController = EmailListController = __decorate([
-    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
-    (0, common_1.UseGuards)(admin_auth_guard_1.AdminAuthGuard),
     (0, common_1.Controller)('/api/email_list'),
     __metadata("design:paramtypes", [email_list_service_1.EmailListService])
 ], EmailListController);

@@ -31,4 +31,17 @@ export declare class EmailListService {
     private emailRegex;
     addEmails(emailArray: string[]): Promise<any>;
     addEmailsFromCSVFile(filePath: string): Promise<void>;
+    getSuppressionList(page?: number, limit?: number, fromDate?: string, toDate?: string): Promise<{
+        data: {
+            email: any;
+            date: any;
+            domain: any;
+        }[];
+        pagination: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    }>;
 }

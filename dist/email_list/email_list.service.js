@@ -86,6 +86,49 @@ let EmailListService = class EmailListService {
             });
         });
     }
+    async getSuppressionList(page = 1, limit = 10, fromDate, toDate) {
+        const filter = {};
+        if (fromDate || toDate) {
+            filter.createdAt = {};
+            if (fromDate) {
+                const from = new Date(fromDate);
+                if (!isNaN(from.getTime())) {
+                    filter.createdAt.$gte = from;
+                }
+            }
+            if (toDate) {
+                const to = new Date(toDate);
+                if (!isNaN(to.getTime())) {
+                    to.setHours(23, 59, 59, 999);
+                    filter.createdAt.$lte = to;
+                }
+            }
+        }
+        const skip = (page - 1) * limit;
+        const [data, total] = await Promise.all([
+            this.emailListModel
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            this.emailListModel.countDocuments(filter),
+        ]);
+        const formatted = data.map((item) => ({
+            email: item.email,
+            date: item.createdAt.toISOString().split('T')[0],
+            domain: item.unsubscribed_domains.toString(),
+        }));
+        return {
+            data: formatted,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    }
 };
 exports.EmailListService = EmailListService;
 exports.EmailListService = EmailListService = __decorate([

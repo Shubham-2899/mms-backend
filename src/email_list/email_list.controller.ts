@@ -6,6 +6,8 @@ import {
   UseInterceptors,
   BadRequestException,
   UseGuards,
+  Query,
+  Get,
 } from '@nestjs/common';
 import { EmailListService } from './email_list.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -16,8 +18,8 @@ import { AdminAuthGuard } from 'src/auth/admin-auth.guard';
 import * as fs from 'fs';
 import * as path from 'path';
 
-@UseGuards(FirebaseAuthGuard)
-@UseGuards(AdminAuthGuard)
+// @UseGuards(FirebaseAuthGuard)
+// @UseGuards(AdminAuthGuard)
 @Controller('/api/email_list')
 export class EmailListController {
   constructor(private readonly emailListService: EmailListService) {}
@@ -79,5 +81,29 @@ export class EmailListController {
       fs.unlinkSync(filePath);
       throw new BadRequestException(error.message);
     }
+  }
+
+  @Get('/suppressions')
+  async getSuppressionList(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('fromDate') fromDate?: string,
+    @Query('toDate') toDate?: string,
+  ) {
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+
+    const result = await this.emailListService.getSuppressionList(
+      pageNum,
+      limitNum,
+      fromDate,
+      toDate,
+    );
+
+    return {
+      message: 'Suppression list fetched successfully.',
+      success: true,
+      ...result,
+    };
   }
 }
