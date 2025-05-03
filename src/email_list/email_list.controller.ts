@@ -83,6 +83,7 @@ export class EmailListController {
     }
   }
 
+  //suppressions
   @Get('/suppressions')
   async getSuppressionList(
     @Query('page') page?: string,
