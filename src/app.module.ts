@@ -4,13 +4,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 // import { AuthModule } from './auth/auth.module';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule } from '@nestjs/config';
 import { EmailModule } from './email/email.module';
 import { UrlModule } from './url/url.module';
 import { Url, UrlSchema } from './url/schemas/url.schema';
 import { AuthModule } from './auth/auth.module';
-import { RootController } from './root.controller';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { Email, EmailSchema } from './email/schemas/email.schemas';
@@ -24,6 +22,7 @@ import { EmailListModule } from './email_list/email_list.module';
 import { BullModule } from '@nestjs/bullmq';
 import { BullmqDashboardModule } from './bullmq-dashboard/bullmq-dashboard.module';
 import { ReportsModule } from './reports/reports.module';
+import { JobsModule } from './jobs/jobs.module';
 
 @Module({
   imports: [
@@ -81,6 +80,7 @@ import { ReportsModule } from './reports/reports.module';
     }),
     BullmqDashboardModule,
     ReportsModule,
+    JobsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

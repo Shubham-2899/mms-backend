@@ -5,7 +5,6 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
-  UseGuards,
   Query,
   Get,
 } from '@nestjs/common';
@@ -13,8 +12,6 @@ import { EmailListService } from './email_list.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { Express } from 'express';
-import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
-import { AdminAuthGuard } from 'src/auth/admin-auth.guard';
 import * as fs from 'fs';
 import * as path from 'path';
 
