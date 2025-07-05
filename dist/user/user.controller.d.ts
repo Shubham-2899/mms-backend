@@ -15,13 +15,13 @@
 /// <reference types="mongoose/types/populate" />
 /// <reference types="mongoose/types/query" />
 /// <reference types="mongoose/types/schemaoptions" />
-/// <reference types="mongoose/types/schematypes" />
 /// <reference types="mongoose/types/session" />
 /// <reference types="mongoose/types/types" />
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
 /// <reference types="mongoose" />
+/// <reference types="mongoose/types/schematypes" />
 /// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
 import { UserService } from './user.service';
@@ -31,8 +31,10 @@ export declare class UserController {
     getAllUsers(): Promise<{
         message: string;
         success: boolean;
-        users: (import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User> & import("./schemas/user.schema").User & {
+        users: (import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User, {}> & import("./schemas/user.schema").User & {
             _id: import("mongoose").Types.ObjectId;
+        } & {
+            __v: number;
         })[];
     } | {
         message: any;
@@ -45,8 +47,10 @@ export declare class UserController {
         displayName: string;
         serverData: any;
         isAdmin: boolean;
-    }): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User> & import("./schemas/user.schema").User & {
+    }): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User, {}> & import("./schemas/user.schema").User & {
         _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
     }>;
     updateUser(uid: string, body: {
         email?: string;
@@ -54,11 +58,15 @@ export declare class UserController {
         displayName?: string;
         serverData?: any;
         isAdmin: boolean;
-    }): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User> & import("./schemas/user.schema").User & {
+    }): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User, {}> & import("./schemas/user.schema").User & {
         _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
     }>;
-    deleteUser(uid: string): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User> & import("./schemas/user.schema").User & {
+    deleteUser(uid: string): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User, {}> & import("./schemas/user.schema").User & {
         _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
     }>;
     findUser(uid: string): Promise<{
         message: string;
@@ -67,8 +75,10 @@ export declare class UserController {
     } | {
         message: string;
         success: boolean;
-        user: import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User> & import("./schemas/user.schema").User & {
+        user: import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User, {}> & import("./schemas/user.schema").User & {
             _id: import("mongoose").Types.ObjectId;
+        } & {
+            __v: number;
         };
     }>;
 }
