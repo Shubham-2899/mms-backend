@@ -20,9 +20,8 @@ let ReportsController = class ReportsController {
     constructor(reportsService) {
         this.reportsService = reportsService;
     }
-    async getReports(page = 1, pageSize = 10, offerId, campaignId) {
-        console.log('page pageSize =>', page, pageSize);
-        const result = await this.reportsService.getReports(page, pageSize, offerId, campaignId);
+    async getReports(page = 1, pageSize = 10, offerId, campaignId, fromDate, toDate) {
+        const result = await this.reportsService.getReports(page, pageSize, offerId, campaignId, fromDate, toDate);
         return {
             message: 'Reports fetched successfully.',
             success: true,
@@ -37,8 +36,10 @@ __decorate([
     __param(1, (0, common_1.Query)('pageSize')),
     __param(2, (0, common_1.Query)('offerId')),
     __param(3, (0, common_1.Query)('campaignId')),
+    __param(4, (0, common_1.Query)('fromDate')),
+    __param(5, (0, common_1.Query)('toDate')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number, Object, Object]),
+    __metadata("design:paramtypes", [Number, Number, String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], ReportsController.prototype, "getReports", null);
 exports.ReportsController = ReportsController = __decorate([

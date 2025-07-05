@@ -21,28 +21,30 @@ let ReportsService = class ReportsService {
         this.urlModel = urlModel;
         this.emailModel = emailModel;
     }
-    async getReports(page, pageSize, offerId, campaignId) {
-        const skip = (page - 1) * pageSize;
-        console.log('offerId campaignId =>', offerId, campaignId);
-        console.log('🚀 ~ ReportsService ~ getReports ~ skip:', skip);
+    async getReports(page, pageSize, offerId, campaignId, fromDate, toDate) {
         try {
-            const searchFilter = {};
-            if (offerId)
-                searchFilter.offerId = offerId;
-            if (campaignId)
-                searchFilter.campaignId = campaignId;
-            console.log('🚀 ~ ReportsService ~ searchFilter:', searchFilter);
+            const skip = (page - 1) * pageSize;
+            const dateFilter = {};
+            if (fromDate)
+                dateFilter.$gte = new Date(fromDate);
+            if (toDate) {
+                const endDate = new Date(toDate);
+                endDate.setHours(23, 59, 59, 999);
+                dateFilter.$lte = endDate;
+            }
+            const matchStage = {
+                ...(offerId && {
+                    offerId: { $regex: `^${offerId}$`, $options: 'i' },
+                }),
+                ...(campaignId && {
+                    campaignId: { $regex: `^${campaignId}$`, $options: 'i' },
+                }),
+                ...(Object.keys(dateFilter).length > 0 && {
+                    createdAt: dateFilter,
+                }),
+            };
             const aggregatedData = await this.urlModel.aggregate([
-                {
-                    $match: {
-                        ...(offerId && {
-                            offerId: { $regex: `^${offerId}$`, $options: 'i' },
-                        }),
-                        ...(campaignId && {
-                            campaignId: { $regex: `^${campaignId}$`, $options: 'i' },
-                        }),
-                    },
-                },
+                { $match: matchStage },
                 {
                     $lookup: {
                         from: 'emails',
@@ -52,7 +54,9 @@ let ReportsService = class ReportsService {
                                 $match: {
                                     $expr: {
                                         $and: [
-                                            { $eq: ['$campaignId', '$$campaignId'] },
+                                            {
+                                                $eq: ['$campaignId', '$$campaignId'],
+                                            },
                                             { $eq: ['$offerId', '$$offerId'] },
                                         ],
                                     },
@@ -81,14 +85,9 @@ let ReportsService = class ReportsService {
                 },
                 { $sort: { date: -1 } },
                 { $skip: skip },
-                { $limit: Number(pageSize) || pageSize },
+                { $limit: Number(pageSize) },
             ]);
-            const totalElements = await this.urlModel.countDocuments({
-                ...(offerId && { offerId: { $regex: `^${offerId}$`, $options: 'i' } }),
-                ...(campaignId && {
-                    campaignId: { $regex: `^${campaignId}$`, $options: 'i' },
-                }),
-            });
+            const totalElements = await this.urlModel.countDocuments(matchStage);
             return {
                 reports: aggregatedData,
                 page,
