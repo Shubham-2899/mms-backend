@@ -15,12 +15,12 @@
 /// <reference types="mongoose/types/populate" />
 /// <reference types="mongoose/types/query" />
 /// <reference types="mongoose/types/schemaoptions" />
-/// <reference types="mongoose/types/schematypes" />
 /// <reference types="mongoose/types/session" />
 /// <reference types="mongoose/types/types" />
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
+/// <reference types="mongoose/types/schematypes" />
 /// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
 import { HydratedDocument } from 'mongoose';
@@ -36,8 +36,12 @@ export declare class Url {
     clickCount: number;
     openRate: number;
 }
-export declare const UrlSchema: import("mongoose").Schema<Url, import("mongoose").Model<Url, any, any, any, import("mongoose").Document<unknown, any, Url> & Url & {
+export declare const UrlSchema: import("mongoose").Schema<Url, import("mongoose").Model<Url, any, any, any, import("mongoose").Document<unknown, any, Url, any> & Url & {
     _id: import("mongoose").Types.ObjectId;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Url, import("mongoose").Document<unknown, {}, import("mongoose").FlatRecord<Url>> & import("mongoose").FlatRecord<Url> & {
+} & {
+    __v: number;
+}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Url, import("mongoose").Document<unknown, {}, import("mongoose").FlatRecord<Url>, {}> & import("mongoose").FlatRecord<Url> & {
     _id: import("mongoose").Types.ObjectId;
+} & {
+    __v: number;
 }>;

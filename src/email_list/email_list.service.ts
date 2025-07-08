@@ -105,4 +105,59 @@ export class EmailListService {
         });
     });
   }
+
+  //get suppression list/unsubs
+  async getSuppressionList(
+    page = 1,
+    limit = 10,
+    fromDate?: string,
+    toDate?: string,
+  ) {
+    const filter: any = {};
+
+    if (fromDate || toDate) {
+      filter.createdAt = {};
+      if (fromDate) {
+        const from = new Date(fromDate);
+        if (!isNaN(from.getTime())) {
+          filter.createdAt.$gte = from;
+        }
+      }
+      if (toDate) {
+        const to = new Date(toDate);
+        if (!isNaN(to.getTime())) {
+          to.setHours(23, 59, 59, 999); // end of day
+          filter.createdAt.$lte = to;
+        }
+      }
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.emailListModel
+        .find(filter)
+        .sort({ createdAt: -1 }) // descending by date
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.emailListModel.countDocuments(filter),
+    ]);
+
+    const formatted = data.map((item: any) => ({
+      email: item.email,
+      date: item.createdAt.toISOString().split('T')[0],
+      domain: item.unsubscribed_domains.toString(),
+    }));
+
+    return {
+      data: formatted,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
 }

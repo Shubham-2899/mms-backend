@@ -15,12 +15,12 @@
 /// <reference types="mongoose/types/populate" />
 /// <reference types="mongoose/types/query" />
 /// <reference types="mongoose/types/schemaoptions" />
-/// <reference types="mongoose/types/schematypes" />
 /// <reference types="mongoose/types/session" />
 /// <reference types="mongoose/types/types" />
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
+/// <reference types="mongoose/types/schematypes" />
 /// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
 import { Model } from 'mongoose';
@@ -29,6 +29,24 @@ export declare class EmailListService {
     private emailListModel;
     constructor(emailListModel: Model<EmailListDocument>);
     private emailRegex;
+<<<<<<< HEAD
     addEmails(emailArray: string[], campaignId: string): Promise<any>;
     addEmailsFromCSVFile(filePath: string, campaignId: string): Promise<void>;
+=======
+    addEmails(emailArray: string[]): Promise<any>;
+    addEmailsFromCSVFile(filePath: string): Promise<void>;
+    getSuppressionList(page?: number, limit?: number, fromDate?: string, toDate?: string): Promise<{
+        data: {
+            email: any;
+            date: any;
+            domain: any;
+        }[];
+        pagination: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    }>;
+>>>>>>> ca7ca5ca5db491875088fbef03c81bcc92b3352a
 }

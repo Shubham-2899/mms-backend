@@ -15,12 +15,12 @@
 /// <reference types="mongoose/types/populate" />
 /// <reference types="mongoose/types/query" />
 /// <reference types="mongoose/types/schemaoptions" />
-/// <reference types="mongoose/types/schematypes" />
 /// <reference types="mongoose/types/session" />
 /// <reference types="mongoose/types/types" />
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
+/// <reference types="mongoose/types/schematypes" />
 /// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
 import { Model } from 'mongoose';
@@ -33,22 +33,30 @@ export declare class UserService {
     getAllUsers(): Promise<{
         message: string;
         success: boolean;
-        users: (import("mongoose").Document<unknown, {}, User> & User & {
+        users: (import("mongoose").Document<unknown, {}, User, {}> & User & {
             _id: import("mongoose").Types.ObjectId;
+        } & {
+            __v: number;
         })[];
     } | {
         message: any;
         success: boolean;
         users?: undefined;
     }>;
-    createUser(email: string, password: string, displayName: string, serverData: any, isAdmin: boolean): Promise<import("mongoose").Document<unknown, {}, User> & User & {
+    createUser(email: string, password: string, displayName: string, serverData: any, isAdmin: boolean): Promise<import("mongoose").Document<unknown, {}, User, {}> & User & {
         _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
     }>;
-    updateUser(uid: string, updateData: any): Promise<import("mongoose").Document<unknown, {}, User> & User & {
+    updateUser(uid: string, updateData: any): Promise<import("mongoose").Document<unknown, {}, User, {}> & User & {
         _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
     }>;
-    deleteUser(uid: string): Promise<import("mongoose").Document<unknown, {}, User> & User & {
+    deleteUser(uid: string): Promise<import("mongoose").Document<unknown, {}, User, {}> & User & {
         _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
     }>;
     findUserByUid(uid: string): Promise<{
         message: string;
@@ -57,8 +65,10 @@ export declare class UserService {
     } | {
         message: string;
         success: boolean;
-        user: import("mongoose").Document<unknown, {}, User> & User & {
+        user: import("mongoose").Document<unknown, {}, User, {}> & User & {
             _id: import("mongoose").Types.ObjectId;
+        } & {
+            __v: number;
         };
     }>;
 }

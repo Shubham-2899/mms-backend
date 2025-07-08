@@ -3,11 +3,11 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { createBullBoard } from '@bull-board/api';
-import { BullAdapter } from '@bull-board/api/bullAdapter';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+
 import { ExpressAdapter } from '@bull-board/express';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { NextFunction, Response, Request } from 'express';
-import { FirebaseService } from 'src/auth/firebase.service';
 
 @Injectable()
 export class BullmqDashboardService implements OnModuleInit {
@@ -28,7 +28,11 @@ export class BullmqDashboardService implements OnModuleInit {
     this.serverAdapter.setBasePath('/api/admin/dashboard');
 
     createBullBoard({
+<<<<<<< HEAD
       queues: [new BullAdapter(this.emailQueue, { readOnlyMode: false })],
+=======
+      queues: [new BullMQAdapter(this.emailQueue, { readOnlyMode: true })],
+>>>>>>> ca7ca5ca5db491875088fbef03c81bcc92b3352a
       serverAdapter: this.serverAdapter,
       options: {
         uiConfig: {
@@ -92,7 +96,7 @@ export class BullmqDashboardService implements OnModuleInit {
       this.serverAdapter.setBasePath('/api/admin/dashboard');
 
       createBullBoard({
-        queues: [new BullAdapter(this.emailQueue, { readOnlyMode: true })],
+        queues: [new BullMQAdapter(this.emailQueue, { readOnlyMode: true })],
         serverAdapter: this.serverAdapter,
         options: {
           uiConfig: {

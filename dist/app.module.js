@@ -26,6 +26,7 @@ const email_list_module_1 = require("./email_list/email_list.module");
 const bullmq_1 = require("@nestjs/bullmq");
 const bullmq_dashboard_module_1 = require("./bullmq-dashboard/bullmq-dashboard.module");
 const reports_module_1 = require("./reports/reports.module");
+const jobs_module_1 = require("./jobs/jobs.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -60,6 +61,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             bullmq_dashboard_module_1.BullmqDashboardModule,
             reports_module_1.ReportsModule,
+            jobs_module_1.JobsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

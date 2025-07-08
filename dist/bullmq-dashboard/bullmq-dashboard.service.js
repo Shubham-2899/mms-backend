@@ -17,7 +17,7 @@ const common_1 = require("@nestjs/common");
 const bullmq_1 = require("bullmq");
 const bullmq_2 = require("@nestjs/bullmq");
 const api_1 = require("@bull-board/api");
-const bullAdapter_1 = require("@bull-board/api/bullAdapter");
+const bullMQAdapter_1 = require("@bull-board/api/bullMQAdapter");
 const express_1 = require("@bull-board/express");
 let BullmqDashboardService = class BullmqDashboardService {
     constructor(emailQueue) {
@@ -27,7 +27,11 @@ let BullmqDashboardService = class BullmqDashboardService {
         this.serverAdapter = new express_1.ExpressAdapter();
         this.serverAdapter.setBasePath('/api/admin/dashboard');
         (0, api_1.createBullBoard)({
+<<<<<<< HEAD
             queues: [new bullAdapter_1.BullAdapter(this.emailQueue, { readOnlyMode: false })],
+=======
+            queues: [new bullMQAdapter_1.BullMQAdapter(this.emailQueue, { readOnlyMode: true })],
+>>>>>>> ca7ca5ca5db491875088fbef03c81bcc92b3352a
             serverAdapter: this.serverAdapter,
             options: {
                 uiConfig: {
@@ -63,7 +67,7 @@ let BullmqDashboardService = class BullmqDashboardService {
             this.serverAdapter = new express_1.ExpressAdapter();
             this.serverAdapter.setBasePath('/api/admin/dashboard');
             (0, api_1.createBullBoard)({
-                queues: [new bullAdapter_1.BullAdapter(this.emailQueue, { readOnlyMode: true })],
+                queues: [new bullMQAdapter_1.BullMQAdapter(this.emailQueue, { readOnlyMode: true })],
                 serverAdapter: this.serverAdapter,
                 options: {
                     uiConfig: {
