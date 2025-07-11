@@ -2,72 +2,202 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# MMS Backend
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+A progressive [Node.js](http://nodejs.org) backend built with [NestJS](https://nestjs.com/) for efficient and scalable server-side applications.
+
+---
+
+## Table of Contents
+
+- [Description](#description)
+- [Installation](#installation)
+- [Running the app](#running-the-app)
+- [API Documentation](#api-documentation)
+  - [Authentication](#authentication)
+  - [User Management](#user-management)
+  - [Email Sending](#email-sending)
+  - [URL Shortener](#url-shortener)
+  - [Reports](#reports)
+  - [Jobs](#jobs)
+  - [Email List Management](#email-list-management)
+  - [BullMQ Dashboard](#bullmq-dashboard)
+- [Testing](#testing)
+- [Support](#support)
+- [License](#license)
+
+---
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This repository contains the backend for the MMS platform, providing APIs for user management, email sending (bulk and test), URL shortening and analytics, reporting, job queue management, and more. Built with NestJS, MongoDB, BullMQ, and Firebase authentication.
+
+---
 
 ## Installation
 
 ```bash
-$ npm install
+npm install
 ```
+
+---
 
 ## Running the app
 
 ```bash
 # development
-$ npm run start
+npm run start
 
 # watch mode
-$ npm run start:dev
+npm run start:dev
 
 # production mode
-$ npm run start:prod
+npm run start:prod
 ```
 
-## Test
+---
+
+## API Documentation
+
+### Authentication
+
+Most endpoints require authentication via Firebase JWT.  
+**Add the following header to your requests:**
+
+```
+Authorization: Bearer <FIREBASE_ID_TOKEN>
+```
+
+Some endpoints require admin privileges (see below).
+
+---
+
+### User Management
+
+**Base URL:** `/api/users`
+
+| Method | Endpoint              | Description                  | Auth      | Body/Params                                                                                 |
+|--------|----------------------|------------------------------|-----------|--------------------------------------------------------------------------------------------|
+| GET    | `/api/users`         | Get all users                | Admin     | -                                                                                          |
+| POST   | `/api/users/create`  | Create a new user            | Admin     | `{ email, password, displayName, serverData, isAdmin }`                                    |
+| PUT    | `/api/users/update/:uid` | Update user by Firebase UID | Admin     | `{ email?, password?, displayName?, serverData?, isAdmin }`                                |
+| DELETE | `/api/users/delete/:uid` | Delete user by Firebase UID | Admin     | -                                                                                          |
+| GET    | `/api/users/:uid`    | Get user by Firebase UID     | Admin     | -                                                                                          |
+
+---
+
+### Email Sending
+
+**Base URL:** `/api`
+
+| Method | Endpoint         | Description                       | Auth      | Body/Params                                                                                 |
+|--------|-----------------|-----------------------------------|-----------|--------------------------------------------------------------------------------------------|
+| POST   | `/api/sendemail` | Send emails (test or bulk)        | User      | [CreateEmailDto](#createemaildto) + `Authorization` header                                 |
+| GET    | `/api/availableIps` | Get available domains/IPs       | User      | -                                                                                          |
+| POST   | `/api/stopjob`   | Stop a running email job          | User      | `{ jobId: number }`                                                                        |
+
+#### <a id="createemaildto"></a>CreateEmailDto
+
+```json
+{
+  "from": "string",
+  "fromName": "string",
+  "subject": "string",
+  "to": ["string"],
+  "templateType": "string",
+  "emailTemplate": "string",
+  "mode": "string", // "test" or "bulk"
+  "offerId": "string",
+  "campaignId": "string",
+  "selectedIp": "string",
+  "batchSize": number,
+  "delay": number
+}
+```
+
+---
+
+### URL Shortener
+
+**Base URL:** `/api/url`
+
+| Method | Endpoint         | Description                       | Auth      | Body/Params                                                                                 |
+|--------|-----------------|-----------------------------------|-----------|--------------------------------------------------------------------------------------------|
+| POST   | `/api/url`      | Create a new short URL            | User      | `{ url, domain, offerId, linkType, campaignId, linkPattern }`                              |
+| GET    | `/api/url/reports` | Get all URL analytics/reports   | User      | Optional: `shortId` query param                                                            |
+
+---
+
+### Reports
+
+**Base URL:** `/api/reports`
+
+| Method | Endpoint         | Description                       | Auth      | Query Params                                                                               |
+|--------|-----------------|-----------------------------------|-----------|--------------------------------------------------------------------------------------------|
+| GET    | `/api/reports`  | Get paginated reports             | User      | `page`, `pageSize`, `offerId`, `campaignId`, `fromDate`, `toDate`                          |
+
+---
+
+### Jobs
+
+**Base URL:** `/jobs`
+
+| Method | Endpoint         | Description                       | Auth      | Query Params                                                                               |
+|--------|-----------------|-----------------------------------|-----------|--------------------------------------------------------------------------------------------|
+| DELETE | `/jobs/clean-old` | Clean old jobs from Bull queue   | Admin     | `value` (number), `unit` ("second", "minute", "hour")                                     |
+
+---
+
+### Email List Management
+
+**Base URL:** `/api/email_list`
+
+| Method | Endpoint         | Description                       | Auth      | Body/Params                                                                                 |
+|--------|-----------------|-----------------------------------|-----------|--------------------------------------------------------------------------------------------|
+| POST   | `/api/email_list/add-emails` | Add emails via array   | Admin     | `{ emails: string[], campaignId: string }`                                                 |
+| POST   | `/api/email_list/upload-emails` | Upload emails via CSV | Admin     | `file` (CSV), `campaignId` (form-data)                                                     |
+| GET    | `/api/email_list/suppressions` | Get suppression list  | Admin     | `page`, `limit`, `fromDate`, `toDate`                                                      |
+
+---
+
+### BullMQ Dashboard
+
+**Base URL:** `/api/admin/dashboard`
+
+- Provides a web dashboard for queue/job monitoring.
+- Requires admin authentication.
+
+---
+
+## Testing
 
 ```bash
 # unit tests
-$ npm run test
+npm run test
 
 # e2e tests
-$ npm run test:e2e
+npm run test:e2e
 
 # test coverage
-$ npm run test:cov
+npm run test:cov
 ```
+
+---
 
 ## Support
 
 Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+---
 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+---
+
+## Notes
+
+- All endpoints (except `/` and static files) require a valid Firebase JWT in the `Authorization` header.
+- Admin endpoints require the user to have the `admin` claim.
+- For API exploration and testing, consider integrating [Swagger](https://docs.nestjs.com/openapi/introduction) in the future.
