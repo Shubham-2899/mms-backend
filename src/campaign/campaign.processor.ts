@@ -46,6 +46,8 @@ export class CampaignProcessor extends WorkerHost {
 
     const delayBetweenEmailsMs = 100;
 
+    let campaignCompleted = false;
+
     while (true) {
       // Check campaign status before processing
       const campaign = await this.campaignModel.findOne({ campaignId });
@@ -68,6 +70,7 @@ export class CampaignProcessor extends WorkerHost {
 
       if (!recipients.length) {
         console.log(`✅ No more pending emails for campaign ${campaignId}`);
+        campaignCompleted = true;
         break;
       }
 
@@ -176,14 +179,6 @@ export class CampaignProcessor extends WorkerHost {
       }
 
       // Bulk operations - only 2 queries instead of 5 per email
-      // if (emailRecords.length > 0) {
-      //   await Promise.all([
-      //     // Bulk insert email records
-      //     this.emailModel.insertMany(emailRecords),
-      //     // Bulk update tracking status
-      //     this.emailTrackingModel.bulkWrite(trackingUpdates)
-      //   ]);
-      // }
       const operations = [];
 
       if (emailRecords.length > 0) {
@@ -202,19 +197,26 @@ export class CampaignProcessor extends WorkerHost {
       await new Promise((res) => setTimeout(res, delay * 1000));
     }
 
-    // Mark campaign as completed
-    await this.campaignModel.updateOne(
-      { campaignId },
-      {
-        status: 'completed',
-        completedAt: new Date(),
-      },
-    );
+    // Only mark as completed if campaign actually finished all emails
+    if (campaignCompleted) {
+      // Mark campaign as completed
+      await this.campaignModel.updateOne(
+        { campaignId },
+        {
+          status: 'completed',
+          completedAt: new Date(),
+        },
+      );
 
-    // Clean up campaign tracking data after completion
-    await this.cleanupCampaignData(campaignId);
+      // Clean up campaign tracking data after completion
+      await this.cleanupCampaignData(campaignId);
 
-    console.log(`✅ Campaign ${campaignId} email sending completed.`);
+      console.log(`✅ Campaign ${campaignId} email sending completed.`);
+    } else {
+      console.log(
+        `⏸️ Campaign ${campaignId} was paused, not marking as completed.`,
+      );
+    }
   }
 
   // Clean up campaign tracking data after completion
