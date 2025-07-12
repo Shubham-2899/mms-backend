@@ -13,7 +13,7 @@ import { createTransporter } from 'src/email/mailer.util';
 @Injectable()
 export class CampaignService {
   constructor(
-    @InjectQueue('email-queue') private emailQueue: Queue,
+    @InjectQueue('campaign-queue') private emailQueue: Queue,
     @InjectModel(Campaign.name) private campaignModel: Model<CampaignDocument>,
     @InjectModel(CampaignEmailTracking.name) private emailTrackingModel: Model<CampaignEmailTrackingDocument>,
     @InjectModel(Email.name) private emailModel: Model<EmailDocument>,
@@ -67,6 +67,7 @@ export class CampaignService {
   }
 
   async startCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any) {
+    console.log("Start campaign")
     // Save campaign details
     await this.campaignModel.findOneAndUpdate(
       { campaignId: createCampaignDto.campaignId },
@@ -80,7 +81,7 @@ export class CampaignService {
 
     // Add job to BullMQ queue
     const job = await this.emailQueue.add(
-      'send-email-job',
+      'send-campaign-job',
       {
         ...createCampaignDto,
         smtpConfig,
@@ -115,7 +116,7 @@ export class CampaignService {
     );
     
     const job = await this.emailQueue.add(
-      'send-email-job',
+      'send-campaign-job',
       {
         ...createCampaignDto,
         smtpConfig,
@@ -132,6 +133,8 @@ export class CampaignService {
 
   async resumeCampaignWithToken(createCampaignDto: CreateCampaignDto, firebaseToken: string) {
     try {
+
+      console.log(`Resume ${createCampaignDto.campaignId} campaign`)
       // Verify Firebase token and retrieve user ID
       const res = await this.firebaseService.verifyToken(firebaseToken);
 

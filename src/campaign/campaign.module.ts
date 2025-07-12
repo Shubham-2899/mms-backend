@@ -18,7 +18,7 @@ import { AuthModule } from 'src/auth/auth.module';
       { name: User.name, schema: UserSchema },
     ]),
     BullModule.registerQueue({
-      name: 'email-queue',
+      name: 'campaign-queue',
     }),
     AuthModule,
   ],

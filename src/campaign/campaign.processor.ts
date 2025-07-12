@@ -11,7 +11,7 @@ import {
 import { Email, EmailDocument } from 'src/email/schemas/email.schemas';
 import { createTransporter } from 'src/email/mailer.util';
 
-@Processor('email-queue')
+@Processor('campaign-queue')
 export class CampaignProcessor extends WorkerHost {
   constructor(
     @InjectModel(CampaignEmailTracking.name)
@@ -213,9 +213,7 @@ export class CampaignProcessor extends WorkerHost {
 
       console.log(`✅ Campaign ${campaignId} email sending completed.`);
     } else {
-      console.log(
-        `⏸️ Campaign ${campaignId} was paused, not marking as completed.`,
-      );
+      console.log(`⏸️ Campaign ${campaignId} was paused, not marking as completed.`);
     }
   }
 
