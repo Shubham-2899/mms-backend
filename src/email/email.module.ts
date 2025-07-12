@@ -8,6 +8,10 @@ import { BullModule } from '@nestjs/bullmq';
 import { EmailProcessor } from './email.processor';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { UserModule } from 'src/user/user.module';
+import {
+  EmailList,
+  EmailListSchema,
+} from 'src/email_list/schemas/email_list.schemas';
 
 @Module({
   imports: [
@@ -17,7 +21,10 @@ import { UserModule } from 'src/user/user.module';
     }),
     AuthModule,
     UserModule,
-    MongooseModule.forFeature([{ name: Email.name, schema: EmailSchema }]),
+    MongooseModule.forFeature([
+      { name: Email.name, schema: EmailSchema },
+      { name: EmailList.name, schema: EmailListSchema },
+    ]),
   ],
   controllers: [EmailController],
   providers: [EmailService, EmailProcessor],

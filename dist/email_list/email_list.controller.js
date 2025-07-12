@@ -23,20 +23,28 @@ let EmailListController = class EmailListController {
     constructor(emailListService) {
         this.emailListService = emailListService;
     }
-    async addEmails(emails) {
+    async addEmails(body) {
+        const { emails, campaignId } = body;
         if (!Array.isArray(emails) || !emails.length) {
             throw new common_1.BadRequestException('Emails must be a non-empty array');
         }
-        return await this.emailListService.addEmails(emails);
+        if (!campaignId) {
+            throw new common_1.BadRequestException('Campaign ID is required');
+        }
+        return await this.emailListService.addEmails(emails, campaignId);
     }
-    async uploadCSV(file) {
+    async uploadCSV(file, campaignId) {
         console.log('🚀 ~ EmailListController ~ uploadCSV ~ file:', file);
+        console.log('🚀 ~ EmailListController ~ uploadCSV ~ campaignId:', campaignId);
         if (!file) {
             throw new common_1.BadRequestException('CSV file must be provided.');
         }
+        if (!campaignId) {
+            throw new common_1.BadRequestException('Campaign ID is required.');
+        }
         const filePath = path.join(__dirname, '../../uploads', file.filename);
         try {
-            const res = await this.emailListService.addEmailsFromCSVFile(filePath);
+            const res = await this.emailListService.addEmailsFromCSVFile(filePath, campaignId);
             fs.unlinkSync(filePath);
             return res;
         }
@@ -60,9 +68,9 @@ let EmailListController = class EmailListController {
 exports.EmailListController = EmailListController;
 __decorate([
     (0, common_1.Post)('add-emails'),
-    __param(0, (0, common_1.Body)('emails')),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Array]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], EmailListController.prototype, "addEmails", null);
 __decorate([
@@ -84,8 +92,9 @@ __decorate([
         },
     })),
     __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Body)('campaignId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], EmailListController.prototype, "uploadCSV", null);
 __decorate([

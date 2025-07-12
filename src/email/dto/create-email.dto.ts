@@ -9,4 +9,6 @@ export class CreateEmailDto {
   offerId: string;
   campaignId: string;
   selectedIp: string;
+  batchSize: number; // number of emails to process at the time
+  delay: number; // in seconds (NEW)
 }

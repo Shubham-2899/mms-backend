@@ -16,7 +16,7 @@ export class EmailListService {
   private emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
   // Add emails via array
-  async addEmails(emailArray: string[]): Promise<any> {
+  async addEmails(emailArray: string[], campaignId: string): Promise<any> {
     try {
       // Filter out invalid emails
       const validEmails = emailArray.filter((email) =>
@@ -31,8 +31,15 @@ export class EmailListService {
       // Prepare bulk operations for valid emails
       const bulkOps = validEmails.map((email) => ({
         updateOne: {
-          filter: { email }, // Check if the email already exists
-          update: { $setOnInsert: { email } }, // Insert only if it doesn't exist
+          filter: { to_email: email }, // Check if the email already exists in 'to_email'
+          update: {
+            $setOnInsert: {
+              to_email: email, // Insert the email into the 'to_email' field
+              campaignId, // Attach the campaign ID
+              status: 'pending', // Default status
+              isProcessed: false, // Default to unprocessed
+            },
+          },
           upsert: true, // Ensures new emails are added, existing ones are ignored
         },
       }));
@@ -56,7 +63,10 @@ export class EmailListService {
   }
 
   // Process the CSV file from disk
-  async addEmailsFromCSVFile(filePath: string): Promise<void> {
+  async addEmailsFromCSVFile(
+    filePath: string,
+    campaignId: string,
+  ): Promise<void> {
     const emails: string[] = [];
 
     return new Promise((resolve, reject) => {
@@ -82,7 +92,7 @@ export class EmailListService {
           }
 
           // Add emails to the database
-          const res = await this.addEmails(emails);
+          const res = await this.addEmails(emails, campaignId);
           if (res.success) {
             resolve(res);
           } else {

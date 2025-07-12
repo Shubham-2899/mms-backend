@@ -29,6 +29,10 @@ export declare class EmailListService {
     private emailListModel;
     constructor(emailListModel: Model<EmailListDocument>);
     private emailRegex;
+<<<<<<< HEAD
+    addEmails(emailArray: string[], campaignId: string): Promise<any>;
+    addEmailsFromCSVFile(filePath: string, campaignId: string): Promise<void>;
+=======
     addEmails(emailArray: string[]): Promise<any>;
     addEmailsFromCSVFile(filePath: string): Promise<void>;
     getSuppressionList(page?: number, limit?: number, fromDate?: string, toDate?: string): Promise<{
@@ -44,4 +48,5 @@ export declare class EmailListService {
             totalPages: number;
         };
     }>;
+>>>>>>> ca7ca5ca5db491875088fbef03c81bcc92b3352a
 }

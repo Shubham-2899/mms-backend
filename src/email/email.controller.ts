@@ -10,7 +10,7 @@ import { EmailService } from './email.service';
 import { CreateEmailDto } from './dto/create-email.dto';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 
-@UseGuards(FirebaseAuthGuard)
+// @UseGuards(FirebaseAuthGuard)
 @Controller('/api')
 export class EmailController {
   constructor(private readonly emailService: EmailService) {}
@@ -30,5 +30,11 @@ export class EmailController {
     // Extract the token from the Authorization header
     const firebaseToken = token.split(' ')[1];
     return this.emailService.getAvailableIps(firebaseToken);
+  }
+
+  @Post('stopjob')
+  async stopJob(@Body() jobId: number,@Headers('Authorization') token: string) {
+    // Extract the token from the Authorization header
+    return this.emailService.stopJob(jobId);
   }
 }

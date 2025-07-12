@@ -28,7 +28,11 @@ export class BullmqDashboardService implements OnModuleInit {
     this.serverAdapter.setBasePath('/api/admin/dashboard');
 
     createBullBoard({
+<<<<<<< HEAD
+      queues: [new BullAdapter(this.emailQueue, { readOnlyMode: false })],
+=======
       queues: [new BullMQAdapter(this.emailQueue, { readOnlyMode: true })],
+>>>>>>> ca7ca5ca5db491875088fbef03c81bcc92b3352a
       serverAdapter: this.serverAdapter,
       options: {
         uiConfig: {

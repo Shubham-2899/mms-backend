@@ -16,7 +16,6 @@ exports.EmailController = void 0;
 const common_1 = require("@nestjs/common");
 const email_service_1 = require("./email.service");
 const create_email_dto_1 = require("./dto/create-email.dto");
-const firebase_auth_guard_1 = require("../auth/firebase-auth.guard");
 let EmailController = class EmailController {
     constructor(emailService) {
         this.emailService = emailService;
@@ -47,7 +46,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], EmailController.prototype, "getAvailableIps", null);
 exports.EmailController = EmailController = __decorate([
-    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
     (0, common_1.Controller)('/api'),
     __metadata("design:paramtypes", [email_service_1.EmailService])
 ], EmailController);
