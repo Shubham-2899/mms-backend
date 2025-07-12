@@ -23,6 +23,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { BullmqDashboardModule } from './bullmq-dashboard/bullmq-dashboard.module';
 import { ReportsModule } from './reports/reports.module';
 import { JobsModule } from './jobs/jobs.module';
+import { CampaignModule } from './campaign/campaign.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { JobsModule } from './jobs/jobs.module';
     BullmqDashboardModule,
     ReportsModule,
     JobsModule,
+    CampaignModule,
   ],
   controllers: [AppController],
   providers: [AppService],
