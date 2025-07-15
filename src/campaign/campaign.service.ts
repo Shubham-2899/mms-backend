@@ -3,7 +3,12 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Campaign, CampaignDocument, CampaignEmailTracking, CampaignEmailTrackingDocument } from './schemas/campaign.schemas';
+import {
+  Campaign,
+  CampaignDocument,
+  CampaignEmailTracking,
+  CampaignEmailTrackingDocument,
+} from './schemas/campaign.schemas';
 import { Email, EmailDocument } from 'src/email/schemas/email.schemas';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { FirebaseService } from 'src/auth/firebase.service';
@@ -13,9 +18,11 @@ import { createTransporter } from 'src/email/mailer.util';
 @Injectable()
 export class CampaignService {
   constructor(
-    @InjectQueue('campaign-queue') private emailQueue: Queue,
+    @InjectQueue('campaign-queue') private campaignQueue: Queue,
+    @InjectQueue('email-queue') private emailQueue: Queue,
     @InjectModel(Campaign.name) private campaignModel: Model<CampaignDocument>,
-    @InjectModel(CampaignEmailTracking.name) private emailTrackingModel: Model<CampaignEmailTrackingDocument>,
+    @InjectModel(CampaignEmailTracking.name)
+    private emailTrackingModel: Model<CampaignEmailTrackingDocument>,
     @InjectModel(Email.name) private emailModel: Model<EmailDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private firebaseService: FirebaseService,
@@ -39,7 +46,10 @@ export class CampaignService {
     }
   }
 
-  async createCampaign(createCampaignDto: CreateCampaignDto, firebaseToken: string) {
+  async createCampaign(
+    createCampaignDto: CreateCampaignDto,
+    firebaseToken: string,
+  ) {
     try {
       // Verify Firebase token and retrieve user ID
       const res = await this.firebaseService.verifyToken(firebaseToken);
@@ -57,41 +67,78 @@ export class CampaignService {
 
       if (createCampaignDto.mode === 'test') {
         return await this.testEmails(createCampaignDto, smtpConfig);
+      } else if (createCampaignDto.mode === 'manual') {
+        // Manual mode: enqueue jobs to email-queue for each recipient
+        if (!createCampaignDto.to || createCampaignDto.to.length === 0) {
+          throw new HttpException(
+            'No recipients provided for manual mode',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+
+        await this.emailQueue.add('send-email-job', {
+          ...createCampaignDto,
+          smtpConfig,
+          mode: 'manual',
+        });
+
+        return {
+          message: 'Manual email jobs added to queue successfully',
+          success: true,
+        };
       } else {
         return await this.startCampaign(createCampaignDto, smtpConfig);
       }
     } catch (error) {
-      console.log('🚀 ~ CampaignService ~ createCampaign ~ error:', error);
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      console.error('🚀 ~ CampaignService ~ createCampaign ~ error:', error);
+
+      if (error instanceof HttpException) {
+        // Re-throw expected exceptions (like 400) as-is
+        throw error;
+      }
+
+      // Only throw 500 for truly unexpected errors
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async startCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any) {
-    console.log("Start campaign")
+    console.log('Start campaign');
+    // Check for recipients in CampaignEmailTracking
+    const recipientCount = await this.emailTrackingModel.countDocuments({
+      campaignId: createCampaignDto.campaignId,
+      status: 'pending',
+    });
+    if (recipientCount === 0) {
+      throw new HttpException(
+        'No recipients found for this campaign. Please contact admin.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     // Save campaign details
     await this.campaignModel.findOneAndUpdate(
       { campaignId: createCampaignDto.campaignId },
-      { 
-        ...createCampaignDto,
-        status: 'running',
-        startedAt: new Date()
-      },
-      { upsert: true }
-    );
-
-    // Add job to BullMQ queue
-    const job = await this.emailQueue.add(
-      'send-campaign-job',
       {
         ...createCampaignDto,
-        smtpConfig,
-      }
+        status: 'running',
+        startedAt: new Date(),
+      },
+      { upsert: true },
     );
+
+    // Add job to BullMQ campaign queue
+    const job = await this.campaignQueue.add('send-campaign-job', {
+      ...createCampaignDto,
+      smtpConfig,
+    });
 
     // Update campaign with job ID
     await this.campaignModel.findOneAndUpdate(
       { campaignId: createCampaignDto.campaignId },
-      { jobId: job.id }
+      { jobId: job.id },
     );
 
     return {
@@ -104,37 +151,48 @@ export class CampaignService {
   async pauseCampaign(campaignId: string) {
     await this.campaignModel.findOneAndUpdate(
       { campaignId },
-      { status: 'paused' }
+      { status: 'paused' },
     );
     return { message: 'Campaign paused', success: true };
   }
 
   async resumeCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any) {
-    await this.campaignModel.findOneAndUpdate(
-      { campaignId: createCampaignDto.campaignId },
-      { status: 'running' }
-    );
-    
-    const job = await this.emailQueue.add(
-      'send-campaign-job',
-      {
+    if (createCampaignDto.mode === 'manual') {
+      // Manual mode is not supported for resume
+      throw new HttpException(
+        'Manual mode is only supported during campaign creation.',
+        HttpStatus.BAD_REQUEST,
+      );
+    } else {
+      // Update all campaign fields on resume
+      await this.campaignModel.findOneAndUpdate(
+        { campaignId: createCampaignDto.campaignId },
+        {
+          ...createCampaignDto,
+          status: 'running',
+        },
+      );
+
+      const job = await this.campaignQueue.add('send-campaign-job', {
         ...createCampaignDto,
         smtpConfig,
-      }
-    );
+      });
 
-    await this.campaignModel.findOneAndUpdate(
-      { campaignId: createCampaignDto.campaignId },
-      { jobId: job.id }
-    );
+      await this.campaignModel.findOneAndUpdate(
+        { campaignId: createCampaignDto.campaignId },
+        { jobId: job.id },
+      );
 
-    return { message: 'Campaign resumed', success: true, jobId: job.id };
+      return { message: 'Campaign resumed', success: true, jobId: job.id };
+    }
   }
 
-  async resumeCampaignWithToken(createCampaignDto: CreateCampaignDto, firebaseToken: string) {
+  async resumeCampaignWithToken(
+    createCampaignDto: CreateCampaignDto,
+    firebaseToken: string,
+  ) {
     try {
-
-      console.log(`Resume ${createCampaignDto.campaignId} campaign`)
+      console.log(`Resume ${createCampaignDto.campaignId} campaign`);
       // Verify Firebase token and retrieve user ID
       const res = await this.firebaseService.verifyToken(firebaseToken);
 
@@ -150,7 +208,10 @@ export class CampaignService {
 
       return await this.resumeCampaign(createCampaignDto, smtpConfig);
     } catch (error) {
-      console.log('🚀 ~ CampaignService ~ resumeCampaignWithToken ~ error:', error);
+      console.log(
+        '🚀 ~ CampaignService ~ resumeCampaignWithToken ~ error:',
+        error,
+      );
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -165,7 +226,7 @@ export class CampaignService {
       offerId,
       campaignId,
       to,
-      selectedIp
+      selectedIp,
     } = createCampaignDto;
 
     const decodedTemplate = decodeURIComponent(emailTemplate);
@@ -183,7 +244,7 @@ export class CampaignService {
           to: email,
           subject,
           html: decodedTemplate,
-          headers
+          headers,
         });
 
         // Save to emails collection for reports
@@ -194,18 +255,18 @@ export class CampaignService {
           campaignId,
           sentAt: new Date(),
           response: info.response,
-          mode: 'test'
+          mode: 'test',
         });
 
         // Update tracking status
         await this.emailTrackingModel.findOneAndUpdate(
           { to_email: email, campaignId },
-          { 
+          {
             status: 'sent',
             sentAt: new Date(),
-            isProcessed: true
+            isProcessed: true,
           },
-          { upsert: true }
+          { upsert: true },
         );
 
         sent.push(email);
@@ -218,19 +279,19 @@ export class CampaignService {
           campaignId,
           sentAt: new Date(),
           response: err.message,
-          mode: 'test'
+          mode: 'test',
         });
 
         // Update tracking status
         await this.emailTrackingModel.findOneAndUpdate(
           { to_email: email, campaignId },
-          { 
+          {
             status: 'failed',
             sentAt: new Date(),
             errorMessage: err.message,
-            isProcessed: true
+            isProcessed: true,
           },
-          { upsert: true }
+          { upsert: true },
         );
 
         failed.push(email);
@@ -238,61 +299,91 @@ export class CampaignService {
     }
 
     return {
-      message: failed.length > 0 ? 'Some emails failed' : 'All emails sent successfully',
+      message:
+        failed.length > 0
+          ? 'Some emails failed'
+          : 'All emails sent successfully',
       success: failed.length === 0,
       sent,
       failed,
       emailSent: sent.length,
-      emailFailed: failed.length
+      emailFailed: failed.length,
     };
   }
 
   async getCampaignStats(campaignId: string) {
+    // Try to get real-time stats from tracking model
     const [sent, failed, pending] = await Promise.all([
       this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
       this.emailTrackingModel.countDocuments({ campaignId, status: 'failed' }),
-      this.emailTrackingModel.countDocuments({ campaignId, status: 'pending' })
+      this.emailTrackingModel.countDocuments({ campaignId, status: 'pending' }),
     ]);
-
     const campaign = await this.campaignModel.findOne({ campaignId });
+    const trackingDataExists = sent + failed + pending > 0;
+
+    let counts, totalEmails, sentEmails, failedEmails;
+    if (trackingDataExists) {
+      counts = { sent, failed, pending, total: sent + failed + pending };
+      totalEmails = sent + failed + pending;
+      sentEmails = sent;
+      failedEmails = failed;
+    } else if (
+      campaign &&
+      (campaign.sentEmails || campaign.failedEmails || campaign.totalEmails)
+    ) {
+      // Use persisted stats if tracking data is gone
+      counts = {
+        sent: campaign.sentEmails || 0,
+        failed: campaign.failedEmails || 0,
+        pending: 0,
+        total: campaign.totalEmails || 0,
+      };
+      totalEmails = campaign.totalEmails || 0;
+      sentEmails = campaign.sentEmails || 0;
+      failedEmails = campaign.failedEmails || 0;
+    } else {
+      // No stats found at all
+      // throw new HttpException('No stats found for this campaign. Please contact admin.', HttpStatus.NOT_FOUND);
+      counts = { sent: 0, failed: 0, pending: 0, total: 0 };
+      totalEmails = 0;
+      sentEmails = 0;
+      failedEmails = 0;
+    }
 
     return {
       campaignId,
       status: campaign?.status || 'unknown',
-      counts: {
-        sent,
-        failed,
-        pending,
-        total: sent + failed + pending
-      },
-      campaign: campaign ? {
-        from: campaign.from,
-        fromName: campaign.fromName,
-        subject: campaign.subject,
-        offerId: campaign.offerId,
-        selectedIp: campaign.selectedIp,
-        batchSize: campaign.batchSize,
-        delay: campaign.delay,
-        startedAt: campaign.startedAt,
-        completedAt: campaign.completedAt,
-        totalEmails: campaign.totalEmails,
-        sentEmails: campaign.sentEmails,
-        failedEmails: campaign.failedEmails
-      } : null
+      counts,
+      campaign: campaign
+        ? {
+            from: campaign.from,
+            fromName: campaign.fromName,
+            subject: campaign.subject,
+            offerId: campaign.offerId,
+            selectedIp: campaign.selectedIp,
+            batchSize: campaign.batchSize,
+            delay: campaign.delay,
+            startedAt: campaign.startedAt,
+            completedAt: campaign.completedAt,
+            totalEmails,
+            sentEmails,
+            failedEmails,
+          }
+        : null,
     };
   }
 
   async getAllCampaigns() {
     const campaigns = await this.campaignModel.find().sort({ createdAt: -1 });
-    
+
     const campaignsWithStats = await Promise.all(
       campaigns.map(async (campaign) => {
         const stats = await this.getCampaignStats(campaign.campaignId);
         return {
           ...campaign.toObject(),
-          stats: stats.counts
+          stats: stats.counts,
         };
-      })
+      }),
     );
 
     return campaignsWithStats;
@@ -307,7 +398,10 @@ export class CampaignService {
       }
       return { message: 'Job not found', success: false };
     } catch (error) {
-      throw new HttpException('Failed to stop job', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Failed to stop job',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -323,16 +417,42 @@ export class CampaignService {
         throw new Error('Campaign must be completed before cleanup');
       }
 
+      //Not required as count will be updated in the campaign processor after completion of campaign
+      //Keeping it for future reference
+      // Calculate stats before cleanup
+      const [sent, failed, pending] = await Promise.all([
+        this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
+        this.emailTrackingModel.countDocuments({
+          campaignId,
+          status: 'failed',
+        }),
+        this.emailTrackingModel.countDocuments({
+          campaignId,
+          status: 'pending',
+        }),
+      ]);
+      const total = sent + failed + pending;
+
+      // Persist stats in the campaign document
+      await this.campaignModel.updateOne(
+        { campaignId },
+        {
+          sentEmails: sent,
+          failedEmails: failed,
+          totalEmails: total,
+        },
+      );
+
       // Delete tracking data for completed campaigns
-      const result = await this.emailTrackingModel.deleteMany({ 
-        campaignId, 
-        status: { $in: ['sent', 'failed'] } 
+      const result = await this.emailTrackingModel.deleteMany({
+        campaignId,
+        status: { $in: ['sent', 'failed'] },
       });
 
       return {
         message: 'Campaign data cleaned up successfully',
         success: true,
-        deletedCount: result.deletedCount
+        deletedCount: result.deletedCount,
       };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -343,14 +463,14 @@ export class CampaignService {
   async getCampaignCleanupStatus(campaignId: string) {
     const [campaign, trackingCount] = await Promise.all([
       this.campaignModel.findOne({ campaignId }),
-      this.emailTrackingModel.countDocuments({ campaignId })
+      this.emailTrackingModel.countDocuments({ campaignId }),
     ]);
 
     return {
       campaignId,
       status: campaign?.status || 'unknown',
       trackingDataCount: trackingCount,
-      needsCleanup: campaign?.status === 'completed' && trackingCount > 0
+      needsCleanup: campaign?.status === 'completed' && trackingCount > 0,
     };
   }
-} 
+}

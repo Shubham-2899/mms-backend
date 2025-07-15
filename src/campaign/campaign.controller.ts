@@ -12,6 +12,7 @@ import { CampaignService } from './campaign.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 
+@UseGuards(FirebaseAuthGuard)
 @Controller('/api/campaign')
 export class CampaignController {
   constructor(private readonly campaignService: CampaignService) {}
@@ -23,7 +24,10 @@ export class CampaignController {
   ) {
     // Extract the token from the Authorization header
     const firebaseToken = token.split(' ')[1];
-    return this.campaignService.createCampaign(createCampaignDto, firebaseToken);
+    return this.campaignService.createCampaign(
+      createCampaignDto,
+      firebaseToken,
+    );
   }
 
   @Put(':campaignId/pause')
@@ -38,7 +42,10 @@ export class CampaignController {
   ) {
     // Extract the token from the Authorization header
     const firebaseToken = token.split(' ')[1];
-    return this.campaignService.resumeCampaignWithToken(createCampaignDto, firebaseToken);
+    return this.campaignService.resumeCampaignWithToken(
+      createCampaignDto,
+      firebaseToken,
+    );
   }
 
   @Get('stats/:campaignId')
@@ -65,4 +72,4 @@ export class CampaignController {
   async getCampaignCleanupStatus(@Param('campaignId') campaignId: string) {
     return this.campaignService.getCampaignCleanupStatus(campaignId);
   }
-} 
+}

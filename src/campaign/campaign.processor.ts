@@ -32,7 +32,6 @@ export class CampaignProcessor extends WorkerHost {
       fromName,
       subject,
       emailTemplate,
-      templateType,
       offerId,
       selectedIp,
     } = job.data;
@@ -213,13 +212,39 @@ export class CampaignProcessor extends WorkerHost {
 
       console.log(`✅ Campaign ${campaignId} email sending completed.`);
     } else {
-      console.log(`⏸️ Campaign ${campaignId} was paused, not marking as completed.`);
+      console.log(
+        `⏸️ Campaign ${campaignId} was paused, not marking as completed.`,
+      );
     }
   }
 
   // Clean up campaign tracking data after completion
   private async cleanupCampaignData(campaignId: string) {
     try {
+      //Persist stats in the campaign document
+      const [sent, failed, pending] = await Promise.all([
+        this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
+        this.emailTrackingModel.countDocuments({
+          campaignId,
+          status: 'failed',
+        }),
+        this.emailTrackingModel.countDocuments({
+          campaignId,
+          status: 'pending',
+        }),
+      ]);
+      const total = sent + failed + pending;
+
+      // Persist stats in the campaign document
+      await this.campaignModel.updateOne(
+        { campaignId },
+        {
+          sentEmails: sent,
+          failedEmails: failed,
+          totalEmails: total,
+        },
+      );
+
       // Option 1: Delete all tracking data (recommended for completed campaigns)
       await this.emailTrackingModel.deleteMany({
         campaignId,

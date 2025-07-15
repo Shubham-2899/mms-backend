@@ -4,10 +4,16 @@ import { BullModule } from '@nestjs/bullmq';
 import { CampaignController } from './campaign.controller';
 import { CampaignService } from './campaign.service';
 import { CampaignProcessor } from './campaign.processor';
-import { Campaign, CampaignSchema, CampaignEmailTracking, CampaignEmailTrackingSchema } from './schemas/campaign.schemas';
+import {
+  Campaign,
+  CampaignSchema,
+  CampaignEmailTracking,
+  CampaignEmailTrackingSchema,
+} from './schemas/campaign.schemas';
 import { Email, EmailSchema } from 'src/email/schemas/email.schemas';
 import { User, UserSchema } from 'src/user/schemas/user.schema';
 import { AuthModule } from 'src/auth/auth.module';
+import { EmailProcessor } from 'src/email/email.processor';
 
 @Module({
   imports: [
@@ -17,13 +23,18 @@ import { AuthModule } from 'src/auth/auth.module';
       { name: Email.name, schema: EmailSchema },
       { name: User.name, schema: UserSchema },
     ]),
-    BullModule.registerQueue({
-      name: 'campaign-queue',
-    }),
+    BullModule.registerQueue(
+      {
+        name: 'campaign-queue',
+      },
+      {
+        name: 'email-queue',
+      },
+    ),
     AuthModule,
   ],
   controllers: [CampaignController],
-  providers: [CampaignService, CampaignProcessor],
+  providers: [CampaignService, CampaignProcessor, EmailProcessor],
   exports: [CampaignService],
 })
-export class CampaignModule {} 
+export class CampaignModule {}

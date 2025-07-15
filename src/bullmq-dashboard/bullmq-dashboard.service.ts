@@ -15,6 +15,7 @@ export class BullmqDashboardService implements OnModuleInit {
 
   constructor(
     @InjectQueue('email-queue') private emailQueue: Queue,
+    @InjectQueue('campaign-queue') private campaignQueue: Queue,
     // private readonly firebaseService: FirebaseService,
   ) {}
 
@@ -98,6 +99,9 @@ export class BullmqDashboardService implements OnModuleInit {
       createBullBoard({
         queues: [
           new BullMQAdapter(this.emailQueue, {
+            readOnlyMode: true,
+          }) as unknown as any,
+          new BullMQAdapter(this.campaignQueue, {
             readOnlyMode: true,
           }) as unknown as any,
         ],
