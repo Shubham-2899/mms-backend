@@ -20,14 +20,19 @@ const api_1 = require("@bull-board/api");
 const bullMQAdapter_1 = require("@bull-board/api/bullMQAdapter");
 const express_1 = require("@bull-board/express");
 let BullmqDashboardService = class BullmqDashboardService {
-    constructor(emailQueue) {
+    constructor(emailQueue, campaignQueue) {
         this.emailQueue = emailQueue;
+        this.campaignQueue = campaignQueue;
     }
     onModuleInit() {
         this.serverAdapter = new express_1.ExpressAdapter();
         this.serverAdapter.setBasePath('/api/admin/dashboard');
         (0, api_1.createBullBoard)({
-            queues: [new bullMQAdapter_1.BullMQAdapter(this.emailQueue, { readOnlyMode: true })],
+            queues: [
+                new bullMQAdapter_1.BullMQAdapter(this.emailQueue, {
+                    readOnlyMode: true,
+                }),
+            ],
             serverAdapter: this.serverAdapter,
             options: {
                 uiConfig: {
@@ -63,7 +68,14 @@ let BullmqDashboardService = class BullmqDashboardService {
             this.serverAdapter = new express_1.ExpressAdapter();
             this.serverAdapter.setBasePath('/api/admin/dashboard');
             (0, api_1.createBullBoard)({
-                queues: [new bullMQAdapter_1.BullMQAdapter(this.emailQueue, { readOnlyMode: true })],
+                queues: [
+                    new bullMQAdapter_1.BullMQAdapter(this.emailQueue, {
+                        readOnlyMode: true,
+                    }),
+                    new bullMQAdapter_1.BullMQAdapter(this.campaignQueue, {
+                        readOnlyMode: true,
+                    }),
+                ],
                 serverAdapter: this.serverAdapter,
                 options: {
                     uiConfig: {
@@ -83,6 +95,8 @@ exports.BullmqDashboardService = BullmqDashboardService;
 exports.BullmqDashboardService = BullmqDashboardService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, bullmq_2.InjectQueue)('email-queue')),
-    __metadata("design:paramtypes", [bullmq_1.Queue])
+    __param(1, (0, bullmq_2.InjectQueue)('campaign-queue')),
+    __metadata("design:paramtypes", [bullmq_1.Queue,
+        bullmq_1.Queue])
 ], BullmqDashboardService);
 //# sourceMappingURL=bullmq-dashboard.service.js.map

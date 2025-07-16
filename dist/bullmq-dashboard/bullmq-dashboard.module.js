@@ -20,6 +20,8 @@ exports.BullmqDashboardModule = BullmqDashboardModule = __decorate([
             auth_module_1.AuthModule,
             bullmq_1.BullModule.registerQueue({
                 name: 'email-queue',
+            }, {
+                name: 'campaign-queue',
             }),
         ],
         providers: [bullmq_dashboard_service_1.BullmqDashboardService],
