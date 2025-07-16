@@ -11,9 +11,14 @@ import { AdminAuthGuard } from 'src/auth/admin-auth.guard';
 @Module({
   imports: [
     AuthModule,
-    BullModule.registerQueue({
-      name: 'email-queue',
-    }),
+    BullModule.registerQueue(
+      {
+        name: 'email-queue',
+      },
+      {
+        name: 'campaign-queue',
+      },
+    ),
   ],
   // controllers: [BullmqDashboardController],
   providers: [BullmqDashboardService],

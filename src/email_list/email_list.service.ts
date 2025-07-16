@@ -3,20 +3,26 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { parse } from 'csv-parse';
 import * as fs from 'fs';
+import {
+  CampaignEmailTracking,
+  CampaignEmailTrackingDocument,
+} from '../campaign/schemas/campaign.schemas';
 import { EmailList, EmailListDocument } from './schemas/email_list.schemas';
 
 @Injectable()
 export class EmailListService {
   constructor(
+    @InjectModel(CampaignEmailTracking.name)
+    private campaignEmailTrackingModel: Model<CampaignEmailTrackingDocument>, // For campaign_email_tracking
     @InjectModel(EmailList.name)
-    private emailListModel: Model<EmailListDocument>,
+    private emailListModel: Model<EmailListDocument>, // For email_list (suppression)
   ) {}
 
   // Regular expression for email validation
   private emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  // Add emails via array
-  async addEmails(emailArray: string[]): Promise<any> {
+  // Add emails via array to campaign_email_tracking
+  async addEmails(emailArray: string[], campaignId: string): Promise<any> {
     try {
       // Filter out invalid emails
       const validEmails = emailArray.filter((email) =>
@@ -31,14 +37,21 @@ export class EmailListService {
       // Prepare bulk operations for valid emails
       const bulkOps = validEmails.map((email) => ({
         updateOne: {
-          filter: { email }, // Check if the email already exists
-          update: { $setOnInsert: { email } }, // Insert only if it doesn't exist
+          filter: { to_email: email, campaignId }, // Ensure uniqueness by email and campaignId
+          update: {
+            $setOnInsert: {
+              to_email: email, // Insert the email into the 'to_email' field
+              campaignId, // Attach the campaign ID
+              status: 'pending', // Default status
+              isProcessed: false, // Default to unprocessed
+            },
+          },
           upsert: true, // Ensures new emails are added, existing ones are ignored
         },
       }));
 
       // Perform bulkWrite operation
-      const result = await this.emailListModel.bulkWrite(bulkOps);
+      const result = await this.campaignEmailTrackingModel.bulkWrite(bulkOps);
 
       return {
         message: 'Emails processed successfully.',
@@ -55,8 +68,11 @@ export class EmailListService {
     }
   }
 
-  // Process the CSV file from disk
-  async addEmailsFromCSVFile(filePath: string): Promise<void> {
+  // Process the CSV file from disk for campaign_email_tracking
+  async addEmailsFromCSVFile(
+    filePath: string,
+    campaignId: string,
+  ): Promise<void> {
     const emails: string[] = [];
 
     return new Promise((resolve, reject) => {
@@ -82,7 +98,7 @@ export class EmailListService {
           }
 
           // Add emails to the database
-          const res = await this.addEmails(emails);
+          const res = await this.addEmails(emails, campaignId);
           if (res.success) {
             resolve(res);
           } else {
@@ -96,7 +112,7 @@ export class EmailListService {
     });
   }
 
-  //get suppression list/unsubs
+  // Suppression list functionality (uses email_list collection)
   async getSuppressionList(
     page = 1,
     limit = 10,

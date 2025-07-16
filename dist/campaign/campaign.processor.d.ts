@@ -23,27 +23,16 @@
 /// <reference types="mongoose/types/schematypes" />
 /// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
+import { WorkerHost } from '@nestjs/bullmq';
+import { Job } from 'bullmq';
 import { Model } from 'mongoose';
-import { CampaignEmailTrackingDocument } from '../campaign/schemas/campaign.schemas';
-import { EmailListDocument } from './schemas/email_list.schemas';
-export declare class EmailListService {
-    private campaignEmailTrackingModel;
-    private emailListModel;
-    constructor(campaignEmailTrackingModel: Model<CampaignEmailTrackingDocument>, emailListModel: Model<EmailListDocument>);
-    private emailRegex;
-    addEmails(emailArray: string[], campaignId: string): Promise<any>;
-    addEmailsFromCSVFile(filePath: string, campaignId: string): Promise<void>;
-    getSuppressionList(page?: number, limit?: number, fromDate?: string, toDate?: string): Promise<{
-        data: {
-            email: any;
-            date: any;
-            domain: any;
-        }[];
-        pagination: {
-            total: number;
-            page: number;
-            limit: number;
-            totalPages: number;
-        };
-    }>;
+import { CampaignDocument, CampaignEmailTrackingDocument } from './schemas/campaign.schemas';
+import { EmailDocument } from 'src/email/schemas/email.schemas';
+export declare class CampaignProcessor extends WorkerHost {
+    private emailTrackingModel;
+    private campaignModel;
+    private emailModel;
+    constructor(emailTrackingModel: Model<CampaignEmailTrackingDocument>, campaignModel: Model<CampaignDocument>, emailModel: Model<EmailDocument>);
+    process(job: Job<any>): Promise<void>;
+    private cleanupCampaignData;
 }

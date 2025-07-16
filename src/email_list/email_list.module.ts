@@ -1,15 +1,18 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { EmailList, EmailListSchema } from './schemas/email_list.schemas';
 import { EmailListService } from './email_list.service';
 import { EmailListController } from './email_list.controller';
-import { AuthModule } from 'src/auth/auth.module';
+import { EmailList, EmailListSchema } from './schemas/email_list.schemas';
+import {
+  CampaignEmailTracking,
+  CampaignEmailTrackingSchema,
+} from '../campaign/schemas/campaign.schemas';
 
 @Module({
   imports: [
-    AuthModule,
     MongooseModule.forFeature([
-      { name: EmailList.name, schema: EmailListSchema },
+      { name: EmailList.name, schema: EmailListSchema }, // For email_list collection
+      { name: CampaignEmailTracking.name, schema: CampaignEmailTrackingSchema }, // For campaign_email_tracking collection
     ]),
   ],
   controllers: [EmailListController],

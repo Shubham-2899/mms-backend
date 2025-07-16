@@ -9,19 +9,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailListModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const email_list_schemas_1 = require("./schemas/email_list.schemas");
 const email_list_service_1 = require("./email_list.service");
 const email_list_controller_1 = require("./email_list.controller");
-const auth_module_1 = require("../auth/auth.module");
+const email_list_schemas_1 = require("./schemas/email_list.schemas");
+const campaign_schemas_1 = require("../campaign/schemas/campaign.schemas");
 let EmailListModule = class EmailListModule {
 };
 exports.EmailListModule = EmailListModule;
 exports.EmailListModule = EmailListModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            auth_module_1.AuthModule,
             mongoose_1.MongooseModule.forFeature([
                 { name: email_list_schemas_1.EmailList.name, schema: email_list_schemas_1.EmailListSchema },
+                { name: campaign_schemas_1.CampaignEmailTracking.name, schema: campaign_schemas_1.CampaignEmailTrackingSchema },
             ]),
         ],
         controllers: [email_list_controller_1.EmailListController],

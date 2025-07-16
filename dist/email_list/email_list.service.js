@@ -18,13 +18,15 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const csv_parse_1 = require("csv-parse");
 const fs = require("fs");
+const campaign_schemas_1 = require("../campaign/schemas/campaign.schemas");
 const email_list_schemas_1 = require("./schemas/email_list.schemas");
 let EmailListService = class EmailListService {
-    constructor(emailListModel) {
+    constructor(campaignEmailTrackingModel, emailListModel) {
+        this.campaignEmailTrackingModel = campaignEmailTrackingModel;
         this.emailListModel = emailListModel;
         this.emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     }
-    async addEmails(emailArray) {
+    async addEmails(emailArray, campaignId) {
         try {
             const validEmails = emailArray.filter((email) => this.emailRegex.test(email));
             if (!validEmails.length) {
@@ -32,12 +34,19 @@ let EmailListService = class EmailListService {
             }
             const bulkOps = validEmails.map((email) => ({
                 updateOne: {
-                    filter: { email },
-                    update: { $setOnInsert: { email } },
+                    filter: { to_email: email, campaignId },
+                    update: {
+                        $setOnInsert: {
+                            to_email: email,
+                            campaignId,
+                            status: 'pending',
+                            isProcessed: false,
+                        },
+                    },
                     upsert: true,
                 },
             }));
-            const result = await this.emailListModel.bulkWrite(bulkOps);
+            const result = await this.campaignEmailTrackingModel.bulkWrite(bulkOps);
             return {
                 message: 'Emails processed successfully.',
                 success: true,
@@ -53,7 +62,7 @@ let EmailListService = class EmailListService {
             };
         }
     }
-    async addEmailsFromCSVFile(filePath) {
+    async addEmailsFromCSVFile(filePath, campaignId) {
         const emails = [];
         return new Promise((resolve, reject) => {
             const stream = fs
@@ -72,7 +81,7 @@ let EmailListService = class EmailListService {
                 if (!emails.length) {
                     return reject(new common_1.BadRequestException('No emails found in the CSV file.'));
                 }
-                const res = await this.addEmails(emails);
+                const res = await this.addEmails(emails, campaignId);
                 if (res.success) {
                     resolve(res);
                 }
@@ -133,7 +142,9 @@ let EmailListService = class EmailListService {
 exports.EmailListService = EmailListService;
 exports.EmailListService = EmailListService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, mongoose_1.InjectModel)(email_list_schemas_1.EmailList.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __param(0, (0, mongoose_1.InjectModel)(campaign_schemas_1.CampaignEmailTracking.name)),
+    __param(1, (0, mongoose_1.InjectModel)(email_list_schemas_1.EmailList.name)),
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model])
 ], EmailListService);
 //# sourceMappingURL=email_list.service.js.map
