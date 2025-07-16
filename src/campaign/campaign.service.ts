@@ -66,25 +66,29 @@ export class CampaignService {
       };
 
       if (createCampaignDto.mode === 'test') {
+        console.log('here in test');
         return await this.testEmails(createCampaignDto, smtpConfig);
       } else if (createCampaignDto.mode === 'manual') {
+        console.log('here manual mode');
         // Manual mode: enqueue jobs to email-queue for each recipient
         if (!createCampaignDto.to || createCampaignDto.to.length === 0) {
+          console.log('No recipients provided for manual mode');
           throw new HttpException(
             'No recipients provided for manual mode',
             HttpStatus.BAD_REQUEST,
           );
         }
 
-        await this.emailQueue.add('send-email-job', {
+        const res = await this.emailQueue.add('send-email-job', {
           ...createCampaignDto,
           smtpConfig,
           mode: 'manual',
         });
 
         return {
-          message: 'Manual email jobs added to queue successfully',
+          message: 'Manual email jobs added to email queue successfully',
           success: true,
+          jobId: res.id,
         };
       } else {
         return await this.startCampaign(createCampaignDto, smtpConfig);
@@ -114,7 +118,7 @@ export class CampaignService {
     });
     if (recipientCount === 0) {
       throw new HttpException(
-        'No recipients found for this campaign. Please contact admin.',
+        'No recipients found for this campaign. Either recipients are not added or campaign is already completed',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -221,7 +225,7 @@ export class CampaignService {
       from,
       fromName,
       subject,
-      templateType,
+      // templateType,
       emailTemplate,
       offerId,
       campaignId,
@@ -236,6 +240,13 @@ export class CampaignService {
 
     const failed: string[] = [];
     const sent: string[] = [];
+
+    if (to.length === 0) {
+      throw new HttpException(
+        'No recipients found, Please add recipients',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     for (const email of to) {
       try {
@@ -258,16 +269,20 @@ export class CampaignService {
           mode: 'test',
         });
 
-        // Update tracking status
-        await this.emailTrackingModel.findOneAndUpdate(
-          { to_email: email, campaignId },
-          {
-            status: 'sent',
-            sentAt: new Date(),
-            isProcessed: true,
-          },
-          { upsert: true },
-        );
+        /**
+         * Update tracking status - this can be used to display total number of emails sent in test mode for given campaign
+         * to check the quality of sending by the user
+         *
+         * */
+        // await this.emailTrackingModel.findOneAndUpdate(
+        //   { to_email: email, campaignId },
+        //   {
+        //     status: 'sent',
+        //     sentAt: new Date(),
+        //     isProcessed: true,
+        //   },
+        //   { upsert: true },
+        // );
 
         sent.push(email);
       } catch (err) {
@@ -283,16 +298,16 @@ export class CampaignService {
         });
 
         // Update tracking status
-        await this.emailTrackingModel.findOneAndUpdate(
-          { to_email: email, campaignId },
-          {
-            status: 'failed',
-            sentAt: new Date(),
-            errorMessage: err.message,
-            isProcessed: true,
-          },
-          { upsert: true },
-        );
+        // await this.emailTrackingModel.findOneAndUpdate(
+        //   { to_email: email, campaignId },
+        //   {
+        //     status: 'failed',
+        //     sentAt: new Date(),
+        //     errorMessage: err.message,
+        //     isProcessed: true,
+        //   },
+        //   { upsert: true },
+        // );
 
         failed.push(email);
       }
@@ -362,6 +377,8 @@ export class CampaignService {
             offerId: campaign.offerId,
             selectedIp: campaign.selectedIp,
             batchSize: campaign.batchSize,
+            templateType: campaign.templateType,
+            emailTemplate: campaign.emailTemplate,
             delay: campaign.delay,
             startedAt: campaign.startedAt,
             completedAt: campaign.completedAt,
