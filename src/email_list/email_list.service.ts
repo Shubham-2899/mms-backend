@@ -58,6 +58,7 @@ export class EmailListService {
         success: true,
         insertedCount: result.upsertedCount,
         modifiedCount: result.modifiedCount,
+        campaignId,
       };
     } catch (err) {
       console.log('Error while processing emails:', err.message);

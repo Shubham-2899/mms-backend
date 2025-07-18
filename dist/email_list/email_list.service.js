@@ -52,6 +52,7 @@ let EmailListService = class EmailListService {
                 success: true,
                 insertedCount: result.upsertedCount,
                 modifiedCount: result.modifiedCount,
+                campaignId,
             };
         }
         catch (err) {

@@ -60,7 +60,7 @@ let ReportsService = class ReportsService {
                                             { $eq: ['$offerId', '$$offerId'] },
                                         ],
                                     },
-                                    mode: 'bulk',
+                                    mode: { $in: ['manual', 'bulk'] },
                                 },
                             },
                         ],
