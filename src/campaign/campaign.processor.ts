@@ -204,6 +204,7 @@ export class CampaignProcessor extends WorkerHost {
         {
           status: 'completed',
           completedAt: new Date(),
+          pendingEmails: 0,
         },
       );
 
@@ -221,7 +222,7 @@ export class CampaignProcessor extends WorkerHost {
   // Clean up campaign tracking data after completion
   private async cleanupCampaignData(campaignId: string) {
     try {
-      //Persist stats in the campaign document
+      // Persist stats in the campaign document
       const [sent, failed, pending] = await Promise.all([
         this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
         this.emailTrackingModel.countDocuments({
@@ -242,6 +243,7 @@ export class CampaignProcessor extends WorkerHost {
           sentEmails: sent,
           failedEmails: failed,
           totalEmails: total,
+          pendingEmails: pending,
         },
       );
 

@@ -41,6 +41,7 @@ export declare class Campaign {
     jobId?: string;
     startedAt?: Date;
     completedAt?: Date;
+    pendingEmails?: number;
     totalEmails?: number;
     sentEmails?: number;
     failedEmails?: number;

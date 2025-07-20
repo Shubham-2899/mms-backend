@@ -10,34 +10,34 @@ export class Campaign {
   @Prop({ required: true, unique: true })
   campaignId: string;
 
-  @Prop({ enum: ['running', 'paused', 'completed'], default: 'paused' })
+  @Prop({ enum: ['draft', 'ready', 'running', 'paused', 'completed'], default: 'draft' })
   status: string;
 
-  @Prop({ required: true })
+  @Prop()
   from: string;
 
-  @Prop({ required: true })
+  @Prop()
   fromName: string;
 
-  @Prop({ required: true })
+  @Prop()
   subject: string;
 
-  @Prop({ required: true })
+  @Prop()
   templateType: string;
 
-  @Prop({ required: true })
+  @Prop()
   emailTemplate: string;
 
-  @Prop({ required: true })
+  @Prop()
   offerId: string;
 
-  @Prop({ required: true })
+  @Prop()
   selectedIp: string;
 
-  @Prop({ required: true })
+  @Prop()
   batchSize: number;
 
-  @Prop({ required: true })
+  @Prop()
   delay: number;
 
   @Prop()
@@ -48,6 +48,9 @@ export class Campaign {
 
   @Prop()
   completedAt?: Date;
+
+  @Prop({ default: 0 })
+  pendingEmails?: number;
 
   @Prop()
   totalEmails?: number;

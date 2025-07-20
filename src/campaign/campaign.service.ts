@@ -111,24 +111,52 @@ export class CampaignService {
 
   async startCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any) {
     console.log('Start campaign');
+    
     // Check for recipients in CampaignEmailTracking
     const recipientCount = await this.emailTrackingModel.countDocuments({
       campaignId: createCampaignDto.campaignId,
       status: 'pending',
     });
+    
     if (recipientCount === 0) {
       throw new HttpException(
         'No recipients found for this campaign. Either recipients are not added or campaign is already completed',
         HttpStatus.BAD_REQUEST,
       );
     }
-    // Save campaign details
+
+    // Check if campaign exists and get current status
+    const existingCampaign = await this.campaignModel.findOne({ 
+      campaignId: createCampaignDto.campaignId 
+    });
+
+    // Validate campaign status
+    if (existingCampaign && existingCampaign.status === 'completed') {
+      throw new HttpException(
+        'Cannot start a completed campaign. Please add new recipients to restart.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Validate that all required fields are present for starting a campaign
+    const requiredFields = ['from', 'fromName', 'subject', 'templateType', 'emailTemplate', 'offerId', 'selectedIp', 'batchSize', 'delay'];
+    const missingFields = requiredFields.filter(field => !createCampaignDto[field]);
+    
+    if (missingFields.length > 0) {
+      throw new HttpException(
+        `Missing required fields for starting campaign: ${missingFields.join(', ')}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Save campaign details with status 'running'
     await this.campaignModel.findOneAndUpdate(
       { campaignId: createCampaignDto.campaignId },
       {
         ...createCampaignDto,
         status: 'running',
         startedAt: new Date(),
+        pendingEmails: recipientCount,
       },
       { upsert: true },
     );
@@ -168,12 +196,26 @@ export class CampaignService {
         HttpStatus.BAD_REQUEST,
       );
     } else {
+      // Check if there are pending emails
+      const pendingCount = await this.emailTrackingModel.countDocuments({
+        campaignId: createCampaignDto.campaignId,
+        status: 'pending',
+      });
+
+      if (pendingCount === 0) {
+        throw new HttpException(
+          'No pending emails to resume. Campaign is already completed.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
       // Update all campaign fields on resume
       await this.campaignModel.findOneAndUpdate(
         { campaignId: createCampaignDto.campaignId },
         {
           ...createCampaignDto,
           status: 'running',
+          pendingEmails: pendingCount,
         },
       );
 
@@ -327,66 +369,70 @@ export class CampaignService {
   }
 
   async getCampaignStats(campaignId: string) {
-    // Try to get real-time stats from tracking model
-    const [sent, failed, pending] = await Promise.all([
-      this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
-      this.emailTrackingModel.countDocuments({ campaignId, status: 'failed' }),
-      this.emailTrackingModel.countDocuments({ campaignId, status: 'pending' }),
-    ]);
     const campaign = await this.campaignModel.findOne({ campaignId });
-    const trackingDataExists = sent + failed + pending > 0;
-
-    let counts, totalEmails, sentEmails, failedEmails;
-    if (trackingDataExists) {
-      counts = { sent, failed, pending, total: sent + failed + pending };
-      totalEmails = sent + failed + pending;
-      sentEmails = sent;
-      failedEmails = failed;
-    } else if (
-      campaign &&
-      (campaign.sentEmails || campaign.failedEmails || campaign.totalEmails)
-    ) {
-      // Use persisted stats if tracking data is gone
-      counts = {
-        sent: campaign.sentEmails || 0,
-        failed: campaign.failedEmails || 0,
-        pending: 0,
-        total: campaign.totalEmails || 0,
+    
+    if (!campaign) {
+      return {
+        campaignId,
+        status: 'unknown',
+        counts: { sent: 0, failed: 0, pending: 0, total: 0 },
+        campaign: null,
       };
-      totalEmails = campaign.totalEmails || 0;
-      sentEmails = campaign.sentEmails || 0;
-      failedEmails = campaign.failedEmails || 0;
+    }
+
+    // Get current pending count from tracking collection
+    const pending = await this.emailTrackingModel.countDocuments({
+      campaignId,
+      status: 'pending',
+    });
+
+    let sent, failed, total;
+
+    // If campaign has persisted stats (was completed before), use them regardless of current status
+    if (typeof campaign.sentEmails === 'number' && typeof campaign.failedEmails === 'number') {
+      sent = campaign.sentEmails;
+      failed = campaign.failedEmails;
+      total = sent + failed + pending;
     } else {
-      // No stats found at all
-      // throw new HttpException('No stats found for this campaign. Please contact admin.', HttpStatus.NOT_FOUND);
-      counts = { sent: 0, failed: 0, pending: 0, total: 0 };
-      totalEmails = 0;
-      sentEmails = 0;
-      failedEmails = 0;
+      // For campaigns that never completed, use live stats from tracking collection
+      const [sentCount, failedCount] = await Promise.all([
+        this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
+        this.emailTrackingModel.countDocuments({ campaignId, status: 'failed' }),
+      ]);
+      sent = sentCount;
+      failed = failedCount;
+      total = sent + failed + pending;
+    }
+
+    // Update campaign pending count if it differs
+    if (campaign.pendingEmails !== pending) {
+      await this.campaignModel.updateOne(
+        { campaignId },
+        { pendingEmails: pending }
+      );
     }
 
     return {
       campaignId,
-      status: campaign?.status || 'unknown',
-      counts,
-      campaign: campaign
-        ? {
-            from: campaign.from,
-            fromName: campaign.fromName,
-            subject: campaign.subject,
-            offerId: campaign.offerId,
-            selectedIp: campaign.selectedIp,
-            batchSize: campaign.batchSize,
-            templateType: campaign.templateType,
-            emailTemplate: campaign.emailTemplate,
-            delay: campaign.delay,
-            startedAt: campaign.startedAt,
-            completedAt: campaign.completedAt,
-            totalEmails,
-            sentEmails,
-            failedEmails,
-          }
-        : null,
+      status: campaign.status,
+      counts: { sent, failed, pending, total },
+      campaign: {
+        from: campaign.from || '',
+        fromName: campaign.fromName || '',
+        subject: campaign.subject || '',
+        offerId: campaign.offerId || '',
+        selectedIp: campaign.selectedIp || '',
+        batchSize: campaign.batchSize || 0,
+        templateType: campaign.templateType || '',
+        emailTemplate: campaign.emailTemplate || '',
+        delay: campaign.delay || 0,
+        startedAt: campaign.startedAt,
+        completedAt: campaign.completedAt,
+        totalEmails: total,
+        sentEmails: sent,
+        failedEmails: failed,
+        pendingEmails: pending,
+      },
     };
   }
 
@@ -434,8 +480,6 @@ export class CampaignService {
         throw new Error('Campaign must be completed before cleanup');
       }
 
-      //Not required as count will be updated in the campaign processor after completion of campaign
-      //Keeping it for future reference
       // Calculate stats before cleanup
       const [sent, failed, pending] = await Promise.all([
         this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
@@ -448,6 +492,9 @@ export class CampaignService {
           status: 'pending',
         }),
       ]);
+
+      // pending emails will be 0 as all emails are processed, but if user/admin stopped the campaign before completion, then pending will be non-zero
+      // so keeping it as it is
       const total = sent + failed + pending;
 
       // Persist stats in the campaign document
@@ -457,6 +504,7 @@ export class CampaignService {
           sentEmails: sent,
           failedEmails: failed,
           totalEmails: total,
+          pendingEmails: pending,
         },
       );
 

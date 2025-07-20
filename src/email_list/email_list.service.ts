@@ -8,6 +8,7 @@ import {
   CampaignEmailTrackingDocument,
 } from '../campaign/schemas/campaign.schemas';
 import { EmailList, EmailListDocument } from './schemas/email_list.schemas';
+import { Campaign, CampaignDocument } from '../campaign/schemas/campaign.schemas';
 
 @Injectable()
 export class EmailListService {
@@ -16,6 +17,8 @@ export class EmailListService {
     private campaignEmailTrackingModel: Model<CampaignEmailTrackingDocument>, // For campaign_email_tracking
     @InjectModel(EmailList.name)
     private emailListModel: Model<EmailListDocument>, // For email_list (suppression)
+    @InjectModel(Campaign.name)
+    private campaignModel: Model<CampaignDocument>, // For campaigns
   ) {}
 
   // Regular expression for email validation
@@ -53,6 +56,9 @@ export class EmailListService {
       // Perform bulkWrite operation
       const result = await this.campaignEmailTrackingModel.bulkWrite(bulkOps);
 
+      // Update campaign status and pending count
+      await this.updateCampaignAfterEmailUpload(campaignId);
+
       return {
         message: 'Emails processed successfully.',
         success: true,
@@ -66,6 +72,45 @@ export class EmailListService {
         message: err.message,
         success: false,
       };
+    }
+  }
+
+  // Update campaign status and pending count after email upload
+  private async updateCampaignAfterEmailUpload(campaignId: string): Promise<void> {
+    try {
+      // Get current pending count
+      const pendingCount = await this.campaignEmailTrackingModel.countDocuments({
+        campaignId,
+        status: 'pending',
+      });
+
+      // Check if campaign exists
+      const existingCampaign = await this.campaignModel.findOne({ campaignId });
+
+      if (!existingCampaign) {
+        // Create new campaign with basic info
+        await this.campaignModel.create({
+          campaignId,
+          status: 'ready', // Ready to start sending
+          pendingEmails: pendingCount,
+        });
+      } else {
+        // Update existing campaign
+        const updateData: any = { pendingEmails: pendingCount };
+
+        // If campaign was completed and new emails are added, set status to ready
+        if (existingCampaign.status === 'completed' && pendingCount > 0) {
+          updateData.status = 'ready';
+          updateData.completedAt = null; // Clear completion date
+        }
+
+        await this.campaignModel.updateOne(
+          { campaignId },
+          updateData,
+        );
+      }
+    } catch (error) {
+      console.error('Error updating campaign after email upload:', error);
     }
   }
 

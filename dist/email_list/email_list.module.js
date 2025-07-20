@@ -22,6 +22,7 @@ exports.EmailListModule = EmailListModule = __decorate([
             mongoose_1.MongooseModule.forFeature([
                 { name: email_list_schemas_1.EmailList.name, schema: email_list_schemas_1.EmailListSchema },
                 { name: campaign_schemas_1.CampaignEmailTracking.name, schema: campaign_schemas_1.CampaignEmailTrackingSchema },
+                { name: campaign_schemas_1.Campaign.name, schema: campaign_schemas_1.CampaignSchema },
             ]),
         ],
         controllers: [email_list_controller_1.EmailListController],

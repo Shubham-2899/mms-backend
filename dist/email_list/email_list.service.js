@@ -20,10 +20,12 @@ const csv_parse_1 = require("csv-parse");
 const fs = require("fs");
 const campaign_schemas_1 = require("../campaign/schemas/campaign.schemas");
 const email_list_schemas_1 = require("./schemas/email_list.schemas");
+const campaign_schemas_2 = require("../campaign/schemas/campaign.schemas");
 let EmailListService = class EmailListService {
-    constructor(campaignEmailTrackingModel, emailListModel) {
+    constructor(campaignEmailTrackingModel, emailListModel, campaignModel) {
         this.campaignEmailTrackingModel = campaignEmailTrackingModel;
         this.emailListModel = emailListModel;
+        this.campaignModel = campaignModel;
         this.emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     }
     async addEmails(emailArray, campaignId) {
@@ -47,6 +49,7 @@ let EmailListService = class EmailListService {
                 },
             }));
             const result = await this.campaignEmailTrackingModel.bulkWrite(bulkOps);
+            await this.updateCampaignAfterEmailUpload(campaignId);
             return {
                 message: 'Emails processed successfully.',
                 success: true,
@@ -61,6 +64,33 @@ let EmailListService = class EmailListService {
                 message: err.message,
                 success: false,
             };
+        }
+    }
+    async updateCampaignAfterEmailUpload(campaignId) {
+        try {
+            const pendingCount = await this.campaignEmailTrackingModel.countDocuments({
+                campaignId,
+                status: 'pending',
+            });
+            const existingCampaign = await this.campaignModel.findOne({ campaignId });
+            if (!existingCampaign) {
+                await this.campaignModel.create({
+                    campaignId,
+                    status: 'ready',
+                    pendingEmails: pendingCount,
+                });
+            }
+            else {
+                const updateData = { pendingEmails: pendingCount };
+                if (existingCampaign.status === 'completed' && pendingCount > 0) {
+                    updateData.status = 'ready';
+                    updateData.completedAt = null;
+                }
+                await this.campaignModel.updateOne({ campaignId }, updateData);
+            }
+        }
+        catch (error) {
+            console.error('Error updating campaign after email upload:', error);
         }
     }
     async addEmailsFromCSVFile(filePath, campaignId) {
@@ -145,7 +175,9 @@ exports.EmailListService = EmailListService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(campaign_schemas_1.CampaignEmailTracking.name)),
     __param(1, (0, mongoose_1.InjectModel)(email_list_schemas_1.EmailList.name)),
+    __param(2, (0, mongoose_1.InjectModel)(campaign_schemas_2.Campaign.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
         mongoose_2.Model])
 ], EmailListService);
 //# sourceMappingURL=email_list.service.js.map

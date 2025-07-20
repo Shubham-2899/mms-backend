@@ -19,43 +19,43 @@ __decorate([
     __metadata("design:type", String)
 ], Campaign.prototype, "campaignId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ enum: ['running', 'paused', 'completed'], default: 'paused' }),
+    (0, mongoose_1.Prop)({ enum: ['draft', 'ready', 'running', 'paused', 'completed'], default: 'draft' }),
     __metadata("design:type", String)
 ], Campaign.prototype, "status", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], Campaign.prototype, "from", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], Campaign.prototype, "fromName", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], Campaign.prototype, "subject", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], Campaign.prototype, "templateType", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], Campaign.prototype, "emailTemplate", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], Campaign.prototype, "offerId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], Campaign.prototype, "selectedIp", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)(),
     __metadata("design:type", Number)
 ], Campaign.prototype, "batchSize", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)(),
     __metadata("design:type", Number)
 ], Campaign.prototype, "delay", void 0);
 __decorate([
@@ -70,6 +70,10 @@ __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", Date)
 ], Campaign.prototype, "completedAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], Campaign.prototype, "pendingEmails", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", Number)

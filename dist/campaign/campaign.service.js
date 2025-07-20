@@ -97,10 +97,22 @@ let CampaignService = class CampaignService {
         if (recipientCount === 0) {
             throw new common_1.HttpException('No recipients found for this campaign. Either recipients are not added or campaign is already completed', common_1.HttpStatus.BAD_REQUEST);
         }
+        const existingCampaign = await this.campaignModel.findOne({
+            campaignId: createCampaignDto.campaignId
+        });
+        if (existingCampaign && existingCampaign.status === 'completed') {
+            throw new common_1.HttpException('Cannot start a completed campaign. Please add new recipients to restart.', common_1.HttpStatus.BAD_REQUEST);
+        }
+        const requiredFields = ['from', 'fromName', 'subject', 'templateType', 'emailTemplate', 'offerId', 'selectedIp', 'batchSize', 'delay'];
+        const missingFields = requiredFields.filter(field => !createCampaignDto[field]);
+        if (missingFields.length > 0) {
+            throw new common_1.HttpException(`Missing required fields for starting campaign: ${missingFields.join(', ')}`, common_1.HttpStatus.BAD_REQUEST);
+        }
         await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, {
             ...createCampaignDto,
             status: 'running',
             startedAt: new Date(),
+            pendingEmails: recipientCount,
         }, { upsert: true });
         const job = await this.campaignQueue.add('send-campaign-job', {
             ...createCampaignDto,
@@ -122,9 +134,17 @@ let CampaignService = class CampaignService {
             throw new common_1.HttpException('Manual mode is only supported during campaign creation.', common_1.HttpStatus.BAD_REQUEST);
         }
         else {
+            const pendingCount = await this.emailTrackingModel.countDocuments({
+                campaignId: createCampaignDto.campaignId,
+                status: 'pending',
+            });
+            if (pendingCount === 0) {
+                throw new common_1.HttpException('No pending emails to resume. Campaign is already completed.', common_1.HttpStatus.BAD_REQUEST);
+            }
             await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, {
                 ...createCampaignDto,
                 status: 'running',
+                pendingEmails: pendingCount,
             });
             const job = await this.campaignQueue.add('send-campaign-job', {
                 ...createCampaignDto,
@@ -207,60 +227,58 @@ let CampaignService = class CampaignService {
         };
     }
     async getCampaignStats(campaignId) {
-        const [sent, failed, pending] = await Promise.all([
-            this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
-            this.emailTrackingModel.countDocuments({ campaignId, status: 'failed' }),
-            this.emailTrackingModel.countDocuments({ campaignId, status: 'pending' }),
-        ]);
         const campaign = await this.campaignModel.findOne({ campaignId });
-        const trackingDataExists = sent + failed + pending > 0;
-        let counts, totalEmails, sentEmails, failedEmails;
-        if (trackingDataExists) {
-            counts = { sent, failed, pending, total: sent + failed + pending };
-            totalEmails = sent + failed + pending;
-            sentEmails = sent;
-            failedEmails = failed;
-        }
-        else if (campaign &&
-            (campaign.sentEmails || campaign.failedEmails || campaign.totalEmails)) {
-            counts = {
-                sent: campaign.sentEmails || 0,
-                failed: campaign.failedEmails || 0,
-                pending: 0,
-                total: campaign.totalEmails || 0,
+        if (!campaign) {
+            return {
+                campaignId,
+                status: 'unknown',
+                counts: { sent: 0, failed: 0, pending: 0, total: 0 },
+                campaign: null,
             };
-            totalEmails = campaign.totalEmails || 0;
-            sentEmails = campaign.sentEmails || 0;
-            failedEmails = campaign.failedEmails || 0;
+        }
+        const pending = await this.emailTrackingModel.countDocuments({
+            campaignId,
+            status: 'pending',
+        });
+        let sent, failed, total;
+        if (typeof campaign.sentEmails === 'number' && typeof campaign.failedEmails === 'number') {
+            sent = campaign.sentEmails;
+            failed = campaign.failedEmails;
+            total = sent + failed + pending;
         }
         else {
-            counts = { sent: 0, failed: 0, pending: 0, total: 0 };
-            totalEmails = 0;
-            sentEmails = 0;
-            failedEmails = 0;
+            const [sentCount, failedCount] = await Promise.all([
+                this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
+                this.emailTrackingModel.countDocuments({ campaignId, status: 'failed' }),
+            ]);
+            sent = sentCount;
+            failed = failedCount;
+            total = sent + failed + pending;
+        }
+        if (campaign.pendingEmails !== pending) {
+            await this.campaignModel.updateOne({ campaignId }, { pendingEmails: pending });
         }
         return {
             campaignId,
-            status: campaign?.status || 'unknown',
-            counts,
-            campaign: campaign
-                ? {
-                    from: campaign.from,
-                    fromName: campaign.fromName,
-                    subject: campaign.subject,
-                    offerId: campaign.offerId,
-                    selectedIp: campaign.selectedIp,
-                    batchSize: campaign.batchSize,
-                    templateType: campaign.templateType,
-                    emailTemplate: campaign.emailTemplate,
-                    delay: campaign.delay,
-                    startedAt: campaign.startedAt,
-                    completedAt: campaign.completedAt,
-                    totalEmails,
-                    sentEmails,
-                    failedEmails,
-                }
-                : null,
+            status: campaign.status,
+            counts: { sent, failed, pending, total },
+            campaign: {
+                from: campaign.from || '',
+                fromName: campaign.fromName || '',
+                subject: campaign.subject || '',
+                offerId: campaign.offerId || '',
+                selectedIp: campaign.selectedIp || '',
+                batchSize: campaign.batchSize || 0,
+                templateType: campaign.templateType || '',
+                emailTemplate: campaign.emailTemplate || '',
+                delay: campaign.delay || 0,
+                startedAt: campaign.startedAt,
+                completedAt: campaign.completedAt,
+                totalEmails: total,
+                sentEmails: sent,
+                failedEmails: failed,
+                pendingEmails: pending,
+            },
         };
     }
     async getAllCampaigns() {
@@ -312,6 +330,7 @@ let CampaignService = class CampaignService {
                 sentEmails: sent,
                 failedEmails: failed,
                 totalEmails: total,
+                pendingEmails: pending,
             });
             const result = await this.emailTrackingModel.deleteMany({
                 campaignId,

@@ -150,6 +150,7 @@ let CampaignProcessor = class CampaignProcessor extends bullmq_1.WorkerHost {
             await this.campaignModel.updateOne({ campaignId }, {
                 status: 'completed',
                 completedAt: new Date(),
+                pendingEmails: 0,
             });
             await this.cleanupCampaignData(campaignId);
             console.log(`✅ Campaign ${campaignId} email sending completed.`);
@@ -176,6 +177,7 @@ let CampaignProcessor = class CampaignProcessor extends bullmq_1.WorkerHost {
                 sentEmails: sent,
                 failedEmails: failed,
                 totalEmails: total,
+                pendingEmails: pending,
             });
             await this.emailTrackingModel.deleteMany({
                 campaignId,
