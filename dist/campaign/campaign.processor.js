@@ -32,6 +32,7 @@ let CampaignProcessor = class CampaignProcessor extends bullmq_1.WorkerHost {
         const transporter = (0, mailer_util_1.createTransporter)(smtpConfig);
         const decodedTemplate = decodeURIComponent(emailTemplate);
         const ip = selectedIp?.split('-')[1]?.trim();
+        const domain = selectedIp?.split('-')[0]?.trim();
         const headers = { 'X-Outgoing-IP': ip };
         const delayBetweenEmailsMs = 100;
         let campaignCompleted = false;
@@ -90,6 +91,8 @@ let CampaignProcessor = class CampaignProcessor extends bullmq_1.WorkerHost {
                         sentAt: new Date(),
                         response: info.response,
                         mode: 'bulk',
+                        domainUsed: domain,
+                        ipUsed: ip,
                     });
                     trackingUpdates.push({
                         updateOne: {
@@ -114,6 +117,8 @@ let CampaignProcessor = class CampaignProcessor extends bullmq_1.WorkerHost {
                         sentAt: new Date(),
                         response: err.message,
                         mode: 'bulk',
+                        domainUsed: domain,
+                        ipUsed: ip,
                     });
                     trackingUpdates.push({
                         updateOne: {

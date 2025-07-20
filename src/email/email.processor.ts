@@ -29,6 +29,7 @@ export class EmailProcessor extends WorkerHost {
     } = job.data;
     console.log('🚀 ~ EmailProcessor ~ process ~ smtpConfig:', smtpConfig);
     const ip = selectedIp?.split('-')[1]?.trim();
+    const domain = selectedIp?.split('-')[0]?.trim();
 
     // Setup SMTP for each user (dynamically based on user)
     // const transporter = nodemailer.createTransport({
@@ -83,6 +84,8 @@ export class EmailProcessor extends WorkerHost {
             response: info.response,
             sentAt: new Date(),
             mode: mode,
+            domainUsed: domain,
+            ipUsed: ip,
           });
 
           await emailRecord.save();
@@ -97,6 +100,8 @@ export class EmailProcessor extends WorkerHost {
             response: `Failed: ${e.message}`,
             sentAt: new Date(),
             mode: mode,
+            domainUsed: domain,
+            ipUsed: ip,
           });
           await emailRecord.save();
         }

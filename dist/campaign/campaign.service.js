@@ -98,13 +98,23 @@ let CampaignService = class CampaignService {
             throw new common_1.HttpException('No recipients found for this campaign. Either recipients are not added or campaign is already completed', common_1.HttpStatus.BAD_REQUEST);
         }
         const existingCampaign = await this.campaignModel.findOne({
-            campaignId: createCampaignDto.campaignId
+            campaignId: createCampaignDto.campaignId,
         });
         if (existingCampaign && existingCampaign.status === 'completed') {
             throw new common_1.HttpException('Cannot start a completed campaign. Please add new recipients to restart.', common_1.HttpStatus.BAD_REQUEST);
         }
-        const requiredFields = ['from', 'fromName', 'subject', 'templateType', 'emailTemplate', 'offerId', 'selectedIp', 'batchSize', 'delay'];
-        const missingFields = requiredFields.filter(field => !createCampaignDto[field]);
+        const requiredFields = [
+            'from',
+            'fromName',
+            'subject',
+            'templateType',
+            'emailTemplate',
+            'offerId',
+            'selectedIp',
+            'batchSize',
+            'delay',
+        ];
+        const missingFields = requiredFields.filter((field) => !createCampaignDto[field]);
         if (missingFields.length > 0) {
             throw new common_1.HttpException(`Missing required fields for starting campaign: ${missingFields.join(', ')}`, common_1.HttpStatus.BAD_REQUEST);
         }
@@ -175,6 +185,7 @@ let CampaignService = class CampaignService {
         const { from, fromName, subject, emailTemplate, offerId, campaignId, to, selectedIp, } = createCampaignDto;
         const decodedTemplate = decodeURIComponent(emailTemplate);
         const ip = selectedIp?.split('-')[1]?.trim();
+        const domain = selectedIp?.split('-')[0]?.trim();
         const headers = { 'X-Outgoing-IP': ip };
         const transporter = (0, mailer_util_1.createTransporter)(smtpConfig);
         const failed = [];
@@ -199,6 +210,8 @@ let CampaignService = class CampaignService {
                     sentAt: new Date(),
                     response: info.response,
                     mode: 'test',
+                    domainUsed: domain,
+                    ipUsed: ip,
                 });
                 sent.push(email);
             }
@@ -211,6 +224,8 @@ let CampaignService = class CampaignService {
                     sentAt: new Date(),
                     response: err.message,
                     mode: 'test',
+                    domainUsed: domain,
+                    ipUsed: ip,
                 });
                 failed.push(email);
             }
@@ -241,7 +256,8 @@ let CampaignService = class CampaignService {
             status: 'pending',
         });
         let sent, failed, total;
-        if (typeof campaign.sentEmails === 'number' && typeof campaign.failedEmails === 'number') {
+        if (typeof campaign.sentEmails === 'number' &&
+            typeof campaign.failedEmails === 'number') {
             sent = campaign.sentEmails;
             failed = campaign.failedEmails;
             total = sent + failed + pending;
@@ -249,7 +265,10 @@ let CampaignService = class CampaignService {
         else {
             const [sentCount, failedCount] = await Promise.all([
                 this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
-                this.emailTrackingModel.countDocuments({ campaignId, status: 'failed' }),
+                this.emailTrackingModel.countDocuments({
+                    campaignId,
+                    status: 'failed',
+                }),
             ]);
             sent = sentCount;
             failed = failedCount;

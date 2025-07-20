@@ -41,6 +41,7 @@ export class CampaignProcessor extends WorkerHost {
     const transporter = createTransporter(smtpConfig);
     const decodedTemplate = decodeURIComponent(emailTemplate);
     const ip = selectedIp?.split('-')[1]?.trim();
+    const domain = selectedIp?.split('-')[0]?.trim();
     const headers = { 'X-Outgoing-IP': ip };
 
     const delayBetweenEmailsMs = 100;
@@ -123,6 +124,8 @@ export class CampaignProcessor extends WorkerHost {
             sentAt: new Date(),
             response: info.response,
             mode: 'bulk',
+            domainUsed: domain,
+            ipUsed: ip,
           });
 
           // Prepare tracking update for bulk operation
@@ -150,6 +153,8 @@ export class CampaignProcessor extends WorkerHost {
             sentAt: new Date(),
             response: err.message,
             mode: 'bulk',
+            domainUsed: domain,
+            ipUsed: ip,
           });
 
           // Prepare tracking update for bulk operation (failed)

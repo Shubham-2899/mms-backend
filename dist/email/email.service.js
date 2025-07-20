@@ -69,6 +69,8 @@ let EmailService = class EmailService {
                             response: info.response,
                             sentAt: new Date(),
                             mode: 'test',
+                            domainUsed: domain,
+                            ipUsed: ip,
                         });
                         await emailRecord.save();
                     }

@@ -111,13 +111,13 @@ export class CampaignService {
 
   async startCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any) {
     console.log('Start campaign');
-    
+
     // Check for recipients in CampaignEmailTracking
     const recipientCount = await this.emailTrackingModel.countDocuments({
       campaignId: createCampaignDto.campaignId,
       status: 'pending',
     });
-    
+
     if (recipientCount === 0) {
       throw new HttpException(
         'No recipients found for this campaign. Either recipients are not added or campaign is already completed',
@@ -126,8 +126,8 @@ export class CampaignService {
     }
 
     // Check if campaign exists and get current status
-    const existingCampaign = await this.campaignModel.findOne({ 
-      campaignId: createCampaignDto.campaignId 
+    const existingCampaign = await this.campaignModel.findOne({
+      campaignId: createCampaignDto.campaignId,
     });
 
     // Validate campaign status
@@ -139,9 +139,21 @@ export class CampaignService {
     }
 
     // Validate that all required fields are present for starting a campaign
-    const requiredFields = ['from', 'fromName', 'subject', 'templateType', 'emailTemplate', 'offerId', 'selectedIp', 'batchSize', 'delay'];
-    const missingFields = requiredFields.filter(field => !createCampaignDto[field]);
-    
+    const requiredFields = [
+      'from',
+      'fromName',
+      'subject',
+      'templateType',
+      'emailTemplate',
+      'offerId',
+      'selectedIp',
+      'batchSize',
+      'delay',
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => !createCampaignDto[field],
+    );
+
     if (missingFields.length > 0) {
       throw new HttpException(
         `Missing required fields for starting campaign: ${missingFields.join(', ')}`,
@@ -277,6 +289,7 @@ export class CampaignService {
 
     const decodedTemplate = decodeURIComponent(emailTemplate);
     const ip = selectedIp?.split('-')[1]?.trim();
+    const domain = selectedIp?.split('-')[0]?.trim();
     const headers = { 'X-Outgoing-IP': ip };
     const transporter = createTransporter(smtpConfig);
 
@@ -309,6 +322,8 @@ export class CampaignService {
           sentAt: new Date(),
           response: info.response,
           mode: 'test',
+          domainUsed: domain,
+          ipUsed: ip,
         });
 
         /**
@@ -337,6 +352,8 @@ export class CampaignService {
           sentAt: new Date(),
           response: err.message,
           mode: 'test',
+          domainUsed: domain,
+          ipUsed: ip,
         });
 
         // Update tracking status
@@ -370,7 +387,6 @@ export class CampaignService {
 
   async getCampaignStats(campaignId: string) {
     const campaign = await this.campaignModel.findOne({ campaignId });
-    
     if (!campaign) {
       return {
         campaignId,
@@ -389,7 +405,11 @@ export class CampaignService {
     let sent, failed, total;
 
     // If campaign has persisted stats (was completed before), use them regardless of current status
-    if (typeof campaign.sentEmails === 'number' && typeof campaign.failedEmails === 'number') {
+    //when campaign is transitioned from completed to ready (when campaign is marked completed campaign data is cleared and stats are updated into campaign document)
+    if (
+      typeof campaign.sentEmails === 'number' &&
+      typeof campaign.failedEmails === 'number'
+    ) {
       sent = campaign.sentEmails;
       failed = campaign.failedEmails;
       total = sent + failed + pending;
@@ -397,7 +417,10 @@ export class CampaignService {
       // For campaigns that never completed, use live stats from tracking collection
       const [sentCount, failedCount] = await Promise.all([
         this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
-        this.emailTrackingModel.countDocuments({ campaignId, status: 'failed' }),
+        this.emailTrackingModel.countDocuments({
+          campaignId,
+          status: 'failed',
+        }),
       ]);
       sent = sentCount;
       failed = failedCount;
@@ -408,7 +431,7 @@ export class CampaignService {
     if (campaign.pendingEmails !== pending) {
       await this.campaignModel.updateOne(
         { campaignId },
-        { pendingEmails: pending }
+        { pendingEmails: pending },
       );
     }
 

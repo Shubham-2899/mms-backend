@@ -42,6 +42,14 @@ __decorate([
     (0, mongoose_1.Prop)({ default: 'test' }),
     __metadata("design:type", String)
 ], Email.prototype, "mode", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], Email.prototype, "domainUsed", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], Email.prototype, "ipUsed", void 0);
 exports.Email = Email = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Email);

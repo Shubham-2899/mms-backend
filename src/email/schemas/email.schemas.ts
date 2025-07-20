@@ -25,6 +25,12 @@ export class Email {
 
   @Prop({ default: 'test' })
   mode: string;
+
+  @Prop({ default: null })
+  domainUsed: string;
+
+  @Prop({ default: null })
+  ipUsed: string;
 }
 
 export const EmailSchema = SchemaFactory.createForClass(Email);

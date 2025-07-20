@@ -27,6 +27,7 @@ let EmailProcessor = class EmailProcessor extends bullmq_1.WorkerHost {
         let { from, to, templateType, fromName, subject, emailTemplate, offerId, campaignId, mode, smtpConfig, selectedIp, } = job.data;
         console.log('🚀 ~ EmailProcessor ~ process ~ smtpConfig:', smtpConfig);
         const ip = selectedIp?.split('-')[1]?.trim();
+        const domain = selectedIp?.split('-')[0]?.trim();
         try {
             const transporter = (0, mailer_util_1.createTransporter)(smtpConfig);
             emailTemplate = decodeURIComponent(emailTemplate);
@@ -52,6 +53,8 @@ let EmailProcessor = class EmailProcessor extends bullmq_1.WorkerHost {
                         response: info.response,
                         sentAt: new Date(),
                         mode: mode,
+                        domainUsed: domain,
+                        ipUsed: ip,
                     });
                     await emailRecord.save();
                 }
@@ -65,6 +68,8 @@ let EmailProcessor = class EmailProcessor extends bullmq_1.WorkerHost {
                         response: `Failed: ${e.message}`,
                         sentAt: new Date(),
                         mode: mode,
+                        domainUsed: domain,
+                        ipUsed: ip,
                     });
                     await emailRecord.save();
                 }
