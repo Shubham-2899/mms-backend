@@ -26,12 +26,15 @@
 import { Model } from 'mongoose';
 import { CampaignEmailTrackingDocument } from '../campaign/schemas/campaign.schemas';
 import { EmailListDocument } from './schemas/email_list.schemas';
+import { CampaignDocument } from '../campaign/schemas/campaign.schemas';
 export declare class EmailListService {
     private campaignEmailTrackingModel;
     private emailListModel;
-    constructor(campaignEmailTrackingModel: Model<CampaignEmailTrackingDocument>, emailListModel: Model<EmailListDocument>);
+    private campaignModel;
+    constructor(campaignEmailTrackingModel: Model<CampaignEmailTrackingDocument>, emailListModel: Model<EmailListDocument>, campaignModel: Model<CampaignDocument>);
     private emailRegex;
     addEmails(emailArray: string[], campaignId: string): Promise<any>;
+    private updateCampaignAfterEmailUpload;
     addEmailsFromCSVFile(filePath: string, campaignId: string): Promise<void>;
     getSuppressionList(page?: number, limit?: number, fromDate?: string, toDate?: string): Promise<{
         data: {

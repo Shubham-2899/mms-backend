@@ -53,7 +53,12 @@ export declare class CampaignController {
     getCampaignStats(campaignId: string): Promise<{
         campaignId: string;
         status: string;
-        counts: any;
+        counts: {
+            sent: any;
+            failed: any;
+            pending: number;
+            total: any;
+        };
         campaign: {
             from: string;
             fromName: string;
@@ -69,10 +74,16 @@ export declare class CampaignController {
             totalEmails: any;
             sentEmails: any;
             failedEmails: any;
+            pendingEmails: number;
         };
     }>;
     getAllCampaigns(): Promise<{
-        stats: any;
+        stats: {
+            sent: any;
+            failed: any;
+            pending: number;
+            total: any;
+        };
         campaignId: string;
         status: string;
         from: string;
@@ -87,6 +98,7 @@ export declare class CampaignController {
         jobId?: string;
         startedAt?: Date;
         completedAt?: Date;
+        pendingEmails?: number;
         totalEmails?: number;
         sentEmails?: number;
         failedEmails?: number;
