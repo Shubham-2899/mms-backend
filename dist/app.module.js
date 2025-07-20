@@ -56,6 +56,10 @@ exports.AppModule = AppModule = __decorate([
                     port: 6379,
                     password: `${process.env.REDIS_PASSWORD}`,
                 },
+                defaultJobOptions: {
+                    removeOnComplete: { age: 7 * 24 * 60 * 60 },
+                    removeOnFail: { age: 7 * 24 * 60 * 60 },
+                },
             }),
             bullmq_1.BullModule.registerQueue({
                 name: 'email-queue',
