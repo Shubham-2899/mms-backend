@@ -82,6 +82,10 @@ let CampaignProcessor = class CampaignProcessor extends bullmq_1.WorkerHost {
                         subject,
                         html: decodedTemplate,
                         headers,
+                        envelope: {
+                            from: `bounces@${domain}`,
+                            to: recipient.to_email,
+                        },
                     });
                     emailRecords.push({
                         from,

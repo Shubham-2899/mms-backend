@@ -201,6 +201,10 @@ let CampaignService = class CampaignService {
                     subject,
                     html: decodedTemplate,
                     headers,
+                    envelope: {
+                        from: `bounces@${domain}`,
+                        to: email,
+                    },
                 });
                 await this.emailModel.create({
                     from,

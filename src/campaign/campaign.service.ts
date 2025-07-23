@@ -311,6 +311,10 @@ export class CampaignService {
           subject,
           html: decodedTemplate,
           headers,
+          envelope: {
+            from: `bounces@${domain}`,
+            to: email,
+          },
         });
 
         // Save to emails collection for reports

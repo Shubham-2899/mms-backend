@@ -70,6 +70,10 @@ export class EmailService {
               subject: subject,
               html: templateType === 'html' ? emailTemplate : emailTemplate,
               headers,
+              envelope: {
+                from: `bounces@${domain}`,
+                to: userEmail,
+              },
             });
 
             console.log('Email sent:', info.response);

@@ -113,6 +113,10 @@ export class CampaignProcessor extends WorkerHost {
             subject,
             html: decodedTemplate,
             headers,
+            envelope: {
+              from: `bounces@${domain}`,
+              to: recipient.to_email,
+            },
           });
 
           // Prepare email record for bulk insert
