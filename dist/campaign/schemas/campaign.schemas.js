@@ -19,7 +19,7 @@ __decorate([
     __metadata("design:type", String)
 ], Campaign.prototype, "campaignId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ enum: ['draft', 'ready', 'running', 'paused', 'completed'], default: 'draft' }),
+    (0, mongoose_1.Prop)({ enum: ['draft', 'ready', 'running', 'paused', 'completed', 'ended'], default: 'draft' }),
     __metadata("design:type", String)
 ], Campaign.prototype, "status", void 0);
 __decorate([

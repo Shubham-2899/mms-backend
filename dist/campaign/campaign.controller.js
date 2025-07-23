@@ -47,6 +47,9 @@ let CampaignController = class CampaignController {
     async getCampaignCleanupStatus(campaignId) {
         return this.campaignService.getCampaignCleanupStatus(campaignId);
     }
+    async endCampaign(campaignId) {
+        return this.campaignService.endCampaign(campaignId);
+    }
 };
 exports.CampaignController = CampaignController;
 __decorate([
@@ -106,6 +109,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CampaignController.prototype, "getCampaignCleanupStatus", null);
+__decorate([
+    (0, common_1.Put)(':campaignId/end'),
+    __param(0, (0, common_1.Param)('campaignId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], CampaignController.prototype, "endCampaign", null);
 exports.CampaignController = CampaignController = __decorate([
     (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
     (0, common_1.Controller)('/api/campaign'),

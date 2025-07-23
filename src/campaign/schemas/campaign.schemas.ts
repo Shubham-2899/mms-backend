@@ -10,7 +10,7 @@ export class Campaign {
   @Prop({ required: true, unique: true })
   campaignId: string;
 
-  @Prop({ enum: ['draft', 'ready', 'running', 'paused', 'completed'], default: 'draft' })
+  @Prop({ enum: ['draft', 'ready', 'running', 'paused', 'completed', 'ended'], default: 'draft' })
   status: string;
 
   @Prop()

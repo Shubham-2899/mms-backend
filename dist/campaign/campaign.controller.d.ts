@@ -104,7 +104,7 @@ export declare class CampaignController {
         failedEmails?: number;
         _id: unknown;
         $locals: Record<string, unknown>;
-        $op: "save" | "validate" | "remove";
+        $op: "remove" | "save" | "validate";
         $where: Record<string, unknown>;
         baseModelName?: string;
         collection: import("mongoose").Collection<import("bson").Document>;
@@ -139,5 +139,9 @@ export declare class CampaignController {
         status: string;
         trackingDataCount: number;
         needsCleanup: boolean;
+    }>;
+    endCampaign(campaignId: string): Promise<{
+        message: string;
+        success: boolean;
     }>;
 }

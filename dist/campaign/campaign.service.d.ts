@@ -169,4 +169,8 @@ export declare class CampaignService {
         trackingDataCount: number;
         needsCleanup: boolean;
     }>;
+    endCampaign(campaignId: string): Promise<{
+        message: string;
+        success: boolean;
+    }>;
 }

@@ -464,8 +464,8 @@ export class CampaignService {
   }
 
   async getAllCampaigns() {
-    const campaigns = await this.campaignModel.find().sort({ createdAt: -1 });
-
+    // Exclude ended campaigns from stats
+    const campaigns = await this.campaignModel.find({ status: { $ne: 'ended' } }).sort({ createdAt: -1 });
     const campaignsWithStats = await Promise.all(
       campaigns.map(async (campaign) => {
         const stats = await this.getCampaignStats(campaign.campaignId);
@@ -475,7 +475,6 @@ export class CampaignService {
         };
       }),
     );
-
     return campaignsWithStats;
   }
 
@@ -564,5 +563,56 @@ export class CampaignService {
       trackingDataCount: trackingCount,
       needsCleanup: campaign?.status === 'completed' && trackingCount > 0,
     };
+  }
+
+  // End a campaign (admin action)
+  async endCampaign(campaignId: string) {
+    const campaign = await this.campaignModel.findOne({ campaignId });
+    if (!campaign) {
+      throw new HttpException('Campaign not found', HttpStatus.NOT_FOUND);
+    }
+    if (['ended'].includes(campaign.status)) {
+      throw new HttpException('Campaign already ended', HttpStatus.BAD_REQUEST);
+    }
+    if (campaign.status === 'completed') {
+      // Only update status to ended, no need to recalculate stats or clean tracking data
+      await this.campaignModel.updateOne(
+        { campaignId },
+        {
+          status: 'ended',
+          completedAt: campaign.completedAt || new Date(),
+        }
+      );
+      return { message: 'Completed campaign marked as ended', success: true };
+    }
+    // If campaign is running or paused, mark as ended, persist stats, and clean tracking data
+    if (["running", "paused"].includes(campaign.status)) {
+      // Accumulate stats with previous values
+      const prevSent = campaign.sentEmails || 0;
+      const prevFailed = campaign.failedEmails || 0;
+      const prevTotal = campaign.totalEmails || 0;
+      const prevPending = campaign.pendingEmails || 0;
+      const [sent, failed, pending] = await Promise.all([
+        this.emailTrackingModel.countDocuments({ campaignId, status: 'sent' }),
+        this.emailTrackingModel.countDocuments({ campaignId, status: 'failed' }),
+        this.emailTrackingModel.countDocuments({ campaignId, status: 'pending' }),
+      ]);
+      const total = sent + failed + pending;
+      await this.campaignModel.updateOne(
+        { campaignId },
+        {
+          status: 'ended',
+          sentEmails: prevSent + sent,
+          failedEmails: prevFailed + failed,
+          totalEmails: prevTotal + total,
+          pendingEmails: prevPending + pending,
+          completedAt: new Date(),
+        }
+      );
+      await this.emailTrackingModel.deleteMany({ campaignId });
+      return { message: 'Campaign ended and cleaned up', success: true };
+    } else {
+      throw new HttpException('Only running, paused, or completed campaigns can be ended', HttpStatus.BAD_REQUEST);
+    }
   }
 }

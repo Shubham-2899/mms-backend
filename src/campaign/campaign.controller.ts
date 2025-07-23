@@ -72,4 +72,9 @@ export class CampaignController {
   async getCampaignCleanupStatus(@Param('campaignId') campaignId: string) {
     return this.campaignService.getCampaignCleanupStatus(campaignId);
   }
+
+  @Put(':campaignId/end')
+  async endCampaign(@Param('campaignId') campaignId: string) {
+    return this.campaignService.endCampaign(campaignId);
+  }
 }
