@@ -133,7 +133,7 @@ export declare class CampaignService {
         failedEmails?: number;
         _id: unknown;
         $locals: Record<string, unknown>;
-        $op: "save" | "validate" | "remove";
+        $op: "remove" | "save" | "validate";
         $where: Record<string, unknown>;
         baseModelName?: string;
         collection: import("mongoose").Collection<import("bson").Document>;
