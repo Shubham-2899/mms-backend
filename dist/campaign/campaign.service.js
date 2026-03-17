@@ -23,8 +23,9 @@ const email_schemas_1 = require("../email/schemas/email.schemas");
 const firebase_service_1 = require("../auth/firebase.service");
 const user_schema_1 = require("../user/schemas/user.schema");
 const mailer_util_1 = require("../email/mailer.util");
+const mailer_proxy_service_1 = require("./mailer-proxy.service");
 let CampaignService = class CampaignService {
-    constructor(campaignQueue, emailQueue, campaignModel, emailTrackingModel, emailModel, userModel, firebaseService) {
+    constructor(campaignQueue, emailQueue, campaignModel, emailTrackingModel, emailModel, userModel, firebaseService, mailerProxyService) {
         this.campaignQueue = campaignQueue;
         this.emailQueue = emailQueue;
         this.campaignModel = campaignModel;
@@ -32,6 +33,7 @@ let CampaignService = class CampaignService {
         this.emailModel = emailModel;
         this.userModel = userModel;
         this.firebaseService = firebaseService;
+        this.mailerProxyService = mailerProxyService;
     }
     async fetchSmtpDetails(userId) {
         try {
@@ -124,6 +126,20 @@ let CampaignService = class CampaignService {
             startedAt: new Date(),
             pendingEmails: recipientCount,
         }, { upsert: true });
+        if (this.mailerProxyService.isMailerServiceEnabled()) {
+            try {
+                const result = await this.mailerProxyService.startCampaign(createCampaignDto, smtpConfig);
+                await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, { jobId: `mailer-${result.mailerId || 'service'}` });
+                return {
+                    message: result.message || 'Campaign started successfully on mailer service',
+                    success: result.success,
+                    mailerId: result.mailerId,
+                };
+            }
+            catch (error) {
+                console.error('Failed to start campaign on mailer service, falling back to BullMQ:', error);
+            }
+        }
         const job = await this.campaignQueue.add('send-campaign-job', {
             ...createCampaignDto,
             smtpConfig,
@@ -156,6 +172,20 @@ let CampaignService = class CampaignService {
                 status: 'running',
                 pendingEmails: pendingCount,
             });
+            if (this.mailerProxyService.isMailerServiceEnabled()) {
+                try {
+                    const result = await this.mailerProxyService.startCampaign(createCampaignDto, smtpConfig);
+                    await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, { jobId: `mailer-${result.mailerId || 'service'}` });
+                    return {
+                        message: result.message || 'Campaign resumed on mailer service',
+                        success: result.success,
+                        mailerId: result.mailerId,
+                    };
+                }
+                catch (error) {
+                    console.error('Failed to resume campaign on mailer service, falling back to BullMQ:', error);
+                }
+            }
             const job = await this.campaignQueue.add('send-campaign-job', {
                 ...createCampaignDto,
                 smtpConfig,
@@ -183,6 +213,18 @@ let CampaignService = class CampaignService {
     }
     async testEmails(createCampaignDto, smtpConfig) {
         const { from, fromName, subject, emailTemplate, offerId, campaignId, to, selectedIp, } = createCampaignDto;
+        if (to.length === 0) {
+            throw new common_1.HttpException('No recipients found, Please add recipients', common_1.HttpStatus.BAD_REQUEST);
+        }
+        if (this.mailerProxyService.isMailerServiceEnabled()) {
+            try {
+                const result = await this.mailerProxyService.sendTestEmails(createCampaignDto, smtpConfig);
+                return result;
+            }
+            catch (error) {
+                console.error('Failed to send test emails on mailer service, falling back to local sending:', error);
+            }
+        }
         const decodedTemplate = decodeURIComponent(emailTemplate);
         const ip = selectedIp?.split('-')[1]?.trim();
         const domain = selectedIp?.split('-')[0]?.trim();
@@ -190,9 +232,6 @@ let CampaignService = class CampaignService {
         const transporter = (0, mailer_util_1.createTransporter)(smtpConfig);
         const failed = [];
         const sent = [];
-        if (to.length === 0) {
-            throw new common_1.HttpException('No recipients found, Please add recipients', common_1.HttpStatus.BAD_REQUEST);
-        }
         for (const email of to) {
             try {
                 const info = await transporter.sendMail({
@@ -422,6 +461,32 @@ let CampaignService = class CampaignService {
             throw new common_1.HttpException('Only running, paused, or completed campaigns can be ended', common_1.HttpStatus.BAD_REQUEST);
         }
     }
+    async getMailerHealth(selectedIp) {
+        if (!this.mailerProxyService.isMailerServiceEnabled()) {
+            return {
+                enabled: false,
+                message: 'Mailer service is not configured',
+            };
+        }
+        const health = await this.mailerProxyService.getMailerHealth(selectedIp);
+        return {
+            enabled: true,
+            health: health || { status: 'unavailable' },
+        };
+    }
+    async getMailerQueueStatus(selectedIp) {
+        if (!this.mailerProxyService.isMailerServiceEnabled()) {
+            return {
+                enabled: false,
+                message: 'Mailer service is not configured',
+            };
+        }
+        const queueStatus = await this.mailerProxyService.getMailerQueueStatus(selectedIp);
+        return {
+            enabled: true,
+            queue: queueStatus || { status: 'unavailable' },
+        };
+    }
 };
 exports.CampaignService = CampaignService;
 exports.CampaignService = CampaignService = __decorate([
@@ -438,6 +503,7 @@ exports.CampaignService = CampaignService = __decorate([
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
-        firebase_service_1.FirebaseService])
+        firebase_service_1.FirebaseService,
+        mailer_proxy_service_1.MailerProxyService])
 ], CampaignService);
 //# sourceMappingURL=campaign.service.js.map

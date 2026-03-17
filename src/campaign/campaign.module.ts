@@ -4,6 +4,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { CampaignController } from './campaign.controller';
 import { CampaignService } from './campaign.service';
 import { CampaignProcessor } from './campaign.processor';
+import { MailerProxyService } from './mailer-proxy.service';
 import {
   Campaign,
   CampaignSchema,
@@ -34,7 +35,7 @@ import { EmailProcessor } from 'src/email/email.processor';
     AuthModule,
   ],
   controllers: [CampaignController],
-  providers: [CampaignService, CampaignProcessor, EmailProcessor],
+  providers: [CampaignService, CampaignProcessor, EmailProcessor, MailerProxyService],
   exports: [CampaignService],
 })
 export class CampaignModule {}
