@@ -40,7 +40,8 @@ let MailerProxyService = MailerProxyService_1 = class MailerProxyService {
         return null;
     }
     isMailerServiceEnabled() {
-        return !!this.mailerBaseUrl && !!this.mailerAuthToken;
+        const proxyEnabled = this.configService.get('MAILER_PROXY_ENABLED') === 'true';
+        return proxyEnabled && !!this.mailerBaseUrl && !!this.mailerAuthToken;
     }
     async startCampaign(createCampaignDto, smtpConfig) {
         const mailerUrl = this.getMailerUrl(createCampaignDto.selectedIp);

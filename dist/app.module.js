@@ -28,6 +28,7 @@ const bullmq_dashboard_module_1 = require("./bullmq-dashboard/bullmq-dashboard.m
 const reports_module_1 = require("./reports/reports.module");
 const jobs_module_1 = require("./jobs/jobs.module");
 const campaign_module_1 = require("./campaign/campaign.module");
+const servers_domains_module_1 = require("./servers-domains/servers-domains.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -68,6 +69,7 @@ exports.AppModule = AppModule = __decorate([
             reports_module_1.ReportsModule,
             jobs_module_1.JobsModule,
             campaign_module_1.CampaignModule,
+            servers_domains_module_1.ServersDomainModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
