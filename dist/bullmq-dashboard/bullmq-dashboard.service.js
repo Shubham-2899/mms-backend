@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BullmqDashboardService = void 0;
 const common_1 = require("@nestjs/common");
@@ -96,7 +97,6 @@ exports.BullmqDashboardService = BullmqDashboardService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, bullmq_2.InjectQueue)('email-queue')),
     __param(1, (0, bullmq_2.InjectQueue)('campaign-queue')),
-    __metadata("design:paramtypes", [bullmq_1.Queue,
-        bullmq_1.Queue])
+    __metadata("design:paramtypes", [typeof (_a = typeof bullmq_1.Queue !== "undefined" && bullmq_1.Queue) === "function" ? _a : Object, typeof (_b = typeof bullmq_1.Queue !== "undefined" && bullmq_1.Queue) === "function" ? _b : Object])
 ], BullmqDashboardService);
 //# sourceMappingURL=bullmq-dashboard.service.js.map

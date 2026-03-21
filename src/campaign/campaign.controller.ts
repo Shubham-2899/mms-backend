@@ -88,4 +88,13 @@ export class CampaignController {
   async getMailerQueueStatus(@Query('selectedIp') selectedIp?: string) {
     return this.campaignService.getMailerQueueStatus(selectedIp);
   }
+
+  @Get(':campaignId/live-stats')
+  async getLiveSendingStats(
+    @Param('campaignId') campaignId: string,
+    @Query('selectedIp') selectedIp?: string,
+    @Query('since') since?: string,
+  ) {
+    return this.campaignService.getLiveSendingStats(campaignId, selectedIp, since);
+  }
 }

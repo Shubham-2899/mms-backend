@@ -15,6 +15,7 @@ import { FirebaseService } from 'src/auth/firebase.service';
 import { User, UserDocument } from 'src/user/schemas/user.schema';
 import { createTransporter } from 'src/email/mailer.util';
 import { MailerProxyService } from './mailer-proxy.service';
+import { ServerDomain, ServerDomainDocument } from 'src/servers-domains/schemas/server-domain.schema';
 
 @Injectable()
 export class CampaignService {
@@ -26,6 +27,7 @@ export class CampaignService {
     private emailTrackingModel: Model<CampaignEmailTrackingDocument>,
     @InjectModel(Email.name) private emailModel: Model<EmailDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(ServerDomain.name) private serverDomainModel: Model<ServerDomainDocument>,
     private firebaseService: FirebaseService,
     private mailerProxyService: MailerProxyService,
   ) {}
@@ -111,6 +113,49 @@ export class CampaignService {
     }
   }
 
+  /**
+   * Resolves the ordered IP list for a campaign run.
+   *
+   * - ipMode 'single' (or omitted): returns [selectedIp] only. Safe for test/warming runs.
+   * - ipMode 'round-robin': fetches all IPs for the domain that are:
+   *     • not marked as spam (wentSpam === false)
+   *     • fully warmed (warmingStatus === 'warmed')
+   *   Orders them: main IP first, then sub IPs.
+   *   Falls back to [selectedIp] if fewer than 2 eligible IPs exist.
+   */
+  private async resolveAllIps(createCampaignDto: CreateCampaignDto): Promise<string[]> {
+    const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
+
+    if (createCampaignDto.ipMode !== 'round-robin' || !domain) {
+      return [createCampaignDto.selectedIp];
+    }
+
+    const serverDomain = await this.serverDomainModel.findOne({ domain, status: 'active' });
+    if (!serverDomain) {
+      return [createCampaignDto.selectedIp];
+    }
+
+    // Only include IPs that are fully warmed and not spam
+    const eligibleIps = serverDomain.availableIps.filter(
+      (e) => !e.wentSpam && e.warmingStatus === 'warmed',
+    );
+
+    if (eligibleIps.length <= 1) {
+      // Not enough warmed IPs to rotate — fall back to single
+      return [createCampaignDto.selectedIp];
+    }
+
+    // Main IP first, then sub IPs
+    const mainIp = eligibleIps.find((e) => e.isMainIp);
+    const subIps = eligibleIps.filter((e) => !e.isMainIp);
+
+    if (!mainIp) {
+      return [createCampaignDto.selectedIp];
+    }
+
+    return [mainIp, ...subIps].map((e) => `${domain} - ${e.ip}`);
+  }
+
   async startCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any) {
     console.log('Start campaign');
 
@@ -163,11 +208,15 @@ export class CampaignService {
       );
     }
 
+    // Resolve all IPs for round-robin if bulkMode is enabled
+    const allIps = await this.resolveAllIps(createCampaignDto);
+
     // Save campaign details with status 'running'
     await this.campaignModel.findOneAndUpdate(
       { campaignId: createCampaignDto.campaignId },
       {
         ...createCampaignDto,
+        allIps,
         status: 'running',
         startedAt: new Date(),
         pendingEmails: recipientCount,
@@ -179,7 +228,7 @@ export class CampaignService {
     if (this.mailerProxyService.isMailerServiceEnabled()) {
       try {
         const result = await this.mailerProxyService.startCampaign(
-          createCampaignDto,
+          { ...createCampaignDto, allIps } as any,
           smtpConfig,
         );
 
@@ -248,11 +297,15 @@ export class CampaignService {
         );
       }
 
+      // Re-resolve IPs in case warming status changed since last run
+      const allIps = await this.resolveAllIps(createCampaignDto);
+
       // Update all campaign fields on resume
       await this.campaignModel.findOneAndUpdate(
         { campaignId: createCampaignDto.campaignId },
         {
           ...createCampaignDto,
+          allIps,
           status: 'running',
           pendingEmails: pendingCount,
         },
@@ -262,7 +315,7 @@ export class CampaignService {
       if (this.mailerProxyService.isMailerServiceEnabled()) {
         try {
           const result = await this.mailerProxyService.startCampaign(
-            createCampaignDto,
+            { ...createCampaignDto, allIps } as any,
             smtpConfig,
           );
 
@@ -518,6 +571,8 @@ export class CampaignService {
         subject: campaign.subject || '',
         offerId: campaign.offerId || '',
         selectedIp: campaign.selectedIp || '',
+        ipMode: campaign.ipMode || 'single',
+        allIps: campaign.allIps || [],
         batchSize: campaign.batchSize || 0,
         templateType: campaign.templateType || '',
         emailTemplate: campaign.emailTemplate || '',
@@ -683,6 +738,15 @@ export class CampaignService {
     } else {
       throw new HttpException('Only running, paused, or completed campaigns can be ended', HttpStatus.BAD_REQUEST);
     }
+  }
+
+  // Get live sending stats from mailer service
+  async getLiveSendingStats(campaignId: string, selectedIp?: string, since?: string) {
+    if (!this.mailerProxyService.isMailerServiceEnabled()) {
+      return { enabled: false, message: 'Mailer service is not configured' };
+    }
+    const data = await this.mailerProxyService.getLiveSendingStats(campaignId, selectedIp, since);
+    return { enabled: true, data: data || { message: 'No data available' } };
   }
 
   // Get mailer service health status

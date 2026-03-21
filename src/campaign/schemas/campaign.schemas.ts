@@ -34,6 +34,14 @@ export class Campaign {
   @Prop()
   selectedIp: string;
 
+  /** 'single' | 'round-robin' — controls IP selection at send time */
+  @Prop({ enum: ['single', 'round-robin'], default: 'single' })
+  ipMode?: string;
+
+  /** Resolved IP list used for this campaign run (populated by resolveAllIps) */
+  @Prop({ type: [String], default: [] })
+  allIps?: string[];
+
   @Prop()
   batchSize: number;
 

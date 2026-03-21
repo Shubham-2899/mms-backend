@@ -20,9 +20,10 @@
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
+/// <reference types="mongoose/types" />
 /// <reference types="mongoose/types/schematypes" />
-/// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
+/// <reference types="mongoose/types/inferschematype" />
 import { Document } from 'mongoose';
 export type UserDocument = User & Document;
 declare class ip {
@@ -44,13 +45,5 @@ export declare class User {
     serverData: serverInstance[];
     isAdmin: boolean;
 }
-export declare const UserSchema: import("mongoose").Schema<User, import("mongoose").Model<User, any, any, any, Document<unknown, any, User, any> & User & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, User, Document<unknown, {}, import("mongoose").FlatRecord<User>, {}> & import("mongoose").FlatRecord<User> & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}>;
+export declare const UserSchema: any;
 export {};

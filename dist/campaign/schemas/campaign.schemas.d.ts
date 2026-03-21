@@ -20,9 +20,10 @@
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
+/// <reference types="mongoose/types" />
 /// <reference types="mongoose/types/schematypes" />
-/// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
+/// <reference types="mongoose/types/inferschematype" />
 import { Document } from 'mongoose';
 export type CampaignDocument = Campaign & Document;
 export type CampaignEmailTrackingDocument = CampaignEmailTracking & Document;
@@ -36,6 +37,8 @@ export declare class Campaign {
     emailTemplate: string;
     offerId: string;
     selectedIp: string;
+    ipMode?: string;
+    allIps?: string[];
     batchSize: number;
     delay: number;
     jobId?: string;
@@ -54,21 +57,5 @@ export declare class CampaignEmailTracking {
     sentAt?: Date;
     errorMessage?: string;
 }
-export declare const CampaignSchema: import("mongoose").Schema<Campaign, import("mongoose").Model<Campaign, any, any, any, Document<unknown, any, Campaign, any> & Campaign & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Campaign, Document<unknown, {}, import("mongoose").FlatRecord<Campaign>, {}> & import("mongoose").FlatRecord<Campaign> & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}>;
-export declare const CampaignEmailTrackingSchema: import("mongoose").Schema<CampaignEmailTracking, import("mongoose").Model<CampaignEmailTracking, any, any, any, Document<unknown, any, CampaignEmailTracking, any> & CampaignEmailTracking & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, CampaignEmailTracking, Document<unknown, {}, import("mongoose").FlatRecord<CampaignEmailTracking>, {}> & import("mongoose").FlatRecord<CampaignEmailTracking> & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}>;
+export declare const CampaignSchema: any;
+export declare const CampaignEmailTrackingSchema: any;

@@ -1,5 +1,5 @@
-/// <reference types="multer" />
 import { EmailListService } from './email_list.service';
+import { Express } from 'express';
 export declare class EmailListController {
     private readonly emailListService;
     constructor(emailListService: EmailListService);

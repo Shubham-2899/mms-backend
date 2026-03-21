@@ -20,38 +20,25 @@
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
+/// <reference types="mongoose/types" />
 /// <reference types="mongoose/types/schematypes" />
-/// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
+/// <reference types="mongoose/types/inferschematype" />
 import { Document } from 'mongoose';
 export type ServerDomainDocument = ServerDomain & Document;
+export type WarmingStatus = 'cold' | 'warming' | 'warmed';
 export declare class IpEntry {
     ip: string;
     isMainIp: boolean;
     wentSpam: boolean;
     provider: string;
+    warmingStatus: WarmingStatus;
 }
-export declare const IpEntrySchema: import("mongoose").Schema<IpEntry, import("mongoose").Model<IpEntry, any, any, any, Document<unknown, any, IpEntry, any> & IpEntry & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, IpEntry, Document<unknown, {}, import("mongoose").FlatRecord<IpEntry>, {}> & import("mongoose").FlatRecord<IpEntry> & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}>;
+export declare const IpEntrySchema: any;
 export declare class ServerDomain {
     domain: string;
     availableIps: IpEntry[];
     status: string;
     notes: string;
 }
-export declare const ServerDomainSchema: import("mongoose").Schema<ServerDomain, import("mongoose").Model<ServerDomain, any, any, any, Document<unknown, any, ServerDomain, any> & ServerDomain & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, ServerDomain, Document<unknown, {}, import("mongoose").FlatRecord<ServerDomain>, {}> & import("mongoose").FlatRecord<ServerDomain> & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}>;
+export declare const ServerDomainSchema: any;

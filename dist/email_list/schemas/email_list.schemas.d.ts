@@ -20,21 +20,14 @@
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
+/// <reference types="mongoose/types" />
 /// <reference types="mongoose/types/schematypes" />
-/// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
+/// <reference types="mongoose/types/inferschematype" />
 import { Document } from 'mongoose';
 export type EmailListDocument = EmailList & Document;
 export declare class EmailList {
     email: string;
     unsubscribed_domains: string[];
 }
-export declare const EmailListSchema: import("mongoose").Schema<EmailList, import("mongoose").Model<EmailList, any, any, any, Document<unknown, any, EmailList, any> & EmailList & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, EmailList, Document<unknown, {}, import("mongoose").FlatRecord<EmailList>, {}> & import("mongoose").FlatRecord<EmailList> & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}>;
+export declare const EmailListSchema: any;

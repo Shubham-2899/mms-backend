@@ -20,10 +20,10 @@
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
-/// <reference types="mongoose" />
+/// <reference types="mongoose/types" />
 /// <reference types="mongoose/types/schematypes" />
-/// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
+/// <reference types="mongoose/types/inferschematype" />
 import { CampaignService } from './campaign.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 export declare class CampaignController {
@@ -44,7 +44,7 @@ export declare class CampaignController {
     } | {
         message: string;
         success: boolean;
-        jobId: string;
+        jobId: any;
     }>;
     pauseCampaign(campaignId: string): Promise<{
         message: string;
@@ -58,7 +58,7 @@ export declare class CampaignController {
     } | {
         message: string;
         success: boolean;
-        jobId: string;
+        jobId: any;
         mailerId?: undefined;
     }>;
     getCampaignStats(campaignId: string): Promise<{
@@ -104,6 +104,8 @@ export declare class CampaignController {
         emailTemplate: string;
         offerId: string;
         selectedIp: string;
+        ipMode?: string;
+        allIps?: string[];
         batchSize: number;
         delay: number;
         jobId?: string;
@@ -115,10 +117,10 @@ export declare class CampaignController {
         failedEmails?: number;
         _id: unknown;
         $locals: Record<string, unknown>;
-        $op: "remove" | "save" | "validate";
+        $op: "save" | "validate" | "remove";
         $where: Record<string, unknown>;
         baseModelName?: string;
-        collection: import("mongoose").Collection<import("bson").Document>;
+        collection: import("mongoose").Collection<mongodb.Document>;
         db: import("mongoose").Connection;
         errors?: import("mongoose").Error.ValidationError;
         id?: any;
@@ -143,7 +145,7 @@ export declare class CampaignController {
     cleanupCampaignData(campaignId: string): Promise<{
         message: string;
         success: boolean;
-        deletedCount: number;
+        deletedCount: any;
     }>;
     getCampaignCleanupStatus(campaignId: string): Promise<{
         campaignId: string;
@@ -173,4 +175,5 @@ export declare class CampaignController {
         queue: any;
         message?: undefined;
     }>;
+    getLiveSendingStats(campaignId: string, selectedIp?: string, since?: string): Promise<any>;
 }

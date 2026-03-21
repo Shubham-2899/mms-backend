@@ -98,6 +98,7 @@ export class MailerProxyService {
         emailTemplate: createCampaignDto.emailTemplate,
         offerId: createCampaignDto.offerId,
         selectedIp: createCampaignDto.selectedIp,
+        allIps: (createCampaignDto as any).allIps || [createCampaignDto.selectedIp],
         smtpConfig: mailerSmtpConfig,
       };
 
@@ -169,6 +170,25 @@ export class MailerProxyService {
       return response.data;
     } catch (error: any) {
       this.logger.warn(`Failed to get mailer queue status: ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Get live sending stats for a campaign from the mailer service
+   */
+  async getLiveSendingStats(campaignId: string, selectedIp?: string, since?: string): Promise<any> {
+    const mailerUrl = this.getMailerUrl(selectedIp);
+    if (!mailerUrl) return null;
+
+    try {
+      const params = since ? `?since=${encodeURIComponent(since)}` : '';
+      const response = await this.httpClient.get(
+        `${mailerUrl}/tracking/live/${campaignId}${params}`,
+      );
+      return response.data;
+    } catch (error: any) {
+      this.logger.warn(`Failed to get live sending stats: ${error.message}`);
       return null;
     }
   }

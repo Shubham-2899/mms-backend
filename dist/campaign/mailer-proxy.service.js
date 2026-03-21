@@ -9,6 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var MailerProxyService_1;
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MailerProxyService = void 0;
 const common_1 = require("@nestjs/common");
@@ -70,6 +71,7 @@ let MailerProxyService = MailerProxyService_1 = class MailerProxyService {
                 emailTemplate: createCampaignDto.emailTemplate,
                 offerId: createCampaignDto.offerId,
                 selectedIp: createCampaignDto.selectedIp,
+                allIps: createCampaignDto.allIps || [createCampaignDto.selectedIp],
                 smtpConfig: mailerSmtpConfig,
             };
             this.logger.log(`Calling mailer service to start campaign: ${createCampaignDto.campaignId}`);
@@ -113,6 +115,20 @@ let MailerProxyService = MailerProxyService_1 = class MailerProxyService {
         }
         catch (error) {
             this.logger.warn(`Failed to get mailer queue status: ${error.message}`);
+            return null;
+        }
+    }
+    async getLiveSendingStats(campaignId, selectedIp, since) {
+        const mailerUrl = this.getMailerUrl(selectedIp);
+        if (!mailerUrl)
+            return null;
+        try {
+            const params = since ? `?since=${encodeURIComponent(since)}` : '';
+            const response = await this.httpClient.get(`${mailerUrl}/tracking/live/${campaignId}${params}`);
+            return response.data;
+        }
+        catch (error) {
+            this.logger.warn(`Failed to get live sending stats: ${error.message}`);
             return null;
         }
     }
@@ -165,6 +181,6 @@ let MailerProxyService = MailerProxyService_1 = class MailerProxyService {
 exports.MailerProxyService = MailerProxyService;
 exports.MailerProxyService = MailerProxyService = MailerProxyService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [config_1.ConfigService])
+    __metadata("design:paramtypes", [typeof (_a = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _a : Object])
 ], MailerProxyService);
 //# sourceMappingURL=mailer-proxy.service.js.map

@@ -3,6 +3,19 @@ import { Document } from 'mongoose';
 
 export type ServerDomainDocument = ServerDomain & Document;
 
+/**
+ * Warming lifecycle for an IP address:
+ *
+ *  cold     → newly added, never sent from. Excluded from round-robin automatically.
+ *  warming  → user has started warming this IP. Still excluded from round-robin bulk
+ *             campaigns, but can be targeted directly via ipMode: 'single'.
+ *  warmed   → fully warmed. Included in round-robin freely.
+ *
+ * Promotion is intentionally manual — reputation depends on bounce/complaint rates,
+ * not just send volume. The user/admin decides when an IP is ready.
+ */
+export type WarmingStatus = 'cold' | 'warming' | 'warmed';
+
 @Schema({ _id: false })
 export class IpEntry {
   @Prop({ required: true })
@@ -16,6 +29,13 @@ export class IpEntry {
 
   @Prop({ required: true })
   provider: string;
+
+  @Prop({
+    required: true,
+    enum: ['cold', 'warming', 'warmed'],
+    default: 'cold',
+  })
+  warmingStatus: WarmingStatus;
 }
 
 export const IpEntrySchema = SchemaFactory.createForClass(IpEntry);

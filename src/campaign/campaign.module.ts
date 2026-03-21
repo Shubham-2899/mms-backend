@@ -15,6 +15,7 @@ import { Email, EmailSchema } from 'src/email/schemas/email.schemas';
 import { User, UserSchema } from 'src/user/schemas/user.schema';
 import { AuthModule } from 'src/auth/auth.module';
 import { EmailProcessor } from 'src/email/email.processor';
+import { ServerDomain, ServerDomainSchema } from 'src/servers-domains/schemas/server-domain.schema';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { EmailProcessor } from 'src/email/email.processor';
       { name: CampaignEmailTracking.name, schema: CampaignEmailTrackingSchema },
       { name: Email.name, schema: EmailSchema },
       { name: User.name, schema: UserSchema },
+      { name: ServerDomain.name, schema: ServerDomainSchema },
     ]),
     BullModule.registerQueue(
       {

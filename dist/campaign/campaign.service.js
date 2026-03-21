@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CampaignService = void 0;
 const common_1 = require("@nestjs/common");
@@ -497,9 +498,7 @@ exports.CampaignService = CampaignService = __decorate([
     __param(3, (0, mongoose_1.InjectModel)(campaign_schemas_1.CampaignEmailTracking.name)),
     __param(4, (0, mongoose_1.InjectModel)(email_schemas_1.Email.name)),
     __param(5, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [bullmq_2.Queue,
-        bullmq_2.Queue,
-        mongoose_2.Model,
+    __metadata("design:paramtypes", [typeof (_a = typeof bullmq_2.Queue !== "undefined" && bullmq_2.Queue) === "function" ? _a : Object, typeof (_b = typeof bullmq_2.Queue !== "undefined" && bullmq_2.Queue) === "function" ? _b : Object, mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,

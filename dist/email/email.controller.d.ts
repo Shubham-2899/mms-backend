@@ -12,7 +12,7 @@ export declare class EmailController {
     } | {
         message: string;
         success: boolean;
-        jobId: string;
+        jobId: any;
         failedEmails?: undefined;
         emailSent?: undefined;
     }>;

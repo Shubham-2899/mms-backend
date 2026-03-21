@@ -55,6 +55,9 @@ let CampaignController = class CampaignController {
     async getMailerQueueStatus(selectedIp) {
         return this.campaignService.getMailerQueueStatus(selectedIp);
     }
+    async getLiveSendingStats(campaignId, selectedIp, since) {
+        return this.campaignService.getLiveSendingStats(campaignId, selectedIp, since);
+    }
 };
 exports.CampaignController = CampaignController;
 __decorate([
@@ -135,6 +138,15 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CampaignController.prototype, "getMailerQueueStatus", null);
+__decorate([
+    (0, common_1.Get)(':campaignId/live-stats'),
+    __param(0, (0, common_1.Param)('campaignId')),
+    __param(1, (0, common_1.Query)('selectedIp')),
+    __param(2, (0, common_1.Query)('since')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], CampaignController.prototype, "getLiveSendingStats", null);
 exports.CampaignController = CampaignController = __decorate([
     (0, common_1.Controller)('/api/campaign'),
     __metadata("design:paramtypes", [campaign_service_1.CampaignService])

@@ -20,9 +20,10 @@
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
+/// <reference types="mongoose/types" />
 /// <reference types="mongoose/types/schematypes" />
-/// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
+/// <reference types="mongoose/types/inferschematype" />
 import { Model } from 'mongoose';
 import { CampaignEmailTrackingDocument } from '../campaign/schemas/campaign.schemas';
 import { EmailListDocument } from './schemas/email_list.schemas';

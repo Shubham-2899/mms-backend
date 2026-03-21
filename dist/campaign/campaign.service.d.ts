@@ -20,9 +20,10 @@
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
+/// <reference types="mongoose/types" />
 /// <reference types="mongoose/types/schematypes" />
-/// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
+/// <reference types="mongoose/types/inferschematype" />
 import { Queue } from 'bullmq';
 import { Model } from 'mongoose';
 import { CampaignDocument, CampaignEmailTrackingDocument } from './schemas/campaign.schemas';
@@ -57,7 +58,7 @@ export declare class CampaignService {
     } | {
         message: string;
         success: boolean;
-        jobId: string;
+        jobId: any;
     }>;
     startCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any): Promise<{
         message: string;
@@ -67,7 +68,7 @@ export declare class CampaignService {
     } | {
         message: string;
         success: boolean;
-        jobId: string;
+        jobId: any;
         mailerId?: undefined;
     }>;
     pauseCampaign(campaignId: string): Promise<{
@@ -82,7 +83,7 @@ export declare class CampaignService {
     } | {
         message: string;
         success: boolean;
-        jobId: string;
+        jobId: any;
         mailerId?: undefined;
     }>;
     resumeCampaignWithToken(createCampaignDto: CreateCampaignDto, firebaseToken: string): Promise<{
@@ -93,7 +94,7 @@ export declare class CampaignService {
     } | {
         message: string;
         success: boolean;
-        jobId: string;
+        jobId: any;
         mailerId?: undefined;
     }>;
     testEmails(createCampaignDto: CreateCampaignDto, smtpConfig: any): Promise<{
@@ -147,6 +148,8 @@ export declare class CampaignService {
         emailTemplate: string;
         offerId: string;
         selectedIp: string;
+        ipMode?: string;
+        allIps?: string[];
         batchSize: number;
         delay: number;
         jobId?: string;
@@ -158,10 +161,10 @@ export declare class CampaignService {
         failedEmails?: number;
         _id: unknown;
         $locals: Record<string, unknown>;
-        $op: "remove" | "save" | "validate";
+        $op: "save" | "validate" | "remove";
         $where: Record<string, unknown>;
         baseModelName?: string;
-        collection: import("mongoose").Collection<import("bson").Document>;
+        collection: import("mongoose").Collection<mongodb.Document>;
         db: import("mongoose").Connection;
         errors?: import("mongoose").Error.ValidationError;
         id?: any;
@@ -186,7 +189,7 @@ export declare class CampaignService {
     cleanupCampaignData(campaignId: string): Promise<{
         message: string;
         success: boolean;
-        deletedCount: number;
+        deletedCount: any;
     }>;
     getCampaignCleanupStatus(campaignId: string): Promise<{
         campaignId: string;

@@ -30,6 +30,14 @@ __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
 ], IpEntry.prototype, "provider", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        required: true,
+        enum: ['cold', 'warming', 'warmed'],
+        default: 'cold',
+    }),
+    __metadata("design:type", String)
+], IpEntry.prototype, "warmingStatus", void 0);
 exports.IpEntry = IpEntry = __decorate([
     (0, mongoose_1.Schema)({ _id: false })
 ], IpEntry);
