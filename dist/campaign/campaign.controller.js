@@ -16,7 +16,6 @@ exports.CampaignController = void 0;
 const common_1 = require("@nestjs/common");
 const campaign_service_1 = require("./campaign.service");
 const create_campaign_dto_1 = require("./dto/create-campaign.dto");
-const firebase_auth_guard_1 = require("../auth/firebase-auth.guard");
 let CampaignController = class CampaignController {
     constructor(campaignService) {
         this.campaignService = campaignService;
@@ -49,6 +48,12 @@ let CampaignController = class CampaignController {
     }
     async endCampaign(campaignId) {
         return this.campaignService.endCampaign(campaignId);
+    }
+    async getMailerHealth(selectedIp) {
+        return this.campaignService.getMailerHealth(selectedIp);
+    }
+    async getMailerQueueStatus(selectedIp) {
+        return this.campaignService.getMailerQueueStatus(selectedIp);
     }
 };
 exports.CampaignController = CampaignController;
@@ -116,8 +121,21 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CampaignController.prototype, "endCampaign", null);
+__decorate([
+    (0, common_1.Get)('mailer/health'),
+    __param(0, (0, common_1.Query)('selectedIp')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], CampaignController.prototype, "getMailerHealth", null);
+__decorate([
+    (0, common_1.Get)('mailer/queue'),
+    __param(0, (0, common_1.Query)('selectedIp')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], CampaignController.prototype, "getMailerQueueStatus", null);
 exports.CampaignController = CampaignController = __decorate([
-    (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
     (0, common_1.Controller)('/api/campaign'),
     __metadata("design:paramtypes", [campaign_service_1.CampaignService])
 ], CampaignController);

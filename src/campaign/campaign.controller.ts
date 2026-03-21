@@ -7,12 +7,13 @@ import {
   Get,
   Param,
   Put,
+  Query,
 } from '@nestjs/common';
 import { CampaignService } from './campaign.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 
-@UseGuards(FirebaseAuthGuard)
+// @UseGuards(FirebaseAuthGuard)
 @Controller('/api/campaign')
 export class CampaignController {
   constructor(private readonly campaignService: CampaignService) {}
@@ -76,5 +77,15 @@ export class CampaignController {
   @Put(':campaignId/end')
   async endCampaign(@Param('campaignId') campaignId: string) {
     return this.campaignService.endCampaign(campaignId);
+  }
+
+  @Get('mailer/health')
+  async getMailerHealth(@Query('selectedIp') selectedIp?: string) {
+    return this.campaignService.getMailerHealth(selectedIp);
+  }
+
+  @Get('mailer/queue')
+  async getMailerQueueStatus(@Query('selectedIp') selectedIp?: string) {
+    return this.campaignService.getMailerQueueStatus(selectedIp);
   }
 }

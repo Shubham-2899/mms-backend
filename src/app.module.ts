@@ -24,6 +24,7 @@ import { BullmqDashboardModule } from './bullmq-dashboard/bullmq-dashboard.modul
 import { ReportsModule } from './reports/reports.module';
 import { JobsModule } from './jobs/jobs.module';
 import { CampaignModule } from './campaign/campaign.module';
+import { ServersDomainModule } from './servers-domains/servers-domains.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { CampaignModule } from './campaign/campaign.module';
     ReportsModule,
     JobsModule,
     CampaignModule,
+    ServersDomainModule,
   ],
   controllers: [AppController],
   providers: [AppService],

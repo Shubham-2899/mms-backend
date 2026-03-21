@@ -30,6 +30,7 @@ import { EmailDocument } from 'src/email/schemas/email.schemas';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { FirebaseService } from 'src/auth/firebase.service';
 import { UserDocument } from 'src/user/schemas/user.schema';
+import { MailerProxyService } from './mailer-proxy.service';
 export declare class CampaignService {
     private campaignQueue;
     private emailQueue;
@@ -38,7 +39,8 @@ export declare class CampaignService {
     private emailModel;
     private userModel;
     private firebaseService;
-    constructor(campaignQueue: Queue, emailQueue: Queue, campaignModel: Model<CampaignDocument>, emailTrackingModel: Model<CampaignEmailTrackingDocument>, emailModel: Model<EmailDocument>, userModel: Model<UserDocument>, firebaseService: FirebaseService);
+    private mailerProxyService;
+    constructor(campaignQueue: Queue, emailQueue: Queue, campaignModel: Model<CampaignDocument>, emailTrackingModel: Model<CampaignEmailTrackingDocument>, emailModel: Model<EmailDocument>, userModel: Model<UserDocument>, firebaseService: FirebaseService, mailerProxyService: MailerProxyService);
     private fetchSmtpDetails;
     createCampaign(createCampaignDto: CreateCampaignDto, firebaseToken: string): Promise<{
         message: string;
@@ -50,12 +52,23 @@ export declare class CampaignService {
     } | {
         message: string;
         success: boolean;
+        mailerId: string;
+        jobId?: undefined;
+    } | {
+        message: string;
+        success: boolean;
         jobId: string;
     }>;
     startCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any): Promise<{
         message: string;
         success: boolean;
+        mailerId: string;
+        jobId?: undefined;
+    } | {
+        message: string;
+        success: boolean;
         jobId: string;
+        mailerId?: undefined;
     }>;
     pauseCampaign(campaignId: string): Promise<{
         message: string;
@@ -64,12 +77,24 @@ export declare class CampaignService {
     resumeCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any): Promise<{
         message: string;
         success: boolean;
+        mailerId: string;
+        jobId?: undefined;
+    } | {
+        message: string;
+        success: boolean;
         jobId: string;
+        mailerId?: undefined;
     }>;
     resumeCampaignWithToken(createCampaignDto: CreateCampaignDto, firebaseToken: string): Promise<{
         message: string;
         success: boolean;
+        mailerId: string;
+        jobId?: undefined;
+    } | {
+        message: string;
+        success: boolean;
         jobId: string;
+        mailerId?: undefined;
     }>;
     testEmails(createCampaignDto: CreateCampaignDto, smtpConfig: any): Promise<{
         message: string;
@@ -133,7 +158,7 @@ export declare class CampaignService {
         failedEmails?: number;
         _id: unknown;
         $locals: Record<string, unknown>;
-        $op: "save" | "validate" | "remove";
+        $op: "remove" | "save" | "validate";
         $where: Record<string, unknown>;
         baseModelName?: string;
         collection: import("mongoose").Collection<import("bson").Document>;
@@ -172,5 +197,23 @@ export declare class CampaignService {
     endCampaign(campaignId: string): Promise<{
         message: string;
         success: boolean;
+    }>;
+    getMailerHealth(selectedIp?: string): Promise<{
+        enabled: boolean;
+        message: string;
+        health?: undefined;
+    } | {
+        enabled: boolean;
+        health: any;
+        message?: undefined;
+    }>;
+    getMailerQueueStatus(selectedIp?: string): Promise<{
+        enabled: boolean;
+        message: string;
+        queue?: undefined;
+    } | {
+        enabled: boolean;
+        queue: any;
+        message?: undefined;
     }>;
 }

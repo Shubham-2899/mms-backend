@@ -39,6 +39,11 @@ export declare class CampaignController {
     } | {
         message: string;
         success: boolean;
+        mailerId: string;
+        jobId?: undefined;
+    } | {
+        message: string;
+        success: boolean;
         jobId: string;
     }>;
     pauseCampaign(campaignId: string): Promise<{
@@ -48,7 +53,13 @@ export declare class CampaignController {
     resumeCampaign(createCampaignDto: CreateCampaignDto, token: string): Promise<{
         message: string;
         success: boolean;
+        mailerId: string;
+        jobId?: undefined;
+    } | {
+        message: string;
+        success: boolean;
         jobId: string;
+        mailerId?: undefined;
     }>;
     getCampaignStats(campaignId: string): Promise<{
         campaignId: string;
@@ -143,5 +154,23 @@ export declare class CampaignController {
     endCampaign(campaignId: string): Promise<{
         message: string;
         success: boolean;
+    }>;
+    getMailerHealth(selectedIp?: string): Promise<{
+        enabled: boolean;
+        message: string;
+        health?: undefined;
+    } | {
+        enabled: boolean;
+        health: any;
+        message?: undefined;
+    }>;
+    getMailerQueueStatus(selectedIp?: string): Promise<{
+        enabled: boolean;
+        message: string;
+        queue?: undefined;
+    } | {
+        enabled: boolean;
+        queue: any;
+        message?: undefined;
     }>;
 }

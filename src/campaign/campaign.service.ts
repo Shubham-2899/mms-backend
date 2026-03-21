@@ -14,6 +14,7 @@ import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { FirebaseService } from 'src/auth/firebase.service';
 import { User, UserDocument } from 'src/user/schemas/user.schema';
 import { createTransporter } from 'src/email/mailer.util';
+import { MailerProxyService } from './mailer-proxy.service';
 
 @Injectable()
 export class CampaignService {
@@ -26,6 +27,7 @@ export class CampaignService {
     @InjectModel(Email.name) private emailModel: Model<EmailDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private firebaseService: FirebaseService,
+    private mailerProxyService: MailerProxyService,
   ) {}
 
   // Method to fetch SMTP details based on user ID
@@ -173,7 +175,32 @@ export class CampaignService {
       { upsert: true },
     );
 
-    // Add job to BullMQ campaign queue
+    // Try to use mailer service if enabled, otherwise fallback to BullMQ
+    if (this.mailerProxyService.isMailerServiceEnabled()) {
+      try {
+        const result = await this.mailerProxyService.startCampaign(
+          createCampaignDto,
+          smtpConfig,
+        );
+
+        // Update campaign with mailer info (optional)
+        await this.campaignModel.findOneAndUpdate(
+          { campaignId: createCampaignDto.campaignId },
+          { jobId: `mailer-${result.mailerId || 'service'}` },
+        );
+
+        return {
+          message: result.message || 'Campaign started successfully on mailer service',
+          success: result.success,
+          mailerId: result.mailerId,
+        };
+      } catch (error) {
+        console.error('Failed to start campaign on mailer service, falling back to BullMQ:', error);
+        // Fall through to BullMQ fallback
+      }
+    }
+
+    // Fallback to BullMQ (original behavior)
     const job = await this.campaignQueue.add('send-campaign-job', {
       ...createCampaignDto,
       smtpConfig,
@@ -231,6 +258,32 @@ export class CampaignService {
         },
       );
 
+      // Try to use mailer service if enabled, otherwise fallback to BullMQ
+      if (this.mailerProxyService.isMailerServiceEnabled()) {
+        try {
+          const result = await this.mailerProxyService.startCampaign(
+            createCampaignDto,
+            smtpConfig,
+          );
+
+          // Update campaign with mailer info (optional)
+          await this.campaignModel.findOneAndUpdate(
+            { campaignId: createCampaignDto.campaignId },
+            { jobId: `mailer-${result.mailerId || 'service'}` },
+          );
+
+          return {
+            message: result.message || 'Campaign resumed on mailer service',
+            success: result.success,
+            mailerId: result.mailerId,
+          };
+        } catch (error) {
+          console.error('Failed to resume campaign on mailer service, falling back to BullMQ:', error);
+          // Fall through to BullMQ fallback
+        }
+      }
+
+      // Fallback to BullMQ (original behavior)
       const job = await this.campaignQueue.add('send-campaign-job', {
         ...createCampaignDto,
         smtpConfig,
@@ -287,6 +340,29 @@ export class CampaignService {
       selectedIp,
     } = createCampaignDto;
 
+    if (to.length === 0) {
+      throw new HttpException(
+        'No recipients found, Please add recipients',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Try to use mailer service if enabled, otherwise fallback to local sending
+    if (this.mailerProxyService.isMailerServiceEnabled()) {
+      try {
+        const result = await this.mailerProxyService.sendTestEmails(
+          createCampaignDto,
+          smtpConfig,
+        );
+
+        return result;
+      } catch (error) {
+        console.error('Failed to send test emails on mailer service, falling back to local sending:', error);
+        // Fall through to local sending fallback
+      }
+    }
+
+    // Fallback to local sending (original behavior)
     const decodedTemplate = decodeURIComponent(emailTemplate);
     const ip = selectedIp?.split('-')[1]?.trim();
     const domain = selectedIp?.split('-')[0]?.trim();
@@ -295,13 +371,6 @@ export class CampaignService {
 
     const failed: string[] = [];
     const sent: string[] = [];
-
-    if (to.length === 0) {
-      throw new HttpException(
-        'No recipients found, Please add recipients',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
     for (const email of to) {
       try {
@@ -614,5 +683,37 @@ export class CampaignService {
     } else {
       throw new HttpException('Only running, paused, or completed campaigns can be ended', HttpStatus.BAD_REQUEST);
     }
+  }
+
+  // Get mailer service health status
+  async getMailerHealth(selectedIp?: string) {
+    if (!this.mailerProxyService.isMailerServiceEnabled()) {
+      return {
+        enabled: false,
+        message: 'Mailer service is not configured',
+      };
+    }
+
+    const health = await this.mailerProxyService.getMailerHealth(selectedIp);
+    return {
+      enabled: true,
+      health: health || { status: 'unavailable' },
+    };
+  }
+
+  // Get mailer queue status
+  async getMailerQueueStatus(selectedIp?: string) {
+    if (!this.mailerProxyService.isMailerServiceEnabled()) {
+      return {
+        enabled: false,
+        message: 'Mailer service is not configured',
+      };
+    }
+
+    const queueStatus = await this.mailerProxyService.getMailerQueueStatus(selectedIp);
+    return {
+      enabled: true,
+      queue: queueStatus || { status: 'unavailable' },
+    };
   }
 }

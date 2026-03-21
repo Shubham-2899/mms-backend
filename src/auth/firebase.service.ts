@@ -9,9 +9,11 @@ export class FirebaseService {
   private firebaseApp: admin.app.App;
 
   constructor() {
-    const serviceAccount = require(
-      path.resolve(__dirname, '../../serviceAccountKey.json'),
-    );
+    // In compiled code, __dirname is dist/src/auth, so we need to go up 3 levels to reach root
+    // In development, __dirname is src/auth, so we need to go up 2 levels
+    // Using process.cwd() is more reliable as it always points to project root
+    const serviceAccountPath = path.resolve(process.cwd(), 'serviceAccountKey.json');
+    const serviceAccount = require(serviceAccountPath);
 
     if (!admin.apps.length) {
       this.firebaseApp = admin.initializeApp({

@@ -13,6 +13,7 @@ const bullmq_1 = require("@nestjs/bullmq");
 const campaign_controller_1 = require("./campaign.controller");
 const campaign_service_1 = require("./campaign.service");
 const campaign_processor_1 = require("./campaign.processor");
+const mailer_proxy_service_1 = require("./mailer-proxy.service");
 const campaign_schemas_1 = require("./schemas/campaign.schemas");
 const email_schemas_1 = require("../email/schemas/email.schemas");
 const user_schema_1 = require("../user/schemas/user.schema");
@@ -38,7 +39,7 @@ exports.CampaignModule = CampaignModule = __decorate([
             auth_module_1.AuthModule,
         ],
         controllers: [campaign_controller_1.CampaignController],
-        providers: [campaign_service_1.CampaignService, campaign_processor_1.CampaignProcessor, email_processor_1.EmailProcessor],
+        providers: [campaign_service_1.CampaignService, campaign_processor_1.CampaignProcessor, email_processor_1.EmailProcessor, mailer_proxy_service_1.MailerProxyService],
         exports: [campaign_service_1.CampaignService],
     })
 ], CampaignModule);
