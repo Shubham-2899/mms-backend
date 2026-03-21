@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CampaignService = void 0;
 const common_1 = require("@nestjs/common");
@@ -25,14 +25,16 @@ const firebase_service_1 = require("../auth/firebase.service");
 const user_schema_1 = require("../user/schemas/user.schema");
 const mailer_util_1 = require("../email/mailer.util");
 const mailer_proxy_service_1 = require("./mailer-proxy.service");
+const server_domain_schema_1 = require("../servers-domains/schemas/server-domain.schema");
 let CampaignService = class CampaignService {
-    constructor(campaignQueue, emailQueue, campaignModel, emailTrackingModel, emailModel, userModel, firebaseService, mailerProxyService) {
+    constructor(campaignQueue, emailQueue, campaignModel, emailTrackingModel, emailModel, userModel, serverDomainModel, firebaseService, mailerProxyService) {
         this.campaignQueue = campaignQueue;
         this.emailQueue = emailQueue;
         this.campaignModel = campaignModel;
         this.emailTrackingModel = emailTrackingModel;
         this.emailModel = emailModel;
         this.userModel = userModel;
+        this.serverDomainModel = serverDomainModel;
         this.firebaseService = firebaseService;
         this.mailerProxyService = mailerProxyService;
     }
@@ -91,6 +93,26 @@ let CampaignService = class CampaignService {
             throw new common_1.HttpException('Internal server error', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    async resolveAllIps(createCampaignDto) {
+        const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
+        if (createCampaignDto.ipMode !== 'round-robin' || !domain) {
+            return [createCampaignDto.selectedIp];
+        }
+        const serverDomain = await this.serverDomainModel.findOne({ domain, status: 'active' });
+        if (!serverDomain) {
+            return [createCampaignDto.selectedIp];
+        }
+        const eligibleIps = serverDomain.availableIps.filter((e) => !e.wentSpam && e.warmingStatus === 'warmed');
+        if (eligibleIps.length <= 1) {
+            return [createCampaignDto.selectedIp];
+        }
+        const mainIp = eligibleIps.find((e) => e.isMainIp);
+        const subIps = eligibleIps.filter((e) => !e.isMainIp);
+        if (!mainIp) {
+            return [createCampaignDto.selectedIp];
+        }
+        return [mainIp, ...subIps].map((e) => `${domain} - ${e.ip}`);
+    }
     async startCampaign(createCampaignDto, smtpConfig) {
         console.log('Start campaign');
         const recipientCount = await this.emailTrackingModel.countDocuments({
@@ -121,15 +143,17 @@ let CampaignService = class CampaignService {
         if (missingFields.length > 0) {
             throw new common_1.HttpException(`Missing required fields for starting campaign: ${missingFields.join(', ')}`, common_1.HttpStatus.BAD_REQUEST);
         }
+        const allIps = await this.resolveAllIps(createCampaignDto);
         await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, {
             ...createCampaignDto,
+            allIps,
             status: 'running',
             startedAt: new Date(),
             pendingEmails: recipientCount,
         }, { upsert: true });
         if (this.mailerProxyService.isMailerServiceEnabled()) {
             try {
-                const result = await this.mailerProxyService.startCampaign(createCampaignDto, smtpConfig);
+                const result = await this.mailerProxyService.startCampaign({ ...createCampaignDto, allIps }, smtpConfig);
                 await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, { jobId: `mailer-${result.mailerId || 'service'}` });
                 return {
                     message: result.message || 'Campaign started successfully on mailer service',
@@ -168,14 +192,16 @@ let CampaignService = class CampaignService {
             if (pendingCount === 0) {
                 throw new common_1.HttpException('No pending emails to resume. Campaign is already completed.', common_1.HttpStatus.BAD_REQUEST);
             }
+            const allIps = await this.resolveAllIps(createCampaignDto);
             await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, {
                 ...createCampaignDto,
+                allIps,
                 status: 'running',
                 pendingEmails: pendingCount,
             });
             if (this.mailerProxyService.isMailerServiceEnabled()) {
                 try {
-                    const result = await this.mailerProxyService.startCampaign(createCampaignDto, smtpConfig);
+                    const result = await this.mailerProxyService.startCampaign({ ...createCampaignDto, allIps }, smtpConfig);
                     await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, { jobId: `mailer-${result.mailerId || 'service'}` });
                     return {
                         message: result.message || 'Campaign resumed on mailer service',
@@ -331,6 +357,8 @@ let CampaignService = class CampaignService {
                 subject: campaign.subject || '',
                 offerId: campaign.offerId || '',
                 selectedIp: campaign.selectedIp || '',
+                ipMode: campaign.ipMode || 'single',
+                allIps: campaign.allIps || [],
                 batchSize: campaign.batchSize || 0,
                 templateType: campaign.templateType || '',
                 emailTemplate: campaign.emailTemplate || '',
@@ -462,6 +490,13 @@ let CampaignService = class CampaignService {
             throw new common_1.HttpException('Only running, paused, or completed campaigns can be ended', common_1.HttpStatus.BAD_REQUEST);
         }
     }
+    async getLiveSendingStats(campaignId, selectedIp, since) {
+        if (!this.mailerProxyService.isMailerServiceEnabled()) {
+            return { enabled: false, message: 'Mailer service is not configured' };
+        }
+        const data = await this.mailerProxyService.getLiveSendingStats(campaignId, selectedIp, since);
+        return { enabled: true, data: data || { message: 'No data available' } };
+    }
     async getMailerHealth(selectedIp) {
         if (!this.mailerProxyService.isMailerServiceEnabled()) {
             return {
@@ -498,11 +533,8 @@ exports.CampaignService = CampaignService = __decorate([
     __param(3, (0, mongoose_1.InjectModel)(campaign_schemas_1.CampaignEmailTracking.name)),
     __param(4, (0, mongoose_1.InjectModel)(email_schemas_1.Email.name)),
     __param(5, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof bullmq_2.Queue !== "undefined" && bullmq_2.Queue) === "function" ? _a : Object, typeof (_b = typeof bullmq_2.Queue !== "undefined" && bullmq_2.Queue) === "function" ? _b : Object, mongoose_2.Model,
-        mongoose_2.Model,
-        mongoose_2.Model,
-        mongoose_2.Model,
-        firebase_service_1.FirebaseService,
+    __param(6, (0, mongoose_1.InjectModel)(server_domain_schema_1.ServerDomain.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof bullmq_2.Queue !== "undefined" && bullmq_2.Queue) === "function" ? _a : Object, typeof (_b = typeof bullmq_2.Queue !== "undefined" && bullmq_2.Queue) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _d : Object, typeof (_e = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _e : Object, typeof (_f = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _f : Object, typeof (_g = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _g : Object, firebase_service_1.FirebaseService,
         mailer_proxy_service_1.MailerProxyService])
 ], CampaignService);
 //# sourceMappingURL=campaign.service.js.map

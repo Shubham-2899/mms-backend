@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailService = void 0;
 const common_1 = require("@nestjs/common");
@@ -173,8 +173,6 @@ exports.EmailService = EmailService = __decorate([
     __param(0, (0, bullmq_1.InjectQueue)('email-queue')),
     __param(1, (0, mongoose_1.InjectModel)(email_schemas_1.Email.name)),
     __param(2, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof bullmq_2.Queue !== "undefined" && bullmq_2.Queue) === "function" ? _a : Object, mongoose_2.Model,
-        mongoose_2.Model,
-        firebase_service_1.FirebaseService])
+    __metadata("design:paramtypes", [typeof (_a = typeof bullmq_2.Queue !== "undefined" && bullmq_2.Queue) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, firebase_service_1.FirebaseService])
 ], EmailService);
 //# sourceMappingURL=email.service.js.map

@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CampaignEmailTrackingSchema = exports.CampaignSchema = exports.CampaignEmailTracking = exports.Campaign = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
@@ -72,11 +73,11 @@ __decorate([
 ], Campaign.prototype, "jobId", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", Date)
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
 ], Campaign.prototype, "startedAt", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", Date)
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
 ], Campaign.prototype, "completedAt", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: 0 }),
@@ -121,7 +122,7 @@ __decorate([
 ], CampaignEmailTracking.prototype, "isProcessed", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", Date)
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
 ], CampaignEmailTracking.prototype, "sentAt", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
