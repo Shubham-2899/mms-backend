@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailListService = void 0;
 const common_1 = require("@nestjs/common");
@@ -177,6 +176,8 @@ exports.EmailListService = EmailListService = __decorate([
     __param(0, (0, mongoose_1.InjectModel)(campaign_schemas_1.CampaignEmailTracking.name)),
     __param(1, (0, mongoose_1.InjectModel)(email_list_schemas_1.EmailList.name)),
     __param(2, (0, mongoose_1.InjectModel)(campaign_schemas_2.Campaign.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model])
 ], EmailListService);
 //# sourceMappingURL=email_list.service.js.map

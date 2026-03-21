@@ -14,8 +14,8 @@ export declare const expectedResponses: {
     testModeResponse: {
         message: string;
         success: boolean;
-        sent: {};
-        failed: {};
+        sent: string[];
+        failed: any[];
         emailSent: number;
         emailFailed: number;
     };

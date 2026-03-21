@@ -11,14 +11,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailListController = void 0;
 const common_1 = require("@nestjs/common");
 const email_list_service_1 = require("./email_list.service");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
-const express_1 = require("express");
 const fs = require("fs");
 const path = require("path");
 let EmailListController = class EmailListController {
@@ -73,7 +71,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", typeof (_a = typeof Promise !== "undefined" && Promise) === "function" ? _a : Object)
+    __metadata("design:returntype", Promise)
 ], EmailListController.prototype, "addEmails", null);
 __decorate([
     (0, common_1.Post)('upload-emails'),
@@ -96,8 +94,8 @@ __decorate([
     __param(0, (0, common_1.UploadedFile)()),
     __param(1, (0, common_1.Body)('campaignId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof express_1.Express !== "undefined" && (_b = express_1.Express.Multer) !== void 0 && _b.File) === "function" ? _c : Object, String]),
-    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
 ], EmailListController.prototype, "uploadCSV", null);
 __decorate([
     (0, common_1.Get)('/suppressions'),

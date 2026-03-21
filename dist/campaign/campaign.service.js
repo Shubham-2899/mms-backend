@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CampaignService = void 0;
 const common_1 = require("@nestjs/common");
@@ -534,7 +533,14 @@ exports.CampaignService = CampaignService = __decorate([
     __param(4, (0, mongoose_1.InjectModel)(email_schemas_1.Email.name)),
     __param(5, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
     __param(6, (0, mongoose_1.InjectModel)(server_domain_schema_1.ServerDomain.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof bullmq_2.Queue !== "undefined" && bullmq_2.Queue) === "function" ? _a : Object, typeof (_b = typeof bullmq_2.Queue !== "undefined" && bullmq_2.Queue) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _d : Object, typeof (_e = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _e : Object, typeof (_f = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _f : Object, typeof (_g = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _g : Object, firebase_service_1.FirebaseService,
+    __metadata("design:paramtypes", [bullmq_2.Queue,
+        bullmq_2.Queue,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        firebase_service_1.FirebaseService,
         mailer_proxy_service_1.MailerProxyService])
 ], CampaignService);
 //# sourceMappingURL=campaign.service.js.map

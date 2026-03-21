@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-// import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { EmailModule } from './email/email.module';
 import { UrlModule } from './url/url.module';
@@ -25,6 +24,8 @@ import { ReportsModule } from './reports/reports.module';
 import { JobsModule } from './jobs/jobs.module';
 import { CampaignModule } from './campaign/campaign.module';
 import { ServersDomainModule } from './servers-domains/servers-domains.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { BounceModule } from './bounce/bounce.module';
 
 @Module({
   imports: [
@@ -66,6 +67,8 @@ import { ServersDomainModule } from './servers-domains/servers-domains.module';
     JobsModule,
     CampaignModule,
     ServersDomainModule,
+    ScheduleModule.forRoot(),
+    BounceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

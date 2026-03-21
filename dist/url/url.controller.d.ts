@@ -4,5 +4,5 @@ export declare class UrlController {
     private readonly urlService;
     constructor(urlService: UrlService);
     createNewShortUrl(createUrlDto: CreateUrlDto): any;
-    getReports(shortId: string): unknown;
+    getReports(shortId: string): Promise<any>;
 }

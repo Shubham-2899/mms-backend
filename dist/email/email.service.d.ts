@@ -20,10 +20,9 @@
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
-/// <reference types="mongoose/types" />
 /// <reference types="mongoose/types/schematypes" />
-/// <reference types="mongoose/types/inferrawdoctype" />
 /// <reference types="mongoose/types/inferschematype" />
+/// <reference types="mongoose/types/inferrawdoctype" />
 import { Queue } from 'bullmq';
 import { Model } from 'mongoose';
 import { EmailDocument } from './schemas/email.schemas';
@@ -45,7 +44,7 @@ export declare class EmailService {
     } | {
         message: string;
         success: boolean;
-        jobId: any;
+        jobId: string;
         failedEmails?: undefined;
         emailSent?: undefined;
     }>;

@@ -20,10 +20,9 @@
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
-/// <reference types="mongoose/types" />
 /// <reference types="mongoose/types/schematypes" />
-/// <reference types="mongoose/types/inferrawdoctype" />
 /// <reference types="mongoose/types/inferschematype" />
+/// <reference types="mongoose/types/inferrawdoctype" />
 import { Document } from 'mongoose';
 export type EmailDocument = Email & Document;
 export declare class Email {
@@ -37,4 +36,12 @@ export declare class Email {
     domainUsed: string;
     ipUsed: string;
 }
-export declare const EmailSchema: any;
+export declare const EmailSchema: import("mongoose").Schema<Email, import("mongoose").Model<Email, any, any, any, Document<unknown, any, Email, any> & Email & {
+    _id: import("mongoose").Types.ObjectId;
+} & {
+    __v: number;
+}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Email, Document<unknown, {}, import("mongoose").FlatRecord<Email>, {}> & import("mongoose").FlatRecord<Email> & {
+    _id: import("mongoose").Types.ObjectId;
+} & {
+    __v: number;
+}>;

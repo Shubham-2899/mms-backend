@@ -11,12 +11,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JobsController = void 0;
 const common_1 = require("@nestjs/common");
 const bull_1 = require("@nestjs/bull");
-const bull_2 = require("bull");
 const jobs_service_1 = require("./jobs.service");
 let JobsController = class JobsController {
     constructor(jobsService, emailQueue) {
@@ -46,6 +44,6 @@ __decorate([
 exports.JobsController = JobsController = __decorate([
     (0, common_1.Controller)('jobs'),
     __param(1, (0, bull_1.InjectQueue)('email-queue')),
-    __metadata("design:paramtypes", [jobs_service_1.JobsService, typeof (_a = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [jobs_service_1.JobsService, Object])
 ], JobsController);
 //# sourceMappingURL=jobs.controller.js.map

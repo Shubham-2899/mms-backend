@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServersDomainService = void 0;
 const common_1 = require("@nestjs/common");
@@ -26,7 +25,9 @@ let ServersDomainService = class ServersDomainService {
         return this.serverDomainModel.findOne({ domain });
     }
     async create(dto) {
-        const existing = await this.serverDomainModel.findOne({ domain: dto.domain });
+        const existing = await this.serverDomainModel.findOne({
+            domain: dto.domain,
+        });
         if (existing) {
             throw new common_1.HttpException(`Domain "${dto.domain}" is already assigned to a server`, common_1.HttpStatus.CONFLICT);
         }
@@ -53,7 +54,9 @@ let ServersDomainService = class ServersDomainService {
                 throw new common_1.HttpException(`Domain "${dto.domain}" is already assigned to another server`, common_1.HttpStatus.CONFLICT);
             }
         }
-        const updated = await this.serverDomainModel.findByIdAndUpdate(id, dto, { new: true });
+        const updated = await this.serverDomainModel.findByIdAndUpdate(id, dto, {
+            new: true,
+        });
         if (!updated)
             throw new common_1.HttpException('Not found', common_1.HttpStatus.NOT_FOUND);
         return { message: 'Updated', success: true, data: updated };
@@ -72,7 +75,7 @@ let ServersDomainService = class ServersDomainService {
         if (duplicate) {
             throw new common_1.HttpException(`IP "${ipDto.ip}" already exists on this server`, common_1.HttpStatus.CONFLICT);
         }
-        doc.availableIps.push({ wentSpam: false, ...ipDto });
+        doc.availableIps.push({ wentSpam: false, warmingStatus: 'cold', ...ipDto });
         await doc.save();
         return { message: 'IP added', success: true, data: doc };
     }
@@ -120,6 +123,6 @@ exports.ServersDomainService = ServersDomainService;
 exports.ServersDomainService = ServersDomainService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(server_domain_schema_1.ServerDomain.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model])
 ], ServersDomainService);
 //# sourceMappingURL=servers-domains.service.js.map

@@ -20,10 +20,9 @@
 /// <reference types="mongoose/types/utility" />
 /// <reference types="mongoose/types/validation" />
 /// <reference types="mongoose/types/virtuals" />
-/// <reference types="mongoose/types" />
 /// <reference types="mongoose/types/schematypes" />
-/// <reference types="mongoose/types/inferrawdoctype" />
 /// <reference types="mongoose/types/inferschematype" />
+/// <reference types="mongoose/types/inferrawdoctype" />
 import { Url } from './schemas/url.schema';
 import { Model } from 'mongoose';
 import { CreateUrlDto } from './dto/create-url.dto';
