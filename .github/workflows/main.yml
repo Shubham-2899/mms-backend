@@ -23,8 +23,7 @@ jobs:
       - name: Restart PM2 process on EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.IP }} << 'EOF'
-            cd /var/www/mms-mailer-app/mms-backend
-            # Restart your app using PM2
+            cd ${{ secrets.PATH }}            # Restart your app using PM2
             git pull origin main 
             npm i 
             pm2 reload 0
