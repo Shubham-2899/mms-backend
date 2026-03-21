@@ -8,23 +8,22 @@ export class MailerProxyService {
   private readonly logger = new Logger(MailerProxyService.name);
   private readonly httpClient: AxiosInstance;
   private readonly mailerAuthToken: string;
-  private readonly mailerBaseUrl: string | null;
+  private readonly mailerPort: number;
 
   constructor(private configService: ConfigService) {
     this.mailerAuthToken =
       this.configService.get<string>('MAILER_AUTH_TOKEN') || '';
-    this.mailerBaseUrl = this.configService.get<string>('MAILER_SERVICE_URL');
+    this.mailerPort =
+      this.configService.get<number>('MAILER_SERVICE_PORT') || 4000;
 
-    // Create axios instance with default config
     this.httpClient = axios.create({
-      timeout: 30000, // 30 seconds timeout
+      timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
         'X-Mailer-Token': this.mailerAuthToken,
       },
     });
 
-    // Add response interceptor for error handling
     this.httpClient.interceptors.response.use(
       (response) => response,
       (error) => {
@@ -38,28 +37,19 @@ export class MailerProxyService {
   }
 
   /**
-   * Get mailer service URL based on selectedIp
-   * This can be extended to support multiple mailer services
+   * Builds the mailer URL from the main IP in selectedIp ("domain - ip").
+   * Mailer service always runs on the main IP at MAILER_SERVICE_PORT (default 4000).
    */
   private getMailerUrl(selectedIp?: string): string | null {
-    // If MAILER_SERVICE_URL is set, use it (single mailer service)
-    if (this.mailerBaseUrl) {
-      return this.mailerBaseUrl;
-    }
-
-    // Future: Can implement logic to map selectedIp to specific mailer URLs
-    // For now, return null to fallback to BullMQ
-    return null;
+    const ip = selectedIp?.split('-')[1]?.trim();
+    if (!ip) return null;
+    return `http://${ip}:${this.mailerPort}`;
   }
 
-  /**
-   * Check if mailer service is enabled and available
-   * Requires MAILER_PROXY_ENABLED=true in addition to URL and token being set
-   */
   isMailerServiceEnabled(): boolean {
     const proxyEnabled =
       this.configService.get<string>('MAILER_PROXY_ENABLED') === 'true';
-    return proxyEnabled && !!this.mailerBaseUrl && !!this.mailerAuthToken;
+    return proxyEnabled && !!this.mailerAuthToken;
   }
 
   /**

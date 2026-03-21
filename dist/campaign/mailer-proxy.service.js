@@ -20,7 +20,8 @@ let MailerProxyService = MailerProxyService_1 = class MailerProxyService {
         this.logger = new common_1.Logger(MailerProxyService_1.name);
         this.mailerAuthToken =
             this.configService.get('MAILER_AUTH_TOKEN') || '';
-        this.mailerBaseUrl = this.configService.get('MAILER_SERVICE_URL');
+        this.mailerPort =
+            this.configService.get('MAILER_SERVICE_PORT') || 4000;
         this.httpClient = axios_1.default.create({
             timeout: 30000,
             headers: {
@@ -34,14 +35,14 @@ let MailerProxyService = MailerProxyService_1 = class MailerProxyService {
         });
     }
     getMailerUrl(selectedIp) {
-        if (this.mailerBaseUrl) {
-            return this.mailerBaseUrl;
-        }
-        return null;
+        const ip = selectedIp?.split('-')[1]?.trim();
+        if (!ip)
+            return null;
+        return `http://${ip}:${this.mailerPort}`;
     }
     isMailerServiceEnabled() {
         const proxyEnabled = this.configService.get('MAILER_PROXY_ENABLED') === 'true';
-        return proxyEnabled && !!this.mailerBaseUrl && !!this.mailerAuthToken;
+        return proxyEnabled && !!this.mailerAuthToken;
     }
     async startCampaign(createCampaignDto, smtpConfig) {
         const mailerUrl = this.getMailerUrl(createCampaignDto.selectedIp);

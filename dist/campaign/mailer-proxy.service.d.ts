@@ -5,7 +5,7 @@ export declare class MailerProxyService {
     private readonly logger;
     private readonly httpClient;
     private readonly mailerAuthToken;
-    private readonly mailerBaseUrl;
+    private readonly mailerPort;
     constructor(configService: ConfigService);
     private getMailerUrl;
     isMailerServiceEnabled(): boolean;

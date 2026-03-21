@@ -29,6 +29,11 @@ import { CreateServerDomainDto, IpEntryDto } from './dto/create-server-domain.dt
 export declare class ServersDomainService {
     private serverDomainModel;
     constructor(serverDomainModel: Model<ServerDomainDocument>);
+    findByDomain(domain: string): Promise<import("mongoose").Document<unknown, {}, ServerDomainDocument, {}> & ServerDomain & import("mongoose").Document<unknown, any, any, Record<string, any>> & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    }>;
     create(dto: CreateServerDomainDto): Promise<{
         message: string;
         success: boolean;

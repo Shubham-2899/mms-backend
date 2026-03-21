@@ -11,6 +11,10 @@ export class ServersDomainService {
     private serverDomainModel: Model<ServerDomainDocument>,
   ) {}
 
+  async findByDomain(domain: string) {
+    return this.serverDomainModel.findOne({ domain });
+  }
+
   async create(dto: CreateServerDomainDto) {
     const existing = await this.serverDomainModel.findOne({ domain: dto.domain });
     if (existing) {

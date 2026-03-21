@@ -21,6 +21,9 @@ let ServersDomainService = class ServersDomainService {
     constructor(serverDomainModel) {
         this.serverDomainModel = serverDomainModel;
     }
+    async findByDomain(domain) {
+        return this.serverDomainModel.findOne({ domain });
+    }
     async create(dto) {
         const existing = await this.serverDomainModel.findOne({ domain: dto.domain });
         if (existing) {
