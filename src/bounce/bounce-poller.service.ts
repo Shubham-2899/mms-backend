@@ -76,20 +76,44 @@ export class BouncePollerService {
       return { processed: 0, errors: 0 };
     }
 
+    // Port/SSL config — reads from env so it can be overridden per deployment.
+    // Exim/Postfix default: 993 SSL. Some setups use 143 + STARTTLS.
+    const imapPort = parseInt(process.env.BOUNCE_IMAP_PORT || '993', 10);
+    const imapSecure = process.env.BOUNCE_IMAP_SECURE !== 'false'; // default true
+
+    this.logger.log(
+      `Connecting to ${host}:${imapPort} (secure=${imapSecure}) as ${user}`,
+    );
+
     const client = new ImapFlow({
       host,
-      port: 993,
-      secure: true,
+      port: imapPort,
+      secure: imapSecure,
       auth: { user, pass: password },
-      logger: false, // suppress imapflow verbose logs
-      tls: { rejectUnauthorized: false },
+      logger: {
+        debug: () => {},
+        info: (obj) => this.logger.debug(JSON.stringify(obj)),
+        warn: (obj) => this.logger.warn(JSON.stringify(obj)),
+        error: (obj) => this.logger.error(JSON.stringify(obj)),
+      },
+      tls: {
+        rejectUnauthorized: false,
+        checkServerIdentity: () => undefined,
+      },
+    });
+
+    // Surface connection errors clearly
+    client.on('error', (err) => {
+      this.logger.error(`IMAP connection error for ${domain}: ${err.message}`);
     });
 
     let processed = 0;
     let errors = 0;
+    let connectionError: Error | null = null;
 
     try {
       await client.connect();
+      this.logger.log(`IMAP connected to ${host} for ${domain}`);
       const lock = await client.getMailboxLock('INBOX');
 
       try {
@@ -129,9 +153,17 @@ export class BouncePollerService {
       } finally {
         lock.release();
       }
+    } catch (err) {
+      connectionError = err;
+      this.logger.error(`IMAP session error for ${domain}: ${err.message}`);
     } finally {
-      await client.logout();
+      // logout() can throw if connection already dropped — ignore that
+      try {
+        await client.logout();
+      } catch (_) {}
     }
+
+    if (connectionError) throw connectionError;
 
     return { processed, errors };
   }

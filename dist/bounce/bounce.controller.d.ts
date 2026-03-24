@@ -45,6 +45,14 @@ export declare class BounceController {
         processed: number;
         errors: number;
         success: boolean;
+        message?: undefined;
+        stack?: undefined;
+        hint?: undefined;
+    } | {
+        success: boolean;
+        message: any;
+        stack: any;
+        hint: string;
     }>;
     pollAll(): Promise<{
         success: boolean;

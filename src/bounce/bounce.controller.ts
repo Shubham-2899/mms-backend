@@ -62,8 +62,17 @@ export class BounceController {
    */
   @Post('poll/:domain')
   async pollDomain(@Param('domain') domain: string) {
-    const result = await this.bouncePollerService.pollDomain(domain);
-    return { success: true, ...result };
+    try {
+      const result = await this.bouncePollerService.pollDomain(domain);
+      return { success: true, ...result };
+    } catch (err) {
+      return {
+        success: false,
+        message: err.message,
+        stack: err.stack,
+        hint: 'Check that the bounces@<domain> mailbox exists and BOUNCE_IMAP_PORT/BOUNCE_IMAP_SECURE env vars are correct',
+      };
+    }
   }
 
   /**

@@ -56,18 +56,34 @@ let BouncePollerService = BouncePollerService_1 = class BouncePollerService {
             this.logger.warn(`ROOT_MAIL_USER_PASSWORD not set, skipping bounce poll for ${domain}`);
             return { processed: 0, errors: 0 };
         }
+        const imapPort = parseInt(process.env.BOUNCE_IMAP_PORT || '993', 10);
+        const imapSecure = process.env.BOUNCE_IMAP_SECURE !== 'false';
+        this.logger.log(`Connecting to ${host}:${imapPort} (secure=${imapSecure}) as ${user}`);
         const client = new imapflow_1.ImapFlow({
             host,
-            port: 993,
-            secure: true,
+            port: imapPort,
+            secure: imapSecure,
             auth: { user, pass: password },
-            logger: false,
-            tls: { rejectUnauthorized: false },
+            logger: {
+                debug: () => { },
+                info: (obj) => this.logger.debug(JSON.stringify(obj)),
+                warn: (obj) => this.logger.warn(JSON.stringify(obj)),
+                error: (obj) => this.logger.error(JSON.stringify(obj)),
+            },
+            tls: {
+                rejectUnauthorized: false,
+                checkServerIdentity: () => undefined,
+            },
+        });
+        client.on('error', (err) => {
+            this.logger.error(`IMAP connection error for ${domain}: ${err.message}`);
         });
         let processed = 0;
         let errors = 0;
+        let connectionError = null;
         try {
             await client.connect();
+            this.logger.log(`IMAP connected to ${host} for ${domain}`);
             const lock = await client.getMailboxLock('INBOX');
             try {
                 const messages = [];
@@ -97,9 +113,18 @@ let BouncePollerService = BouncePollerService_1 = class BouncePollerService {
                 lock.release();
             }
         }
-        finally {
-            await client.logout();
+        catch (err) {
+            connectionError = err;
+            this.logger.error(`IMAP session error for ${domain}: ${err.message}`);
         }
+        finally {
+            try {
+                await client.logout();
+            }
+            catch (_) { }
+        }
+        if (connectionError)
+            throw connectionError;
         return { processed, errors };
     }
     async processNdr(source, domain) {

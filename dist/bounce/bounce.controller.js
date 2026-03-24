@@ -44,8 +44,18 @@ let BounceController = class BounceController {
         return { success: true, data, total, page: pageNum, limit: limitNum };
     }
     async pollDomain(domain) {
-        const result = await this.bouncePollerService.pollDomain(domain);
-        return { success: true, ...result };
+        try {
+            const result = await this.bouncePollerService.pollDomain(domain);
+            return { success: true, ...result };
+        }
+        catch (err) {
+            return {
+                success: false,
+                message: err.message,
+                stack: err.stack,
+                hint: 'Check that the bounces@<domain> mailbox exists and BOUNCE_IMAP_PORT/BOUNCE_IMAP_SECURE env vars are correct',
+            };
+        }
     }
     async pollAll() {
         await this.bouncePollerService.pollAllDomains();
