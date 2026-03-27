@@ -52,10 +52,15 @@ export declare class CampaignService {
         emailSent: number;
         emailFailed: number;
     } | {
+        ipWarning: string;
         message: string;
         success: boolean;
         mailerId: string;
-        jobId?: undefined;
+    } | {
+        ipWarning: string;
+        message: string;
+        success: boolean;
+        jobId: string;
     } | {
         message: string;
         success: boolean;
@@ -63,41 +68,41 @@ export declare class CampaignService {
     }>;
     private resolveAllIps;
     startCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any): Promise<{
+        ipWarning: string;
         message: string;
         success: boolean;
         mailerId: string;
-        jobId?: undefined;
     } | {
+        ipWarning: string;
         message: string;
         success: boolean;
         jobId: string;
-        mailerId?: undefined;
     }>;
     pauseCampaign(campaignId: string): Promise<{
         message: string;
         success: boolean;
     }>;
     resumeCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any): Promise<{
+        ipWarning: string;
         message: string;
         success: boolean;
         mailerId: string;
-        jobId?: undefined;
     } | {
+        ipWarning: string;
         message: string;
         success: boolean;
         jobId: string;
-        mailerId?: undefined;
     }>;
     resumeCampaignWithToken(createCampaignDto: CreateCampaignDto, firebaseToken: string): Promise<{
+        ipWarning: string;
         message: string;
         success: boolean;
         mailerId: string;
-        jobId?: undefined;
     } | {
+        ipWarning: string;
         message: string;
         success: boolean;
         jobId: string;
-        mailerId?: undefined;
     }>;
     testEmails(createCampaignDto: CreateCampaignDto, smtpConfig: any): Promise<{
         message: string;
@@ -165,7 +170,7 @@ export declare class CampaignService {
         failedEmails?: number;
         _id: unknown;
         $locals: Record<string, unknown>;
-        $op: "remove" | "save" | "validate";
+        $op: "save" | "validate" | "remove";
         $where: Record<string, unknown>;
         baseModelName?: string;
         collection: import("mongoose").Collection<import("bson").Document>;

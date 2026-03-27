@@ -95,22 +95,42 @@ let CampaignService = class CampaignService {
     async resolveAllIps(createCampaignDto) {
         const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
         if (createCampaignDto.ipMode !== 'round-robin' || !domain) {
-            return [createCampaignDto.selectedIp];
+            return { ips: [createCampaignDto.selectedIp] };
         }
-        const serverDomain = await this.serverDomainModel.findOne({ domain, status: 'active' });
+        const serverDomain = await this.serverDomainModel.findOne({
+            domain,
+            status: 'active',
+        });
         if (!serverDomain) {
-            return [createCampaignDto.selectedIp];
+            throw new common_1.HttpException(`Domain "${domain}" not found or inactive. Cannot resolve IPs for round-robin.`, common_1.HttpStatus.BAD_REQUEST);
         }
+        const totalIps = serverDomain.availableIps.length;
         const eligibleIps = serverDomain.availableIps.filter((e) => !e.wentSpam && e.warmingStatus === 'warmed');
-        if (eligibleIps.length <= 1) {
-            return [createCampaignDto.selectedIp];
+        const coldCount = serverDomain.availableIps.filter((e) => e.warmingStatus === 'cold' || e.warmingStatus === 'warming').length;
+        if (eligibleIps.length === 0) {
+            const detail = totalIps === 0
+                ? 'No IPs are configured for this domain.'
+                : coldCount > 0
+                    ? `${coldCount} IP${coldCount > 1 ? 's are' : ' is'} cold or warming and cannot be used for bulk sending. Warm up at least one IP first, or switch to Single IP mode.`
+                    : 'All IPs on this domain are marked as spam and cannot be used.';
+            throw new common_1.HttpException(`Round-robin requires at least one warmed IP. ${detail}`, common_1.HttpStatus.BAD_REQUEST);
+        }
+        if (eligibleIps.length === 1) {
+            const singleIp = eligibleIps[0];
+            return {
+                ips: [`${domain} - ${singleIp.ip}`],
+                warning: `Only one warmed IP found (${singleIp.ip}). Sending from single IP. ` +
+                    (coldCount > 0
+                        ? `${coldCount} other IP${coldCount > 1 ? 's are' : ' is'} still cold/warming.`
+                        : ''),
+            };
         }
         const mainIp = eligibleIps.find((e) => e.isMainIp);
         const subIps = eligibleIps.filter((e) => !e.isMainIp);
-        if (!mainIp) {
-            return [createCampaignDto.selectedIp];
-        }
-        return [mainIp, ...subIps].map((e) => `${domain} - ${e.ip}`);
+        const ordered = mainIp ? [mainIp, ...subIps] : eligibleIps;
+        return {
+            ips: ordered.map((e) => `${domain} - ${e.ip}`),
+        };
     }
     async startCampaign(createCampaignDto, smtpConfig) {
         console.log('Start campaign');
@@ -142,7 +162,7 @@ let CampaignService = class CampaignService {
         if (missingFields.length > 0) {
             throw new common_1.HttpException(`Missing required fields for starting campaign: ${missingFields.join(', ')}`, common_1.HttpStatus.BAD_REQUEST);
         }
-        const allIps = await this.resolveAllIps(createCampaignDto);
+        const { ips: allIps, warning: ipWarning } = await this.resolveAllIps(createCampaignDto);
         await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, {
             ...createCampaignDto,
             allIps,
@@ -152,12 +172,14 @@ let CampaignService = class CampaignService {
         }, { upsert: true });
         if (this.mailerProxyService.isMailerServiceEnabled()) {
             try {
+                console.log(`Calling Mailer service with ${createCampaignDto.ipMode} mode`);
                 const result = await this.mailerProxyService.startCampaign({ ...createCampaignDto, allIps }, smtpConfig);
                 await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, { jobId: `mailer-${result.mailerId || 'service'}` });
                 return {
                     message: result.message || 'Campaign started successfully on mailer service',
                     success: result.success,
                     mailerId: result.mailerId,
+                    ...(ipWarning && { ipWarning }),
                 };
             }
             catch (error) {
@@ -173,6 +195,7 @@ let CampaignService = class CampaignService {
             message: 'Campaign started successfully',
             success: true,
             jobId: job.id,
+            ...(ipWarning && { ipWarning }),
         };
     }
     async pauseCampaign(campaignId) {
@@ -191,7 +214,7 @@ let CampaignService = class CampaignService {
             if (pendingCount === 0) {
                 throw new common_1.HttpException('No pending emails to resume. Campaign is already completed.', common_1.HttpStatus.BAD_REQUEST);
             }
-            const allIps = await this.resolveAllIps(createCampaignDto);
+            const { ips: allIps, warning: ipWarning } = await this.resolveAllIps(createCampaignDto);
             await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, {
                 ...createCampaignDto,
                 allIps,
@@ -206,6 +229,7 @@ let CampaignService = class CampaignService {
                         message: result.message || 'Campaign resumed on mailer service',
                         success: result.success,
                         mailerId: result.mailerId,
+                        ...(ipWarning && { ipWarning }),
                     };
                 }
                 catch (error) {
@@ -217,7 +241,12 @@ let CampaignService = class CampaignService {
                 smtpConfig,
             });
             await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, { jobId: job.id });
-            return { message: 'Campaign resumed', success: true, jobId: job.id };
+            return {
+                message: 'Campaign resumed',
+                success: true,
+                jobId: job.id,
+                ...(ipWarning && { ipWarning }),
+            };
         }
     }
     async resumeCampaignWithToken(createCampaignDto, firebaseToken) {

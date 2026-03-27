@@ -37,10 +37,15 @@ export declare class CampaignController {
         emailSent: number;
         emailFailed: number;
     } | {
+        ipWarning: string;
         message: string;
         success: boolean;
         mailerId: string;
-        jobId?: undefined;
+    } | {
+        ipWarning: string;
+        message: string;
+        success: boolean;
+        jobId: string;
     } | {
         message: string;
         success: boolean;
@@ -51,15 +56,15 @@ export declare class CampaignController {
         success: boolean;
     }>;
     resumeCampaign(createCampaignDto: CreateCampaignDto, token: string): Promise<{
+        ipWarning: string;
         message: string;
         success: boolean;
         mailerId: string;
-        jobId?: undefined;
     } | {
+        ipWarning: string;
         message: string;
         success: boolean;
         jobId: string;
-        mailerId?: undefined;
     }>;
     getCampaignStats(campaignId: string): Promise<{
         campaignId: string;
@@ -119,7 +124,7 @@ export declare class CampaignController {
         failedEmails?: number;
         _id: unknown;
         $locals: Record<string, unknown>;
-        $op: "remove" | "save" | "validate";
+        $op: "save" | "validate" | "remove";
         $where: Record<string, unknown>;
         baseModelName?: string;
         collection: import("mongoose").Collection<import("bson").Document>;
