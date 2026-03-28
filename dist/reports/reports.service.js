@@ -33,15 +33,9 @@ let ReportsService = class ReportsService {
                 dateFilter.$lte = endDate;
             }
             const matchStage = {
-                ...(offerId && {
-                    offerId: { $regex: `^${offerId}$`, $options: 'i' },
-                }),
-                ...(campaignId && {
-                    campaignId: { $regex: `^${campaignId}$`, $options: 'i' },
-                }),
-                ...(Object.keys(dateFilter).length > 0 && {
-                    createdAt: dateFilter,
-                }),
+                ...(offerId && { offerId: { $regex: `^${offerId}$`, $options: 'i' } }),
+                ...(campaignId && { campaignId: { $regex: `^${campaignId}$`, $options: 'i' } }),
+                ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter }),
             };
             const aggregatedData = await this.urlModel.aggregate([
                 { $match: matchStage },
@@ -54,9 +48,7 @@ let ReportsService = class ReportsService {
                                 $match: {
                                     $expr: {
                                         $and: [
-                                            {
-                                                $eq: ['$campaignId', '$$campaignId'],
-                                            },
+                                            { $eq: ['$campaignId', '$$campaignId'] },
                                             { $eq: ['$offerId', '$$offerId'] },
                                         ],
                                     },
@@ -67,11 +59,7 @@ let ReportsService = class ReportsService {
                         as: 'emailData',
                     },
                 },
-                {
-                    $addFields: {
-                        totalEmailSent: { $size: '$emailData' },
-                    },
-                },
+                { $addFields: { totalEmailSent: { $size: '$emailData' } } },
                 {
                     $project: {
                         _id: 0,
@@ -88,16 +76,128 @@ let ReportsService = class ReportsService {
                 { $limit: Number(pageSize) },
             ]);
             const totalElements = await this.urlModel.countDocuments(matchStage);
-            return {
-                reports: aggregatedData,
-                page,
-                pageSize,
-                totalElements,
-            };
+            return { reports: aggregatedData, page, pageSize, totalElements };
         }
         catch (err) {
             console.log('error while fetching reports', err.message);
         }
+    }
+    async getDailySendingReport(date, provider) {
+        const start = new Date(date);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(date);
+        end.setHours(23, 59, 59, 999);
+        const matchStage = {
+            sentAt: { $gte: start, $lte: end },
+            mode: { $in: ['bulk', 'manual'] },
+            ipUsed: { $ne: null },
+        };
+        if (provider) {
+            const providerDomains = {
+                gmail: ['gmail.com', 'googlemail.com'],
+                yahoo: ['yahoo.com', 'yahoo.co.uk', 'yahoo.co.in', 'ymail.com'],
+                aol: ['aol.com'],
+                comcast: ['comcast.net'],
+                hotmail: ['hotmail.com', 'hotmail.co.uk', 'outlook.com', 'live.com'],
+            };
+            const domains = providerDomains[provider.toLowerCase()];
+            if (domains) {
+                matchStage['to'] = {
+                    $regex: `@(${domains.map((d) => d.replace('.', '\\.')).join('|')})$`,
+                    $options: 'i',
+                };
+            }
+        }
+        const rows = await this.emailModel.aggregate([
+            { $match: matchStage },
+            {
+                $group: {
+                    _id: { domain: '$domainUsed', ip: '$ipUsed' },
+                    sent: {
+                        $sum: {
+                            $cond: [{ $regexMatch: { input: '$response', regex: /^250/ } }, 1, 0],
+                        },
+                    },
+                    failed: {
+                        $sum: {
+                            $cond: [{ $regexMatch: { input: '$response', regex: /^250/ } }, 0, 1],
+                        },
+                    },
+                    total: { $sum: 1 },
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    domain: '$_id.domain',
+                    ip: '$_id.ip',
+                    sent: 1,
+                    failed: 1,
+                    total: 1,
+                },
+            },
+            { $sort: { domain: 1, ip: 1 } },
+        ]);
+        const totals = rows.reduce((acc, r) => ({
+            sent: acc.sent + r.sent,
+            failed: acc.failed + r.failed,
+            total: acc.total + r.total,
+        }), { sent: 0, failed: 0, total: 0 });
+        return { date, provider: provider || 'all', rows, totals };
+    }
+    async getHourlySendingReport(date) {
+        const start = new Date(date);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(date);
+        end.setHours(23, 59, 59, 999);
+        const rows = await this.emailModel.aggregate([
+            {
+                $match: {
+                    sentAt: { $gte: start, $lte: end },
+                    mode: { $in: ['bulk', 'manual'] },
+                    ipUsed: { $ne: null },
+                },
+            },
+            {
+                $group: {
+                    _id: {
+                        domain: '$domainUsed',
+                        ip: '$ipUsed',
+                        hour: { $hour: '$sentAt' },
+                    },
+                    count: { $sum: 1 },
+                },
+            },
+            {
+                $group: {
+                    _id: { domain: '$_id.domain', ip: '$_id.ip' },
+                    hours: {
+                        $push: { hour: '$_id.hour', count: '$count' },
+                    },
+                    total: { $sum: '$count' },
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    domain: '$_id.domain',
+                    ip: '$_id.ip',
+                    hours: 1,
+                    total: 1,
+                },
+            },
+            { $sort: { domain: 1, ip: 1 } },
+        ]);
+        const normalized = rows.map((row) => {
+            const hourMap = {};
+            for (let h = 0; h < 24; h++)
+                hourMap[`H${h}`] = 0;
+            row.hours.forEach((h) => {
+                hourMap[`H${h.hour}`] = h.count;
+            });
+            return { domain: row.domain, ip: row.ip, total: row.total, ...hourMap };
+        });
+        return { date, rows: normalized };
     }
 };
 exports.ReportsService = ReportsService;

@@ -22,11 +22,17 @@ let ReportsController = class ReportsController {
     }
     async getReports(page = 1, pageSize = 10, offerId, campaignId, fromDate, toDate) {
         const result = await this.reportsService.getReports(page, pageSize, offerId, campaignId, fromDate, toDate);
-        return {
-            message: 'Reports fetched successfully.',
-            success: true,
-            ...result,
-        };
+        return { message: 'Reports fetched successfully.', success: true, ...result };
+    }
+    async getDailySendingReport(date, provider) {
+        const reportDate = date || new Date().toISOString().split('T')[0];
+        const result = await this.reportsService.getDailySendingReport(reportDate, provider);
+        return { success: true, ...result };
+    }
+    async getHourlySendingReport(date) {
+        const reportDate = date || new Date().toISOString().split('T')[0];
+        const result = await this.reportsService.getHourlySendingReport(reportDate);
+        return { success: true, ...result };
     }
 };
 exports.ReportsController = ReportsController;
@@ -42,6 +48,21 @@ __decorate([
     __metadata("design:paramtypes", [Number, Number, String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], ReportsController.prototype, "getReports", null);
+__decorate([
+    (0, common_1.Get)('sending/daily'),
+    __param(0, (0, common_1.Query)('date')),
+    __param(1, (0, common_1.Query)('provider')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "getDailySendingReport", null);
+__decorate([
+    (0, common_1.Get)('sending/hourly'),
+    __param(0, (0, common_1.Query)('date')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ReportsController.prototype, "getHourlySendingReport", null);
 exports.ReportsController = ReportsController = __decorate([
     (0, common_1.UseGuards)(firebase_auth_guard_1.FirebaseAuthGuard),
     (0, common_1.Controller)('/api/reports'),
