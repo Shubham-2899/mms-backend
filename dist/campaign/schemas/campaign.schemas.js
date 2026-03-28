@@ -132,4 +132,5 @@ exports.CampaignEmailTracking = CampaignEmailTracking = __decorate([
 ], CampaignEmailTracking);
 exports.CampaignSchema = mongoose_1.SchemaFactory.createForClass(Campaign);
 exports.CampaignEmailTrackingSchema = mongoose_1.SchemaFactory.createForClass(CampaignEmailTracking);
+exports.CampaignEmailTrackingSchema.index({ campaignId: 1, status: 1, isProcessed: 1 }, { name: 'idx_campaign_status_processed' });
 //# sourceMappingURL=campaign.schemas.js.map
