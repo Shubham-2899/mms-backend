@@ -21,38 +21,23 @@ const mongoose_2 = require("mongoose");
 const campaign_schemas_1 = require("./schemas/campaign.schemas");
 const email_schemas_1 = require("../email/schemas/email.schemas");
 const firebase_service_1 = require("../auth/firebase.service");
-const user_schema_1 = require("../user/schemas/user.schema");
 const mailer_util_1 = require("../email/mailer.util");
 const mailer_proxy_service_1 = require("./mailer-proxy.service");
 const server_domain_schema_1 = require("../servers-domains/schemas/server-domain.schema");
 let CampaignService = class CampaignService {
-    constructor(campaignQueue, emailQueue, campaignModel, emailTrackingModel, emailModel, userModel, serverDomainModel, firebaseService, mailerProxyService) {
+    constructor(campaignQueue, emailQueue, campaignModel, emailTrackingModel, emailModel, serverDomainModel, firebaseService, mailerProxyService) {
         this.campaignQueue = campaignQueue;
         this.emailQueue = emailQueue;
         this.campaignModel = campaignModel;
         this.emailTrackingModel = emailTrackingModel;
         this.emailModel = emailModel;
-        this.userModel = userModel;
         this.serverDomainModel = serverDomainModel;
         this.firebaseService = firebaseService;
         this.mailerProxyService = mailerProxyService;
     }
-    async fetchSmtpDetails(userId) {
-        try {
-            const user = await this.userModel.findOne({ firebaseUid: userId });
-            if (!user) {
-                throw new Error('User not found');
-            }
-            return user?.serverData;
-        }
-        catch (error) {
-            throw new common_1.HttpException('Failed to fetch SMTP details', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
     async createCampaign(createCampaignDto, firebaseToken) {
         try {
             const res = await this.firebaseService.verifyToken(firebaseToken);
-            const serverData = await this.fetchSmtpDetails(res.uid);
             const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
             const ip = createCampaignDto.selectedIp?.split('-')[1]?.trim();
             const smtpConfig = {
@@ -253,7 +238,6 @@ let CampaignService = class CampaignService {
         try {
             console.log(`Resume ${createCampaignDto.campaignId} campaign`);
             const res = await this.firebaseService.verifyToken(firebaseToken);
-            const serverData = await this.fetchSmtpDetails(res.uid);
             const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
             const smtpConfig = {
                 host: `mail.${domain}`,
@@ -262,7 +246,9 @@ let CampaignService = class CampaignService {
             return await this.resumeCampaign(createCampaignDto, smtpConfig);
         }
         catch (error) {
-            console.log('🚀 ~ CampaignService ~ resumeCampaignWithToken ~ error:', error);
+            if (error instanceof common_1.HttpException) {
+                throw error;
+            }
             throw new common_1.HttpException(error.message, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -560,11 +546,9 @@ exports.CampaignService = CampaignService = __decorate([
     __param(2, (0, mongoose_1.InjectModel)(campaign_schemas_1.Campaign.name)),
     __param(3, (0, mongoose_1.InjectModel)(campaign_schemas_1.CampaignEmailTracking.name)),
     __param(4, (0, mongoose_1.InjectModel)(email_schemas_1.Email.name)),
-    __param(5, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __param(6, (0, mongoose_1.InjectModel)(server_domain_schema_1.ServerDomain.name)),
+    __param(5, (0, mongoose_1.InjectModel)(server_domain_schema_1.ServerDomain.name)),
     __metadata("design:paramtypes", [bullmq_2.Queue,
         bullmq_2.Queue,
-        mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,

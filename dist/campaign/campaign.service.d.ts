@@ -29,7 +29,6 @@ import { CampaignDocument, CampaignEmailTrackingDocument } from './schemas/campa
 import { EmailDocument } from 'src/email/schemas/email.schemas';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { FirebaseService } from 'src/auth/firebase.service';
-import { UserDocument } from 'src/user/schemas/user.schema';
 import { MailerProxyService } from './mailer-proxy.service';
 import { ServerDomainDocument } from 'src/servers-domains/schemas/server-domain.schema';
 export declare class CampaignService {
@@ -38,12 +37,10 @@ export declare class CampaignService {
     private campaignModel;
     private emailTrackingModel;
     private emailModel;
-    private userModel;
     private serverDomainModel;
     private firebaseService;
     private mailerProxyService;
-    constructor(campaignQueue: Queue, emailQueue: Queue, campaignModel: Model<CampaignDocument>, emailTrackingModel: Model<CampaignEmailTrackingDocument>, emailModel: Model<EmailDocument>, userModel: Model<UserDocument>, serverDomainModel: Model<ServerDomainDocument>, firebaseService: FirebaseService, mailerProxyService: MailerProxyService);
-    private fetchSmtpDetails;
+    constructor(campaignQueue: Queue, emailQueue: Queue, campaignModel: Model<CampaignDocument>, emailTrackingModel: Model<CampaignEmailTrackingDocument>, emailModel: Model<EmailDocument>, serverDomainModel: Model<ServerDomainDocument>, firebaseService: FirebaseService, mailerProxyService: MailerProxyService);
     createCampaign(createCampaignDto: CreateCampaignDto, firebaseToken: string): Promise<{
         message: string;
         success: boolean;

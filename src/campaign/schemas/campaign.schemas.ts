@@ -96,4 +96,11 @@ export class CampaignEmailTracking {
 }
 
 export const CampaignSchema = SchemaFactory.createForClass(Campaign);
-export const CampaignEmailTrackingSchema = SchemaFactory.createForClass(CampaignEmailTracking); 
+export const CampaignEmailTrackingSchema = SchemaFactory.createForClass(CampaignEmailTracking);
+
+// Compound index for the hot query path in the sending loop:
+// find({ campaignId, status: 'pending', isProcessed: false }).limit(batchSize)
+CampaignEmailTrackingSchema.index(
+  { campaignId: 1, status: 1, isProcessed: 1 },
+  { name: 'idx_campaign_status_processed' },
+);

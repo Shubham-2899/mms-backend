@@ -12,7 +12,6 @@ import {
 import { Email, EmailDocument } from 'src/email/schemas/email.schemas';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { FirebaseService } from 'src/auth/firebase.service';
-import { User, UserDocument } from 'src/user/schemas/user.schema';
 import { createTransporter } from 'src/email/mailer.util';
 import { MailerProxyService } from './mailer-proxy.service';
 import { ServerDomain, ServerDomainDocument } from 'src/servers-domains/schemas/server-domain.schema';
@@ -26,29 +25,10 @@ export class CampaignService {
     @InjectModel(CampaignEmailTracking.name)
     private emailTrackingModel: Model<CampaignEmailTrackingDocument>,
     @InjectModel(Email.name) private emailModel: Model<EmailDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(ServerDomain.name) private serverDomainModel: Model<ServerDomainDocument>,
     private firebaseService: FirebaseService,
     private mailerProxyService: MailerProxyService,
   ) {}
-
-  // Method to fetch SMTP details based on user ID
-  private async fetchSmtpDetails(userId: string): Promise<any> {
-    try {
-      const user = await this.userModel.findOne({ firebaseUid: userId });
-
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      return user?.serverData;
-    } catch (error) {
-      throw new HttpException(
-        'Failed to fetch SMTP details',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
 
   async createCampaign(
     createCampaignDto: CreateCampaignDto,
@@ -57,9 +37,6 @@ export class CampaignService {
     try {
       // Verify Firebase token and retrieve user ID
       const res = await this.firebaseService.verifyToken(firebaseToken);
-
-      // Fetch the SMTP details using the userId (uid)
-      const serverData = await this.fetchSmtpDetails(res.uid);
 
       const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
       const ip = createCampaignDto.selectedIp?.split('-')[1]?.trim();
@@ -409,11 +386,7 @@ export class CampaignService {
   ) {
     try {
       console.log(`Resume ${createCampaignDto.campaignId} campaign`);
-      // Verify Firebase token and retrieve user ID
       const res = await this.firebaseService.verifyToken(firebaseToken);
-
-      // Fetch the SMTP details using the userId (uid)
-      const serverData = await this.fetchSmtpDetails(res.uid);
 
       const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
 
@@ -424,10 +397,10 @@ export class CampaignService {
 
       return await this.resumeCampaign(createCampaignDto, smtpConfig);
     } catch (error) {
-      console.log(
-        '🚀 ~ CampaignService ~ resumeCampaignWithToken ~ error:',
-        error,
-      );
+      // Preserve the original status code — don't swallow 400s as 500s
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
