@@ -36,6 +36,8 @@ export declare class Campaign {
     emailTemplate: string;
     offerId: string;
     selectedIp: string;
+    ipMode?: string;
+    allIps?: string[];
     batchSize: number;
     delay: number;
     jobId?: string;

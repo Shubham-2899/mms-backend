@@ -15,6 +15,7 @@ import { FirebaseService } from 'src/auth/firebase.service';
 import { User, UserDocument } from 'src/user/schemas/user.schema';
 import { createTransporter } from 'src/email/mailer.util';
 import { MailerProxyService } from './mailer-proxy.service';
+import { ServerDomain, ServerDomainDocument } from 'src/servers-domains/schemas/server-domain.schema';
 
 @Injectable()
 export class CampaignService {
@@ -26,6 +27,7 @@ export class CampaignService {
     private emailTrackingModel: Model<CampaignEmailTrackingDocument>,
     @InjectModel(Email.name) private emailModel: Model<EmailDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(ServerDomain.name) private serverDomainModel: Model<ServerDomainDocument>,
     private firebaseService: FirebaseService,
     private mailerProxyService: MailerProxyService,
   ) {}
@@ -111,6 +113,95 @@ export class CampaignService {
     }
   }
 
+  /**
+   * Resolves the ordered IP list for a campaign run.
+   *
+   * Returns { ips, warning } where:
+   *  - ips     — the resolved IP list to use for sending
+   *  - warning — optional message when round-robin fell back to single IP (case 3)
+   *
+   * Throws HttpException (400) when:
+   *  - ipMode is 'round-robin' but no warmed IPs exist at all (case 1)
+   *  - ipMode is 'round-robin' but the only IP is cold (case 2)
+   *
+   * Cases:
+   *  - ipMode 'single' (or omitted): always returns [selectedIp], no validation.
+   *  - ipMode 'round-robin':
+   *      • 0 warmed IPs           → 400 error (cases 1 & 2)
+   *      • 1 warmed IP            → soft warning, proceeds with that single IP (case 3)
+   *      • 2+ warmed IPs          → full round-robin, main IP first then sub IPs
+   */
+  private async resolveAllIps(
+    createCampaignDto: CreateCampaignDto,
+  ): Promise<{ ips: string[]; warning?: string }> {
+    const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
+
+    // Single mode — no resolution needed, always safe
+    if (createCampaignDto.ipMode !== 'round-robin' || !domain) {
+      return { ips: [createCampaignDto.selectedIp] };
+    }
+
+    const serverDomain = await this.serverDomainModel.findOne({
+      domain,
+      status: 'active',
+    });
+
+    // Domain not found in our records
+    if (!serverDomain) {
+      throw new HttpException(
+        `Domain "${domain}" not found or inactive. Cannot resolve IPs for round-robin.`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const totalIps = serverDomain.availableIps.length;
+    const eligibleIps = serverDomain.availableIps.filter(
+      (e) => !e.wentSpam && e.warmingStatus === 'warmed',
+    );
+    const coldCount = serverDomain.availableIps.filter(
+      (e) => e.warmingStatus === 'cold' || e.warmingStatus === 'warming',
+    ).length;
+
+    // Cases 1 & 2 — no warmed IPs at all → hard error, do not send
+    if (eligibleIps.length === 0) {
+      const detail =
+        totalIps === 0
+          ? 'No IPs are configured for this domain.'
+          : coldCount > 0
+            ? `${coldCount} IP${coldCount > 1 ? 's are' : ' is'} cold or warming and cannot be used for bulk sending. Warm up at least one IP first, or switch to Single IP mode.`
+            : 'All IPs on this domain are marked as spam and cannot be used.';
+
+      throw new HttpException(
+        `Round-robin requires at least one warmed IP. ${detail}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Case 3 — exactly one warmed IP → proceed with soft warning
+    if (eligibleIps.length === 1) {
+      const singleIp = eligibleIps[0];
+      return {
+        ips: [`${domain} - ${singleIp.ip}`],
+        warning:
+          `Only one warmed IP found (${singleIp.ip}). Sending from single IP. ` +
+          (coldCount > 0
+            ? `${coldCount} other IP${coldCount > 1 ? 's are' : ' is'} still cold/warming.`
+            : ''),
+      };
+    }
+
+    // 2+ warmed IPs — full round-robin, main IP first then sub IPs
+    const mainIp = eligibleIps.find((e) => e.isMainIp);
+    const subIps = eligibleIps.filter((e) => !e.isMainIp);
+
+    // Edge case: no main IP marked — use all eligible IPs as-is
+    const ordered = mainIp ? [mainIp, ...subIps] : eligibleIps;
+
+    return {
+      ips: ordered.map((e) => `${domain} - ${e.ip}`),
+    };
+  }
+
   async startCampaign(createCampaignDto: CreateCampaignDto, smtpConfig: any) {
     console.log('Start campaign');
 
@@ -163,11 +254,15 @@ export class CampaignService {
       );
     }
 
+    // Resolve all IPs for round-robin if ipMode is set
+    const { ips: allIps, warning: ipWarning } = await this.resolveAllIps(createCampaignDto);
+
     // Save campaign details with status 'running'
     await this.campaignModel.findOneAndUpdate(
       { campaignId: createCampaignDto.campaignId },
       {
         ...createCampaignDto,
+        allIps,
         status: 'running',
         startedAt: new Date(),
         pendingEmails: recipientCount,
@@ -178,12 +273,12 @@ export class CampaignService {
     // Try to use mailer service if enabled, otherwise fallback to BullMQ
     if (this.mailerProxyService.isMailerServiceEnabled()) {
       try {
+        console.log(`Calling Mailer service with ${createCampaignDto.ipMode} mode`)
         const result = await this.mailerProxyService.startCampaign(
-          createCampaignDto,
+          { ...createCampaignDto, allIps } as any,
           smtpConfig,
         );
 
-        // Update campaign with mailer info (optional)
         await this.campaignModel.findOneAndUpdate(
           { campaignId: createCampaignDto.campaignId },
           { jobId: `mailer-${result.mailerId || 'service'}` },
@@ -193,6 +288,7 @@ export class CampaignService {
           message: result.message || 'Campaign started successfully on mailer service',
           success: result.success,
           mailerId: result.mailerId,
+          ...(ipWarning && { ipWarning }),
         };
       } catch (error) {
         console.error('Failed to start campaign on mailer service, falling back to BullMQ:', error);
@@ -206,7 +302,6 @@ export class CampaignService {
       smtpConfig,
     });
 
-    // Update campaign with job ID
     await this.campaignModel.findOneAndUpdate(
       { campaignId: createCampaignDto.campaignId },
       { jobId: job.id },
@@ -216,6 +311,7 @@ export class CampaignService {
       message: 'Campaign started successfully',
       success: true,
       jobId: job.id,
+      ...(ipWarning && { ipWarning }),
     };
   }
 
@@ -248,11 +344,15 @@ export class CampaignService {
         );
       }
 
+      // Re-resolve IPs in case warming status changed since last run
+      const { ips: allIps, warning: ipWarning } = await this.resolveAllIps(createCampaignDto);
+
       // Update all campaign fields on resume
       await this.campaignModel.findOneAndUpdate(
         { campaignId: createCampaignDto.campaignId },
         {
           ...createCampaignDto,
+          allIps,
           status: 'running',
           pendingEmails: pendingCount,
         },
@@ -262,11 +362,10 @@ export class CampaignService {
       if (this.mailerProxyService.isMailerServiceEnabled()) {
         try {
           const result = await this.mailerProxyService.startCampaign(
-            createCampaignDto,
+            { ...createCampaignDto, allIps } as any,
             smtpConfig,
           );
 
-          // Update campaign with mailer info (optional)
           await this.campaignModel.findOneAndUpdate(
             { campaignId: createCampaignDto.campaignId },
             { jobId: `mailer-${result.mailerId || 'service'}` },
@@ -276,6 +375,7 @@ export class CampaignService {
             message: result.message || 'Campaign resumed on mailer service',
             success: result.success,
             mailerId: result.mailerId,
+            ...(ipWarning && { ipWarning }),
           };
         } catch (error) {
           console.error('Failed to resume campaign on mailer service, falling back to BullMQ:', error);
@@ -294,7 +394,12 @@ export class CampaignService {
         { jobId: job.id },
       );
 
-      return { message: 'Campaign resumed', success: true, jobId: job.id };
+      return {
+        message: 'Campaign resumed',
+        success: true,
+        jobId: job.id,
+        ...(ipWarning && { ipWarning }),
+      };
     }
   }
 
@@ -518,6 +623,8 @@ export class CampaignService {
         subject: campaign.subject || '',
         offerId: campaign.offerId || '',
         selectedIp: campaign.selectedIp || '',
+        ipMode: campaign.ipMode || 'single',
+        allIps: campaign.allIps || [],
         batchSize: campaign.batchSize || 0,
         templateType: campaign.templateType || '',
         emailTemplate: campaign.emailTemplate || '',
@@ -683,6 +790,15 @@ export class CampaignService {
     } else {
       throw new HttpException('Only running, paused, or completed campaigns can be ended', HttpStatus.BAD_REQUEST);
     }
+  }
+
+  // Get live sending stats from mailer service
+  async getLiveSendingStats(campaignId: string, selectedIp?: string, since?: string) {
+    if (!this.mailerProxyService.isMailerServiceEnabled()) {
+      return { enabled: false, message: 'Mailer service is not configured' };
+    }
+    const data = await this.mailerProxyService.getLiveSendingStats(campaignId, selectedIp, since);
+    return { enabled: true, data: data || { message: 'No data available' } };
   }
 
   // Get mailer service health status

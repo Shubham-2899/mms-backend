@@ -16,6 +16,7 @@ export declare class MailerProxyService {
     }>;
     getMailerHealth(selectedIp?: string): Promise<any>;
     getMailerQueueStatus(selectedIp?: string): Promise<any>;
+    getLiveSendingStats(campaignId: string, selectedIp?: string, since?: string): Promise<any>;
     sendTestEmails(createCampaignDto: CreateCampaignDto, smtpConfig: any): Promise<{
         message: string;
         success: boolean;

@@ -25,7 +25,9 @@ let ServersDomainService = class ServersDomainService {
         return this.serverDomainModel.findOne({ domain });
     }
     async create(dto) {
-        const existing = await this.serverDomainModel.findOne({ domain: dto.domain });
+        const existing = await this.serverDomainModel.findOne({
+            domain: dto.domain,
+        });
         if (existing) {
             throw new common_1.HttpException(`Domain "${dto.domain}" is already assigned to a server`, common_1.HttpStatus.CONFLICT);
         }
@@ -52,7 +54,9 @@ let ServersDomainService = class ServersDomainService {
                 throw new common_1.HttpException(`Domain "${dto.domain}" is already assigned to another server`, common_1.HttpStatus.CONFLICT);
             }
         }
-        const updated = await this.serverDomainModel.findByIdAndUpdate(id, dto, { new: true });
+        const updated = await this.serverDomainModel.findByIdAndUpdate(id, dto, {
+            new: true,
+        });
         if (!updated)
             throw new common_1.HttpException('Not found', common_1.HttpStatus.NOT_FOUND);
         return { message: 'Updated', success: true, data: updated };
@@ -71,7 +75,7 @@ let ServersDomainService = class ServersDomainService {
         if (duplicate) {
             throw new common_1.HttpException(`IP "${ipDto.ip}" already exists on this server`, common_1.HttpStatus.CONFLICT);
         }
-        doc.availableIps.push({ wentSpam: false, ...ipDto });
+        doc.availableIps.push({ wentSpam: false, warmingStatus: 'cold', ...ipDto });
         await doc.save();
         return { message: 'IP added', success: true, data: doc };
     }

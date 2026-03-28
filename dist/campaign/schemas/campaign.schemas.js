@@ -51,6 +51,14 @@ __decorate([
     __metadata("design:type", String)
 ], Campaign.prototype, "selectedIp", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ enum: ['single', 'round-robin'], default: 'single' }),
+    __metadata("design:type", String)
+], Campaign.prototype, "ipMode", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], Campaign.prototype, "allIps", void 0);
+__decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", Number)
 ], Campaign.prototype, "batchSize", void 0);

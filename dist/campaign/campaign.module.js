@@ -19,6 +19,7 @@ const email_schemas_1 = require("../email/schemas/email.schemas");
 const user_schema_1 = require("../user/schemas/user.schema");
 const auth_module_1 = require("../auth/auth.module");
 const email_processor_1 = require("../email/email.processor");
+const server_domain_schema_1 = require("../servers-domains/schemas/server-domain.schema");
 let CampaignModule = class CampaignModule {
 };
 exports.CampaignModule = CampaignModule;
@@ -30,6 +31,7 @@ exports.CampaignModule = CampaignModule = __decorate([
                 { name: campaign_schemas_1.CampaignEmailTracking.name, schema: campaign_schemas_1.CampaignEmailTrackingSchema },
                 { name: email_schemas_1.Email.name, schema: email_schemas_1.EmailSchema },
                 { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+                { name: server_domain_schema_1.ServerDomain.name, schema: server_domain_schema_1.ServerDomainSchema },
             ]),
             bullmq_1.BullModule.registerQueue({
                 name: 'campaign-queue',

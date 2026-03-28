@@ -24,35 +24,21 @@
 /// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose/types/inferrawdoctype" />
 import { Document } from 'mongoose';
-export type ServerDomainDocument = ServerDomain & Document;
-export type WarmingStatus = 'cold' | 'warming' | 'warmed';
-export declare class IpEntry {
-    ip: string;
-    isMainIp: boolean;
-    wentSpam: boolean;
-    provider: string;
-    warmingStatus: WarmingStatus;
-}
-export declare const IpEntrySchema: import("mongoose").Schema<IpEntry, import("mongoose").Model<IpEntry, any, any, any, Document<unknown, any, IpEntry, any> & IpEntry & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, IpEntry, Document<unknown, {}, import("mongoose").FlatRecord<IpEntry>, {}> & import("mongoose").FlatRecord<IpEntry> & {
-    _id: import("mongoose").Types.ObjectId;
-} & {
-    __v: number;
-}>;
-export declare class ServerDomain {
+export type BouncedEmailDocument = BouncedEmail & Document;
+export type BounceType = 'hard' | 'soft';
+export declare class BouncedEmail {
+    email: string;
     domain: string;
-    availableIps: IpEntry[];
-    status: string;
-    notes: string;
+    bounceType: BounceType;
+    statusCode?: string;
+    diagnosticMessage?: string;
+    bouncedAt: Date;
 }
-export declare const ServerDomainSchema: import("mongoose").Schema<ServerDomain, import("mongoose").Model<ServerDomain, any, any, any, Document<unknown, any, ServerDomain, any> & ServerDomain & {
+export declare const BouncedEmailSchema: import("mongoose").Schema<BouncedEmail, import("mongoose").Model<BouncedEmail, any, any, any, Document<unknown, any, BouncedEmail, any> & BouncedEmail & {
     _id: import("mongoose").Types.ObjectId;
 } & {
     __v: number;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, ServerDomain, Document<unknown, {}, import("mongoose").FlatRecord<ServerDomain>, {}> & import("mongoose").FlatRecord<ServerDomain> & {
+}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, BouncedEmail, Document<unknown, {}, import("mongoose").FlatRecord<BouncedEmail>, {}> & import("mongoose").FlatRecord<BouncedEmail> & {
     _id: import("mongoose").Types.ObjectId;
 } & {
     __v: number;

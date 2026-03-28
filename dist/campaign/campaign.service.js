@@ -24,14 +24,16 @@ const firebase_service_1 = require("../auth/firebase.service");
 const user_schema_1 = require("../user/schemas/user.schema");
 const mailer_util_1 = require("../email/mailer.util");
 const mailer_proxy_service_1 = require("./mailer-proxy.service");
+const server_domain_schema_1 = require("../servers-domains/schemas/server-domain.schema");
 let CampaignService = class CampaignService {
-    constructor(campaignQueue, emailQueue, campaignModel, emailTrackingModel, emailModel, userModel, firebaseService, mailerProxyService) {
+    constructor(campaignQueue, emailQueue, campaignModel, emailTrackingModel, emailModel, userModel, serverDomainModel, firebaseService, mailerProxyService) {
         this.campaignQueue = campaignQueue;
         this.emailQueue = emailQueue;
         this.campaignModel = campaignModel;
         this.emailTrackingModel = emailTrackingModel;
         this.emailModel = emailModel;
         this.userModel = userModel;
+        this.serverDomainModel = serverDomainModel;
         this.firebaseService = firebaseService;
         this.mailerProxyService = mailerProxyService;
     }
@@ -90,6 +92,46 @@ let CampaignService = class CampaignService {
             throw new common_1.HttpException('Internal server error', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    async resolveAllIps(createCampaignDto) {
+        const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
+        if (createCampaignDto.ipMode !== 'round-robin' || !domain) {
+            return { ips: [createCampaignDto.selectedIp] };
+        }
+        const serverDomain = await this.serverDomainModel.findOne({
+            domain,
+            status: 'active',
+        });
+        if (!serverDomain) {
+            throw new common_1.HttpException(`Domain "${domain}" not found or inactive. Cannot resolve IPs for round-robin.`, common_1.HttpStatus.BAD_REQUEST);
+        }
+        const totalIps = serverDomain.availableIps.length;
+        const eligibleIps = serverDomain.availableIps.filter((e) => !e.wentSpam && e.warmingStatus === 'warmed');
+        const coldCount = serverDomain.availableIps.filter((e) => e.warmingStatus === 'cold' || e.warmingStatus === 'warming').length;
+        if (eligibleIps.length === 0) {
+            const detail = totalIps === 0
+                ? 'No IPs are configured for this domain.'
+                : coldCount > 0
+                    ? `${coldCount} IP${coldCount > 1 ? 's are' : ' is'} cold or warming and cannot be used for bulk sending. Warm up at least one IP first, or switch to Single IP mode.`
+                    : 'All IPs on this domain are marked as spam and cannot be used.';
+            throw new common_1.HttpException(`Round-robin requires at least one warmed IP. ${detail}`, common_1.HttpStatus.BAD_REQUEST);
+        }
+        if (eligibleIps.length === 1) {
+            const singleIp = eligibleIps[0];
+            return {
+                ips: [`${domain} - ${singleIp.ip}`],
+                warning: `Only one warmed IP found (${singleIp.ip}). Sending from single IP. ` +
+                    (coldCount > 0
+                        ? `${coldCount} other IP${coldCount > 1 ? 's are' : ' is'} still cold/warming.`
+                        : ''),
+            };
+        }
+        const mainIp = eligibleIps.find((e) => e.isMainIp);
+        const subIps = eligibleIps.filter((e) => !e.isMainIp);
+        const ordered = mainIp ? [mainIp, ...subIps] : eligibleIps;
+        return {
+            ips: ordered.map((e) => `${domain} - ${e.ip}`),
+        };
+    }
     async startCampaign(createCampaignDto, smtpConfig) {
         console.log('Start campaign');
         const recipientCount = await this.emailTrackingModel.countDocuments({
@@ -120,20 +162,24 @@ let CampaignService = class CampaignService {
         if (missingFields.length > 0) {
             throw new common_1.HttpException(`Missing required fields for starting campaign: ${missingFields.join(', ')}`, common_1.HttpStatus.BAD_REQUEST);
         }
+        const { ips: allIps, warning: ipWarning } = await this.resolveAllIps(createCampaignDto);
         await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, {
             ...createCampaignDto,
+            allIps,
             status: 'running',
             startedAt: new Date(),
             pendingEmails: recipientCount,
         }, { upsert: true });
         if (this.mailerProxyService.isMailerServiceEnabled()) {
             try {
-                const result = await this.mailerProxyService.startCampaign(createCampaignDto, smtpConfig);
+                console.log(`Calling Mailer service with ${createCampaignDto.ipMode} mode`);
+                const result = await this.mailerProxyService.startCampaign({ ...createCampaignDto, allIps }, smtpConfig);
                 await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, { jobId: `mailer-${result.mailerId || 'service'}` });
                 return {
                     message: result.message || 'Campaign started successfully on mailer service',
                     success: result.success,
                     mailerId: result.mailerId,
+                    ...(ipWarning && { ipWarning }),
                 };
             }
             catch (error) {
@@ -149,6 +195,7 @@ let CampaignService = class CampaignService {
             message: 'Campaign started successfully',
             success: true,
             jobId: job.id,
+            ...(ipWarning && { ipWarning }),
         };
     }
     async pauseCampaign(campaignId) {
@@ -167,19 +214,22 @@ let CampaignService = class CampaignService {
             if (pendingCount === 0) {
                 throw new common_1.HttpException('No pending emails to resume. Campaign is already completed.', common_1.HttpStatus.BAD_REQUEST);
             }
+            const { ips: allIps, warning: ipWarning } = await this.resolveAllIps(createCampaignDto);
             await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, {
                 ...createCampaignDto,
+                allIps,
                 status: 'running',
                 pendingEmails: pendingCount,
             });
             if (this.mailerProxyService.isMailerServiceEnabled()) {
                 try {
-                    const result = await this.mailerProxyService.startCampaign(createCampaignDto, smtpConfig);
+                    const result = await this.mailerProxyService.startCampaign({ ...createCampaignDto, allIps }, smtpConfig);
                     await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, { jobId: `mailer-${result.mailerId || 'service'}` });
                     return {
                         message: result.message || 'Campaign resumed on mailer service',
                         success: result.success,
                         mailerId: result.mailerId,
+                        ...(ipWarning && { ipWarning }),
                     };
                 }
                 catch (error) {
@@ -191,7 +241,12 @@ let CampaignService = class CampaignService {
                 smtpConfig,
             });
             await this.campaignModel.findOneAndUpdate({ campaignId: createCampaignDto.campaignId }, { jobId: job.id });
-            return { message: 'Campaign resumed', success: true, jobId: job.id };
+            return {
+                message: 'Campaign resumed',
+                success: true,
+                jobId: job.id,
+                ...(ipWarning && { ipWarning }),
+            };
         }
     }
     async resumeCampaignWithToken(createCampaignDto, firebaseToken) {
@@ -330,6 +385,8 @@ let CampaignService = class CampaignService {
                 subject: campaign.subject || '',
                 offerId: campaign.offerId || '',
                 selectedIp: campaign.selectedIp || '',
+                ipMode: campaign.ipMode || 'single',
+                allIps: campaign.allIps || [],
                 batchSize: campaign.batchSize || 0,
                 templateType: campaign.templateType || '',
                 emailTemplate: campaign.emailTemplate || '',
@@ -461,6 +518,13 @@ let CampaignService = class CampaignService {
             throw new common_1.HttpException('Only running, paused, or completed campaigns can be ended', common_1.HttpStatus.BAD_REQUEST);
         }
     }
+    async getLiveSendingStats(campaignId, selectedIp, since) {
+        if (!this.mailerProxyService.isMailerServiceEnabled()) {
+            return { enabled: false, message: 'Mailer service is not configured' };
+        }
+        const data = await this.mailerProxyService.getLiveSendingStats(campaignId, selectedIp, since);
+        return { enabled: true, data: data || { message: 'No data available' } };
+    }
     async getMailerHealth(selectedIp) {
         if (!this.mailerProxyService.isMailerServiceEnabled()) {
             return {
@@ -497,8 +561,10 @@ exports.CampaignService = CampaignService = __decorate([
     __param(3, (0, mongoose_1.InjectModel)(campaign_schemas_1.CampaignEmailTracking.name)),
     __param(4, (0, mongoose_1.InjectModel)(email_schemas_1.Email.name)),
     __param(5, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __param(6, (0, mongoose_1.InjectModel)(server_domain_schema_1.ServerDomain.name)),
     __metadata("design:paramtypes", [bullmq_2.Queue,
         bullmq_2.Queue,
+        mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,

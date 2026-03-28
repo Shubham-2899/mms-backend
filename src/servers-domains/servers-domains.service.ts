@@ -1,8 +1,14 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ServerDomain, ServerDomainDocument } from './schemas/server-domain.schema';
-import { CreateServerDomainDto, IpEntryDto } from './dto/create-server-domain.dto';
+import {
+  ServerDomain,
+  ServerDomainDocument,
+} from './schemas/server-domain.schema';
+import {
+  CreateServerDomainDto,
+  IpEntryDto,
+} from './dto/create-server-domain.dto';
 
 @Injectable()
 export class ServersDomainService {
@@ -16,7 +22,9 @@ export class ServersDomainService {
   }
 
   async create(dto: CreateServerDomainDto) {
-    const existing = await this.serverDomainModel.findOne({ domain: dto.domain });
+    const existing = await this.serverDomainModel.findOne({
+      domain: dto.domain,
+    });
     if (existing) {
       throw new HttpException(
         `Domain "${dto.domain}" is already assigned to a server`,
@@ -52,7 +60,9 @@ export class ServersDomainService {
         );
       }
     }
-    const updated = await this.serverDomainModel.findByIdAndUpdate(id, dto, { new: true });
+    const updated = await this.serverDomainModel.findByIdAndUpdate(id, dto, {
+      new: true,
+    });
     if (!updated) throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     return { message: 'Updated', success: true, data: updated };
   }
@@ -71,10 +81,13 @@ export class ServersDomainService {
 
     const duplicate = doc.availableIps.find((e) => e.ip === ipDto.ip);
     if (duplicate) {
-      throw new HttpException(`IP "${ipDto.ip}" already exists on this server`, HttpStatus.CONFLICT);
+      throw new HttpException(
+        `IP "${ipDto.ip}" already exists on this server`,
+        HttpStatus.CONFLICT,
+      );
     }
 
-    doc.availableIps.push({ wentSpam: false, ...ipDto });
+    doc.availableIps.push({ wentSpam: false, warmingStatus: 'cold', ...ipDto });
     await doc.save();
     return { message: 'IP added', success: true, data: doc };
   }
@@ -84,7 +97,8 @@ export class ServersDomainService {
     if (!doc) throw new HttpException('Not found', HttpStatus.NOT_FOUND);
 
     const entry = doc.availableIps.find((e) => e.ip === ip);
-    if (!entry) throw new HttpException(`IP "${ip}" not found`, HttpStatus.NOT_FOUND);
+    if (!entry)
+      throw new HttpException(`IP "${ip}" not found`, HttpStatus.NOT_FOUND);
 
     Object.assign(entry, updates);
     await doc.save();

@@ -70,6 +70,7 @@ let MailerProxyService = MailerProxyService_1 = class MailerProxyService {
                 emailTemplate: createCampaignDto.emailTemplate,
                 offerId: createCampaignDto.offerId,
                 selectedIp: createCampaignDto.selectedIp,
+                allIps: createCampaignDto.allIps || [createCampaignDto.selectedIp],
                 smtpConfig: mailerSmtpConfig,
             };
             this.logger.log(`Calling mailer service to start campaign: ${createCampaignDto.campaignId}`);
@@ -113,6 +114,20 @@ let MailerProxyService = MailerProxyService_1 = class MailerProxyService {
         }
         catch (error) {
             this.logger.warn(`Failed to get mailer queue status: ${error.message}`);
+            return null;
+        }
+    }
+    async getLiveSendingStats(campaignId, selectedIp, since) {
+        const mailerUrl = this.getMailerUrl(selectedIp);
+        if (!mailerUrl)
+            return null;
+        try {
+            const params = since ? `?since=${encodeURIComponent(since)}` : '';
+            const response = await this.httpClient.get(`${mailerUrl}/tracking/live/${campaignId}${params}`);
+            return response.data;
+        }
+        catch (error) {
+            this.logger.warn(`Failed to get live sending stats: ${error.message}`);
             return null;
         }
     }

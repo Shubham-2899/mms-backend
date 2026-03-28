@@ -37,10 +37,15 @@ export declare class CampaignController {
         emailSent: number;
         emailFailed: number;
     } | {
+        ipWarning: string;
         message: string;
         success: boolean;
         mailerId: string;
-        jobId?: undefined;
+    } | {
+        ipWarning: string;
+        message: string;
+        success: boolean;
+        jobId: string;
     } | {
         message: string;
         success: boolean;
@@ -51,15 +56,15 @@ export declare class CampaignController {
         success: boolean;
     }>;
     resumeCampaign(createCampaignDto: CreateCampaignDto, token: string): Promise<{
+        ipWarning: string;
         message: string;
         success: boolean;
         mailerId: string;
-        jobId?: undefined;
     } | {
+        ipWarning: string;
         message: string;
         success: boolean;
         jobId: string;
-        mailerId?: undefined;
     }>;
     getCampaignStats(campaignId: string): Promise<{
         campaignId: string;
@@ -76,6 +81,8 @@ export declare class CampaignController {
             subject: string;
             offerId: string;
             selectedIp: string;
+            ipMode: string;
+            allIps: string[];
             batchSize: number;
             templateType: string;
             emailTemplate: string;
@@ -104,6 +111,8 @@ export declare class CampaignController {
         emailTemplate: string;
         offerId: string;
         selectedIp: string;
+        ipMode?: string;
+        allIps?: string[];
         batchSize: number;
         delay: number;
         jobId?: string;
@@ -115,7 +124,7 @@ export declare class CampaignController {
         failedEmails?: number;
         _id: unknown;
         $locals: Record<string, unknown>;
-        $op: "remove" | "save" | "validate";
+        $op: "save" | "validate" | "remove";
         $where: Record<string, unknown>;
         baseModelName?: string;
         collection: import("mongoose").Collection<import("bson").Document>;
@@ -171,6 +180,15 @@ export declare class CampaignController {
     } | {
         enabled: boolean;
         queue: any;
+        message?: undefined;
+    }>;
+    getLiveSendingStats(campaignId: string, selectedIp?: string, since?: string): Promise<{
+        enabled: boolean;
+        message: string;
+        data?: undefined;
+    } | {
+        enabled: boolean;
+        data: any;
         message?: undefined;
     }>;
 }

@@ -11,4 +11,5 @@ export declare class CreateCampaignDto {
     selectedIp: string;
     batchSize: number;
     delay: number;
+    ipMode?: 'single' | 'round-robin';
 }
