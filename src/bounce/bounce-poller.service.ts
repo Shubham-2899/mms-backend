@@ -195,7 +195,9 @@ export class BouncePollerService {
         bounceType,
         statusCode,
         diagnosticMessage,
-        bouncedAt: new Date(),
+        // Use the NDR email's Date header — this is when the bounce actually
+        // occurred, not when the poller processed it.
+        bouncedAt: parsed.date ?? new Date(),
       },
       { upsert: true, new: true },
     );

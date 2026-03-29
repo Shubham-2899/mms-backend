@@ -141,7 +141,7 @@ let BouncePollerService = BouncePollerService_1 = class BouncePollerService {
             bounceType,
             statusCode,
             diagnosticMessage,
-            bouncedAt: new Date(),
+            bouncedAt: parsed.date ?? new Date(),
         }, { upsert: true, new: true });
         this.logger.debug(`Recorded ${bounceType} bounce for ${failedEmail} on ${domain}`);
     }
