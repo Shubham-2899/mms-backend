@@ -107,16 +107,18 @@ let ServersDomainService = class ServersDomainService {
     }
     async getSelectableIps() {
         const docs = await this.serverDomainModel.find({ status: 'active' });
-        const options = [];
-        for (const doc of docs) {
-            for (const entry of doc.availableIps) {
-                options.push({
-                    label: `${doc.domain} - ${entry.ip}`,
-                    value: `${doc.domain} - ${entry.ip}`,
-                });
-            }
-        }
-        return { success: true, data: options };
+        const data = docs.map((doc) => ({
+            domain: doc.domain,
+            availableIps: doc.availableIps
+                .filter((e) => !e.wentSpam)
+                .map((e) => ({
+                ip: e.ip,
+                isMainIp: e.isMainIp,
+                warmingStatus: e.warmingStatus,
+                provider: e.provider,
+            })),
+        })).filter((d) => d.availableIps.length > 0);
+        return { success: true, data };
     }
 };
 exports.ServersDomainService = ServersDomainService;
