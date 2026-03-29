@@ -36,4 +36,18 @@ export declare class ReportsService {
         pageSize: number;
         totalElements: number;
     }>;
+    getDailySendingReport(date: string, provider?: string): Promise<{
+        date: string;
+        provider: string;
+        rows: any[];
+        totals: any;
+    }>;
+    getHourlySendingReport(date: string): Promise<{
+        date: string;
+        rows: {
+            domain: any;
+            ip: any;
+            total: any;
+        }[];
+    }>;
 }

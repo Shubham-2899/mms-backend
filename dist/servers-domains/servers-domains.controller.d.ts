@@ -49,8 +49,13 @@ export declare class ServersDomainController {
     getSelectableIps(): Promise<{
         success: boolean;
         data: {
-            label: string;
-            value: string;
+            domain: string;
+            availableIps: {
+                ip: string;
+                isMainIp: boolean;
+                warmingStatus: import("./schemas/server-domain.schema").WarmingStatus;
+                provider: string;
+            }[];
         }[];
     }>;
     findOne(id: string): Promise<{

@@ -123,20 +123,26 @@ export class ServersDomainService {
     return this.updateIp(id, ip, { wentSpam });
   }
 
-  /** Returns all active server-domains formatted as the selectedIp dropdown format: "domain - ip" */
+  /**
+   * Returns all active server-domains with their non-spam IPs.
+   *
+   * Future: when users have dedicated domains/IPs, add userId filter here.
+   */
   async getSelectableIps() {
     const docs = await this.serverDomainModel.find({ status: 'active' });
-    const options: { label: string; value: string }[] = [];
 
-    for (const doc of docs) {
-      for (const entry of doc.availableIps) {
-        options.push({
-          label: `${doc.domain} - ${entry.ip}`,
-          value: `${doc.domain} - ${entry.ip}`,
-        });
-      }
-    }
+    const data = docs.map((doc) => ({
+      domain: doc.domain,
+      availableIps: doc.availableIps
+        .filter((e) => !e.wentSpam)
+        .map((e) => ({
+          ip: e.ip,
+          isMainIp: e.isMainIp,
+          warmingStatus: e.warmingStatus,
+          provider: e.provider,
+        })),
+    })).filter((d) => d.availableIps.length > 0);
 
-    return { success: true, data: options };
+    return { success: true, data };
   }
 }

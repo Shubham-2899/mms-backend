@@ -10,4 +10,20 @@ export declare class ReportsController {
         message: string;
         success: boolean;
     }>;
+    getDailySendingReport(date: string, provider?: string): Promise<{
+        date: string;
+        provider: string;
+        rows: any[];
+        totals: any;
+        success: boolean;
+    }>;
+    getHourlySendingReport(date: string): Promise<{
+        date: string;
+        rows: {
+            domain: any;
+            ip: any;
+            total: any;
+        }[];
+        success: boolean;
+    }>;
 }

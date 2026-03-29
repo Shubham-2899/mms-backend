@@ -24,10 +24,32 @@ export class ReportsController {
       fromDate,
       toDate,
     );
-    return {
-      message: 'Reports fetched successfully.',
-      success: true,
-      ...result,
-    };
+    return { message: 'Reports fetched successfully.', success: true, ...result };
+  }
+
+  /**
+   * GET /api/reports/sending/daily?date=2024-05-13&provider=gmail
+   * Per-IP daily summary: sent, failed, total.
+   * provider is optional — gmail | yahoo | aol | comcast | hotmail
+   */
+  @Get('sending/daily')
+  async getDailySendingReport(
+    @Query('date') date: string,
+    @Query('provider') provider?: string,
+  ) {
+    const reportDate = date || new Date().toISOString().split('T')[0];
+    const result = await this.reportsService.getDailySendingReport(reportDate, provider);
+    return { success: true, ...result };
+  }
+
+  /**
+   * GET /api/reports/sending/hourly?date=2024-05-13
+   * Per-IP hourly breakdown: H0–H23 sent counts per IP per hour.
+   */
+  @Get('sending/hourly')
+  async getHourlySendingReport(@Query('date') date: string) {
+    const reportDate = date || new Date().toISOString().split('T')[0];
+    const result = await this.reportsService.getHourlySendingReport(reportDate);
+    return { success: true, ...result };
   }
 }
