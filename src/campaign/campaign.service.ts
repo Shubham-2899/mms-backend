@@ -332,6 +332,8 @@ export class CampaignService {
           allIps,
           status: 'running',
           pendingEmails: pendingCount,
+          checkpointStatus: 'idle',
+          emailsSinceLastCheck: 0,
         },
       );
 
@@ -590,6 +592,7 @@ export class CampaignService {
       campaignId,
       status: campaign.status,
       counts: { sent, failed, pending, total },
+      checkpointStatus: campaign.checkpointStatus || 'idle',
       campaign: {
         from: campaign.from || '',
         fromName: campaign.fromName || '',
@@ -602,6 +605,7 @@ export class CampaignService {
         templateType: campaign.templateType || '',
         emailTemplate: campaign.emailTemplate || '',
         delay: campaign.delay || 0,
+        checkpointInterval: campaign.checkpointInterval,
         startedAt: campaign.startedAt,
         completedAt: campaign.completedAt,
         totalEmails: total,
