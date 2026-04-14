@@ -47,6 +47,9 @@ export declare class Campaign {
     totalEmails?: number;
     sentEmails?: number;
     failedEmails?: number;
+    checkpointStatus?: string;
+    emailsSinceLastCheck?: number;
+    checkpointInterval?: number;
 }
 export declare class CampaignEmailTracking {
     to_email: string;

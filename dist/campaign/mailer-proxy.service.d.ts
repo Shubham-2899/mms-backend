@@ -25,4 +25,9 @@ export declare class MailerProxyService {
         emailSent: number;
         emailFailed: number;
     }>;
+    testDeliverabilityCheckpoint(createCampaignDto: CreateCampaignDto, smtpConfig: any): Promise<{
+        success: boolean;
+        result: 'inbox' | 'spam';
+        message: string;
+    }>;
 }

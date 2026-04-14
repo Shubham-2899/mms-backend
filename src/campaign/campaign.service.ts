@@ -809,4 +809,18 @@ export class CampaignService {
       queue: queueStatus || { status: 'unavailable' },
     };
   }
+
+  // Manually trigger a deliverability checkpoint test via mailer service
+  async testDeliverabilityCheckpoint(createCampaignDto: CreateCampaignDto, firebaseToken: string) {
+    await this.firebaseService.verifyToken(firebaseToken);
+
+    if (!this.mailerProxyService.isMailerServiceEnabled()) {
+      throw new HttpException('Mailer service is not configured', HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
+    const smtpConfig = { host: `mail.${domain}`, user: `admin@${domain}` };
+
+    return this.mailerProxyService.testDeliverabilityCheckpoint(createCampaignDto, smtpConfig);
+  }
 }

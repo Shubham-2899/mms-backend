@@ -205,6 +205,8 @@ let CampaignService = class CampaignService {
                 allIps,
                 status: 'running',
                 pendingEmails: pendingCount,
+                checkpointStatus: 'idle',
+                emailsSinceLastCheck: 0,
             });
             if (this.mailerProxyService.isMailerServiceEnabled()) {
                 try {
@@ -365,6 +367,7 @@ let CampaignService = class CampaignService {
             campaignId,
             status: campaign.status,
             counts: { sent, failed, pending, total },
+            checkpointStatus: campaign.checkpointStatus || 'idle',
             campaign: {
                 from: campaign.from || '',
                 fromName: campaign.fromName || '',
@@ -377,6 +380,7 @@ let CampaignService = class CampaignService {
                 templateType: campaign.templateType || '',
                 emailTemplate: campaign.emailTemplate || '',
                 delay: campaign.delay || 0,
+                checkpointInterval: campaign.checkpointInterval,
                 startedAt: campaign.startedAt,
                 completedAt: campaign.completedAt,
                 totalEmails: total,
@@ -536,6 +540,15 @@ let CampaignService = class CampaignService {
             enabled: true,
             queue: queueStatus || { status: 'unavailable' },
         };
+    }
+    async testDeliverabilityCheckpoint(createCampaignDto, firebaseToken) {
+        await this.firebaseService.verifyToken(firebaseToken);
+        if (!this.mailerProxyService.isMailerServiceEnabled()) {
+            throw new common_1.HttpException('Mailer service is not configured', common_1.HttpStatus.SERVICE_UNAVAILABLE);
+        }
+        const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
+        const smtpConfig = { host: `mail.${domain}`, user: `admin@${domain}` };
+        return this.mailerProxyService.testDeliverabilityCheckpoint(createCampaignDto, smtpConfig);
     }
 };
 exports.CampaignService = CampaignService;
