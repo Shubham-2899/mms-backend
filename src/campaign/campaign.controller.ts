@@ -97,4 +97,13 @@ export class CampaignController {
   ) {
     return this.campaignService.getLiveSendingStats(campaignId, selectedIp, since);
   }
+
+  @Post('checkpoint/test')
+  async testDeliverabilityCheckpoint(
+    @Body() createCampaignDto: CreateCampaignDto,
+    @Headers('Authorization') token: string,
+  ) {
+    const firebaseToken = token.split(' ')[1];
+    return this.campaignService.testDeliverabilityCheckpoint(createCampaignDto, firebaseToken);
+  }
 }

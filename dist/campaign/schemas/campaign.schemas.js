@@ -94,6 +94,18 @@ __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", Number)
 ], Campaign.prototype, "failedEmails", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ enum: ['idle', 'checking', 'inbox', 'spam'], default: 'idle' }),
+    __metadata("design:type", String)
+], Campaign.prototype, "checkpointStatus", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], Campaign.prototype, "emailsSinceLastCheck", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", Number)
+], Campaign.prototype, "checkpointInterval", void 0);
 exports.Campaign = Campaign = __decorate([
     (0, mongoose_1.Schema)({ collection: 'campaigns', timestamps: true })
 ], Campaign);

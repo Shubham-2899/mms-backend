@@ -21,4 +21,11 @@ export class CreateCampaignDto {
    * Defaults to 'single' if omitted.
    */
   ipMode?: 'single' | 'round-robin';
+
+  /**
+   * Optional per-campaign deliverability checkpoint interval (number of emails sent).
+   * Overrides the CHECKPOINT_INTERVAL env var on mailer-service.
+   * Defaults to 500 if omitted.
+   */
+  checkpointInterval?: number;
 } 

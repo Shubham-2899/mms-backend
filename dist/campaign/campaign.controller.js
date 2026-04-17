@@ -58,6 +58,10 @@ let CampaignController = class CampaignController {
     async getLiveSendingStats(campaignId, selectedIp, since) {
         return this.campaignService.getLiveSendingStats(campaignId, selectedIp, since);
     }
+    async testDeliverabilityCheckpoint(createCampaignDto, token) {
+        const firebaseToken = token.split(' ')[1];
+        return this.campaignService.testDeliverabilityCheckpoint(createCampaignDto, firebaseToken);
+    }
 };
 exports.CampaignController = CampaignController;
 __decorate([
@@ -147,6 +151,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", Promise)
 ], CampaignController.prototype, "getLiveSendingStats", null);
+__decorate([
+    (0, common_1.Post)('checkpoint/test'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Headers)('Authorization')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_campaign_dto_1.CreateCampaignDto, String]),
+    __metadata("design:returntype", Promise)
+], CampaignController.prototype, "testDeliverabilityCheckpoint", null);
 exports.CampaignController = CampaignController = __decorate([
     (0, common_1.Controller)('/api/campaign'),
     __metadata("design:paramtypes", [campaign_service_1.CampaignService])

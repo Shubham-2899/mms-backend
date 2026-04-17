@@ -283,4 +283,65 @@ export class MailerProxyService {
       );
     }
   }
+
+  /**
+   * Trigger a manual deliverability checkpoint on the mailer service.
+   * Sends the campaign email to all active test accounts, polls IMAP, returns 'inbox' | 'spam'.
+   */
+  async testDeliverabilityCheckpoint(
+    createCampaignDto: CreateCampaignDto,
+    smtpConfig: any,
+  ): Promise<{ success: boolean; result: 'inbox' | 'spam'; message: string }> {
+    const mailerUrl = this.getMailerUrl(createCampaignDto.selectedIp);
+    // const mailerUrl = 'http://localhost:4000'
+    if (!mailerUrl) {
+      throw new HttpException(
+        'Mailer service URL not configured',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+
+    const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
+    const mailerSmtpConfig = {
+      host: smtpConfig.host || `mail.${domain}`,
+      user: smtpConfig.user || `admin@${domain}`,
+      port: smtpConfig.port || 587,
+    };
+
+    try {
+      const response = await this.httpClient.post(
+        `${mailerUrl}/mail/checkpoint/test`,
+        {
+          from: createCampaignDto.from,
+          fromName: createCampaignDto.fromName,
+          subject: createCampaignDto.subject,
+          emailTemplate: createCampaignDto.emailTemplate,
+          offerId: createCampaignDto.offerId,
+          selectedIp: createCampaignDto.selectedIp,
+          smtpConfig: mailerSmtpConfig,
+        },
+        { timeout: 5 * 60 * 1000 }, // 5 min — checkpoint waits 2 min for delivery
+      );
+
+      return {
+        success: response.data.success,
+        result: response.data.result,
+        message: response.data.message,
+      };
+    } catch (error: any) {
+      this.logger.error(`Deliverability checkpoint test failed: ${error.message}`, error.response?.data);
+
+      if (error.response) {
+        throw new HttpException(
+          error.response.data?.message || 'Mailer service error',
+          error.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      throw new HttpException(
+        `Failed to connect to mailer service: ${error.message}`,
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
 }

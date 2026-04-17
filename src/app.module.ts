@@ -26,6 +26,7 @@ import { CampaignModule } from './campaign/campaign.module';
 import { ServersDomainModule } from './servers-domains/servers-domains.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BounceModule } from './bounce/bounce.module';
+import { TestAccountsModule } from './test-accounts/test-accounts.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { BounceModule } from './bounce/bounce.module';
     ServersDomainModule,
     ScheduleModule.forRoot(),
     BounceModule,
+    TestAccountsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

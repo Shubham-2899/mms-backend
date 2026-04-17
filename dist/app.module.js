@@ -31,6 +31,7 @@ const campaign_module_1 = require("./campaign/campaign.module");
 const servers_domains_module_1 = require("./servers-domains/servers-domains.module");
 const schedule_1 = require("@nestjs/schedule");
 const bounce_module_1 = require("./bounce/bounce.module");
+const test_accounts_module_1 = require("./test-accounts/test-accounts.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -74,6 +75,7 @@ exports.AppModule = AppModule = __decorate([
             servers_domains_module_1.ServersDomainModule,
             schedule_1.ScheduleModule.forRoot(),
             bounce_module_1.BounceModule,
+            test_accounts_module_1.TestAccountsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

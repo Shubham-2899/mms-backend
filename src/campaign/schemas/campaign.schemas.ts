@@ -68,6 +68,20 @@ export class Campaign {
 
   @Prop()
   failedEmails?: number;
+
+  /** Deliverability checkpoint fields */
+  @Prop({ enum: ['idle', 'checking', 'inbox', 'spam'], default: 'idle' })
+  checkpointStatus?: string;
+
+  @Prop({ default: 0 })
+  emailsSinceLastCheck?: number;
+
+  /**
+   * Per-campaign checkpoint interval (emails sent between checks).
+   * If omitted, mailer-service falls back to CHECKPOINT_INTERVAL env var (default 500).
+   */
+  @Prop()
+  checkpointInterval?: number;
 }
 
 // Email Queue/Status Tracking Schema (Minimal fields)

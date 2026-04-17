@@ -12,4 +12,5 @@ export declare class CreateCampaignDto {
     batchSize: number;
     delay: number;
     ipMode?: 'single' | 'round-robin';
+    checkpointInterval?: number;
 }

@@ -332,6 +332,8 @@ export class CampaignService {
           allIps,
           status: 'running',
           pendingEmails: pendingCount,
+          checkpointStatus: 'idle',
+          emailsSinceLastCheck: 0,
         },
       );
 
@@ -590,6 +592,7 @@ export class CampaignService {
       campaignId,
       status: campaign.status,
       counts: { sent, failed, pending, total },
+      checkpointStatus: campaign.checkpointStatus || 'idle',
       campaign: {
         from: campaign.from || '',
         fromName: campaign.fromName || '',
@@ -602,6 +605,7 @@ export class CampaignService {
         templateType: campaign.templateType || '',
         emailTemplate: campaign.emailTemplate || '',
         delay: campaign.delay || 0,
+        checkpointInterval: campaign.checkpointInterval,
         startedAt: campaign.startedAt,
         completedAt: campaign.completedAt,
         totalEmails: total,
@@ -804,5 +808,19 @@ export class CampaignService {
       enabled: true,
       queue: queueStatus || { status: 'unavailable' },
     };
+  }
+
+  // Manually trigger a deliverability checkpoint test via mailer service
+  async testDeliverabilityCheckpoint(createCampaignDto: CreateCampaignDto, firebaseToken: string) {
+    await this.firebaseService.verifyToken(firebaseToken);
+
+    if (!this.mailerProxyService.isMailerServiceEnabled()) {
+      throw new HttpException('Mailer service is not configured', HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
+    const smtpConfig = { host: `mail.${domain}`, user: `admin@${domain}` };
+
+    return this.mailerProxyService.testDeliverabilityCheckpoint(createCampaignDto, smtpConfig);
   }
 }

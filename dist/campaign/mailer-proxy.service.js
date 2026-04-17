@@ -176,6 +176,41 @@ let MailerProxyService = MailerProxyService_1 = class MailerProxyService {
             throw new common_1.HttpException(`Failed to connect to mailer service: ${error.message}`, common_1.HttpStatus.SERVICE_UNAVAILABLE);
         }
     }
+    async testDeliverabilityCheckpoint(createCampaignDto, smtpConfig) {
+        const mailerUrl = this.getMailerUrl(createCampaignDto.selectedIp);
+        if (!mailerUrl) {
+            throw new common_1.HttpException('Mailer service URL not configured', common_1.HttpStatus.SERVICE_UNAVAILABLE);
+        }
+        const domain = createCampaignDto.selectedIp?.split('-')[0]?.trim();
+        const mailerSmtpConfig = {
+            host: smtpConfig.host || `mail.${domain}`,
+            user: smtpConfig.user || `admin@${domain}`,
+            port: smtpConfig.port || 587,
+        };
+        try {
+            const response = await this.httpClient.post(`${mailerUrl}/mail/checkpoint/test`, {
+                from: createCampaignDto.from,
+                fromName: createCampaignDto.fromName,
+                subject: createCampaignDto.subject,
+                emailTemplate: createCampaignDto.emailTemplate,
+                offerId: createCampaignDto.offerId,
+                selectedIp: createCampaignDto.selectedIp,
+                smtpConfig: mailerSmtpConfig,
+            }, { timeout: 5 * 60 * 1000 });
+            return {
+                success: response.data.success,
+                result: response.data.result,
+                message: response.data.message,
+            };
+        }
+        catch (error) {
+            this.logger.error(`Deliverability checkpoint test failed: ${error.message}`, error.response?.data);
+            if (error.response) {
+                throw new common_1.HttpException(error.response.data?.message || 'Mailer service error', error.response.status || common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            throw new common_1.HttpException(`Failed to connect to mailer service: ${error.message}`, common_1.HttpStatus.SERVICE_UNAVAILABLE);
+        }
+    }
 };
 exports.MailerProxyService = MailerProxyService;
 exports.MailerProxyService = MailerProxyService = MailerProxyService_1 = __decorate([

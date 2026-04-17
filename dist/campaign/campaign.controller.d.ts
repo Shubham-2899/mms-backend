@@ -70,11 +70,23 @@ export declare class CampaignController {
         campaignId: string;
         status: string;
         counts: {
+            sent: number;
+            failed: number;
+            pending: number;
+            total: number;
+        };
+        campaign: any;
+        checkpointStatus?: undefined;
+    } | {
+        campaignId: string;
+        status: string;
+        counts: {
             sent: any;
             failed: any;
             pending: number;
             total: any;
         };
+        checkpointStatus: string;
         campaign: {
             from: string;
             fromName: string;
@@ -87,6 +99,7 @@ export declare class CampaignController {
             templateType: string;
             emailTemplate: string;
             delay: number;
+            checkpointInterval: number;
             startedAt: Date;
             completedAt: Date;
             totalEmails: any;
@@ -97,6 +110,11 @@ export declare class CampaignController {
     }>;
     getAllCampaigns(): Promise<{
         stats: {
+            sent: number;
+            failed: number;
+            pending: number;
+            total: number;
+        } | {
             sent: any;
             failed: any;
             pending: number;
@@ -122,9 +140,12 @@ export declare class CampaignController {
         totalEmails?: number;
         sentEmails?: number;
         failedEmails?: number;
+        checkpointStatus?: string;
+        emailsSinceLastCheck?: number;
+        checkpointInterval?: number;
         _id: unknown;
         $locals: Record<string, unknown>;
-        $op: "remove" | "save" | "validate";
+        $op: "validate" | "save" | "remove";
         $where: Record<string, unknown>;
         baseModelName?: string;
         collection: import("mongoose").Collection<import("bson").Document>;
@@ -190,5 +211,10 @@ export declare class CampaignController {
         enabled: boolean;
         data: any;
         message?: undefined;
+    }>;
+    testDeliverabilityCheckpoint(createCampaignDto: CreateCampaignDto, token: string): Promise<{
+        success: boolean;
+        result: "inbox" | "spam";
+        message: string;
     }>;
 }
